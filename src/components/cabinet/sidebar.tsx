@@ -11,6 +11,8 @@ import {
   Shield,
   Eye,
   BarChart3,
+  UserCog,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +30,7 @@ const adminNav = [
   { label: "Vue pratique", href: "/admin/practice", icon: BarChart3 },
   { label: "Journal d'audit", href: "/admin/audit", icon: Shield },
   { label: "Journal d'accès", href: "/admin/access", icon: Eye },
+  { label: "Équipe", href: "/admin/staff", icon: UserCog },
 ];
 
 export function Sidebar() {
@@ -92,7 +95,19 @@ export function Sidebar() {
         })}
       </div>
 
-      <div className="p-2 border-t">
+      <div className="p-2 border-t space-y-0.5">
+        <Link
+          href="/profile"
+          className={cn(
+            "flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors",
+            pathname === "/profile"
+              ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          )}
+        >
+          <User className="size-4" />
+          Profil
+        </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 w-full transition-colors"

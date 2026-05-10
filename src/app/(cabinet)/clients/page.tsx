@@ -3,9 +3,10 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
-import { asc, isNull, ilike, or, and } from "drizzle-orm";
+import { asc, isNull, ilike, or, and, eq } from "drizzle-orm";
 import { Plus, Building2 } from "lucide-react";
 import { ClientSearch } from "./client-search";
+import { ClientFilters } from "./client-filters";
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Actif",
@@ -22,20 +23,27 @@ const statusVariants: Record<string, "default" | "secondary" | "destructive" | "
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, status } = await searchParams;
 
-  const conditions = q
-    ? and(
-        isNull(companies.deletedAt),
-        or(
-          ilike(companies.name, `%${q}%`),
-          ilike(companies.neq, `%${q}%`),
-          ilike(companies.email, `%${q}%`)
-        )
-      )
-    : isNull(companies.deletedAt);
+  const filters = [isNull(companies.deletedAt)];
+
+  if (q) {
+    filters.push(
+      or(
+        ilike(companies.name, `%${q}%`),
+        ilike(companies.neq, `%${q}%`),
+        ilike(companies.email, `%${q}%`)
+      )!
+    );
+  }
+
+  if (status === "ACTIVE" || status === "INACTIVE") {
+    filters.push(eq(companies.status, status));
+  }
+
+  const conditions = and(...filters);
 
   const clientList = await db
     .select()
@@ -53,6 +61,7 @@ export default async function ClientsPage({
         </Link>
       </div>
 
+      <ClientFilters currentStatus={status} />
       <ClientSearch defaultValue={q} />
 
       {clientList.length === 0 ? (

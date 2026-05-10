@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
 
 export function PortalHeader() {
@@ -20,6 +21,12 @@ export function PortalHeader() {
         <span className="text-sm font-semibold tracking-tight">CabiCompta</span>
         <div className="flex items-center gap-0.5">
           <NotificationBell />
+          <Link
+            href="/portal/profile"
+            className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <User className="size-4" />
+          </Link>
           <button
             onClick={handleSignOut}
             className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"

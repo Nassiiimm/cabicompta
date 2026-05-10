@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Eye, FileText } from "lucide-react";
 import { db } from "@/lib/db";
 import { invoices, companies } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { InvoiceFilters } from "./invoice-filters";
 
 function formatCAD(value: string | number): string {
   return new Intl.NumberFormat("fr-CA", {
@@ -41,7 +42,12 @@ function statusBadge(status: string) {
   );
 }
 
-export default async function InvoicesPage() {
+export default async function InvoicesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>;
+}) {
+  const { status } = await searchParams;
   let invoiceList: {
     id: string;
     invoiceNumber: string;
@@ -52,8 +58,14 @@ export default async function InvoicesPage() {
     companyName: string | null;
   }[] = [];
 
+  const validStatuses = ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] as const;
+  const statusFilter =
+    status && validStatuses.includes(status as typeof validStatuses[number])
+      ? (status as typeof validStatuses[number])
+      : undefined;
+
   try {
-    invoiceList = await db
+    const query = db
       .select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
@@ -66,6 +78,12 @@ export default async function InvoicesPage() {
       .from(invoices)
       .leftJoin(companies, eq(invoices.companyId, companies.id))
       .orderBy(desc(invoices.createdAt));
+
+    if (statusFilter) {
+      invoiceList = await query.where(eq(invoices.status, statusFilter));
+    } else {
+      invoiceList = await query;
+    }
   } catch {
     // DB not connected yet
   }
@@ -84,6 +102,8 @@ export default async function InvoicesPage() {
           Nouvelle facture
         </Link>
       </div>
+
+      <InvoiceFilters currentStatus={status} />
 
       <Card>
         <CardContent className="p-0">

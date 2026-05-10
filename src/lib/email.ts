@@ -105,6 +105,30 @@ export async function sendDeadlineReminderEmail(to: string, name: string, deadli
   });
 }
 
+export async function sendInvoiceOverdueEmail(to: string, name: string, invoiceNumber: string, total: string, daysLate: number) {
+  const urgency = daysLate >= 30 ? "URGENT" : "Rappel";
+  return sendEmail({
+    to,
+    subject: `${urgency} — Facture ${invoiceNumber} en retard`,
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${name},</h2>
+        <p style="color: #525252; line-height: 1.6;">
+          La facture <strong>${invoiceNumber}</strong> d'un montant de <strong>${total}</strong>
+          est en retard de <strong>${daysLate} jour${daysLate > 1 ? "s" : ""}</strong>.
+        </p>
+        <p style="color: #525252; line-height: 1.6;">
+          Veuillez procéder au paiement dans les plus brefs délais ou contactez votre comptable
+          si vous avez des questions.
+        </p>
+        <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
+          — L'équipe CabiCompta
+        </p>
+      </div>
+    `,
+  });
+}
+
 export async function sendInvoiceEmail(to: string, name: string, invoiceNumber: string, total: string) {
   return sendEmail({
     to,

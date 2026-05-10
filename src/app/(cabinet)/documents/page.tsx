@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
 import { DocumentsActions } from "./documents-actions";
 import { DocumentSearch } from "./document-search";
+import { DocumentFilters } from "./document-filters";
 
 const CATEGORY_LABELS: Record<string, string> = {
   BANK_STATEMENT: "Relevé bancaire",
@@ -34,16 +35,22 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { q } = await searchParams;
+  const { q, status } = await searchParams;
 
-  const conditions = q
-    ? and(
-        isNull(documents.deletedAt),
-        ilike(documents.fileName, `%${q}%`)
-      )
-    : isNull(documents.deletedAt);
+  const filters = [isNull(documents.deletedAt)];
+
+  if (q) {
+    filters.push(ilike(documents.fileName, `%${q}%`));
+  }
+
+  const validStatuses = ["PENDING", "PROCESSED", "REJECTED"] as const;
+  if (status && validStatuses.includes(status as typeof validStatuses[number])) {
+    filters.push(eq(documents.status, status as typeof validStatuses[number]));
+  }
+
+  const conditions = and(...filters);
 
   const docs = await db
     .select({
@@ -71,6 +78,7 @@ export default async function DocumentsPage({
         <DocumentsActions />
       </div>
 
+      <DocumentFilters currentStatus={status} />
       <DocumentSearch defaultValue={q} />
 
       {docs.length === 0 ? (

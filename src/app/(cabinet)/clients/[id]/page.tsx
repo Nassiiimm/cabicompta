@@ -19,6 +19,7 @@ import { InviteClientButton } from "./invite-client";
 import { AssignStaff } from "./assign-staff";
 import { TimeTracker } from "./time-tracker";
 import { KycSection } from "./kyc-section";
+import { DeadlineAction } from "./deadline-action";
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Actif",
@@ -224,6 +225,7 @@ async function FiscalDeadlinesSection({ companyId }: { companyId: string }) {
                 <th className="text-left font-medium px-4 py-2">Période</th>
                 <th className="text-left font-medium px-4 py-2">Date limite</th>
                 <th className="text-left font-medium px-4 py-2">Statut</th>
+                <th className="text-left font-medium px-4 py-2">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -257,6 +259,9 @@ async function FiscalDeadlinesSection({ companyId }: { companyId: string }) {
                       <Badge variant={DEADLINE_STATUS_VARIANTS[d.status] ?? "outline"}>
                         {DEADLINE_STATUS_LABELS[d.status] ?? d.status}
                       </Badge>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <DeadlineAction deadlineId={d.id} status={d.status} />
                     </td>
                   </tr>
                 );
