@@ -1,65 +1,109 @@
-import Image from "next/image";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex flex-col">
+      <header className="h-14 border-b flex items-center px-6">
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+          <span className="text-sm font-semibold tracking-tight">CabiCompta</span>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+              Connexion
+            </Link>
+            <Link href="/register" className={buttonVariants({ size: "sm" })}>
+              Essai gratuit
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="max-w-5xl mx-auto px-6 pt-20 sm:pt-28 pb-16">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] max-w-2xl">
+            La gestion de votre cabinet comptable, simplifiée.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-4 text-lg text-muted-foreground max-w-lg leading-relaxed">
+            Dossiers clients, documents, factures et échéances fiscales québécoises —
+            centralisés dans un seul outil.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="mt-8 flex gap-3">
+            <Link
+              href="/register"
+              className={buttonVariants() + " h-10 px-5 text-sm"}
+            >
+              Commencer
+              <ArrowRight className="ml-1.5 size-3.5" />
+            </Link>
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: "outline" }) + " h-10 px-5 text-sm"}
+            >
+              Se connecter
+            </Link>
+          </div>
+        </section>
+
+        {/* What it does */}
+        <section className="border-t">
+          <div className="max-w-5xl mx-auto px-6 py-16">
+            <div className="grid sm:grid-cols-3 gap-8 sm:gap-12">
+              <div>
+                <div className="text-sm font-semibold mb-2">01</div>
+                <h3 className="font-semibold mb-1">Portail client</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Vos clients déposent leurs documents en ligne.
+                  Ils reçoivent des rappels automatiques quand quelque chose manque.
+                </p>
+              </div>
+              <div>
+                <div className="text-sm font-semibold mb-2">02</div>
+                <h3 className="font-semibold mb-1">Échéances fiscales</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  T2, CO-17, TPS/TVQ, DAS, RL-1 — toutes les dates sont
+                  générées automatiquement selon la fin d&apos;exercice.
+                </p>
+              </div>
+              <div>
+                <div className="text-sm font-semibold mb-2">03</div>
+                <h3 className="font-semibold mb-1">Extraction IA</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  L&apos;IA analyse les documents déposés, identifie le type
+                  et extrait les données pour pré-remplir vos formulaires.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="border-t bg-neutral-950 text-white">
+          <div className="max-w-5xl mx-auto px-6 py-16 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Prêt à commencer ?</h2>
+              <p className="text-neutral-400 text-sm mt-1">
+                14 jours d&apos;essai gratuit. Aucune carte requise.
+              </p>
+            </div>
+            <Link
+              href="/register"
+              className="inline-flex items-center h-10 px-5 rounded-md bg-white text-neutral-950 text-sm font-semibold hover:bg-neutral-200 transition-colors shrink-0"
+            >
+              Créer un compte
+              <ArrowRight className="ml-1.5 size-3.5" />
+            </Link>
+          </div>
+        </section>
       </main>
+
+      <footer className="border-t py-5 px-6">
+        <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-muted-foreground">
+          <span>CabiCompta</span>
+          <span>&copy; {new Date().getFullYear()}</span>
+        </div>
+      </footer>
     </div>
   );
 }

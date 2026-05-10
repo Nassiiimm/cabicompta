@@ -1,0 +1,117 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { FileText, Download, Search, FolderOpen, ArrowLeft } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+
+type Doc = {
+  id: string;
+  fileName: string;
+  fileSize: number | null;
+  category: string | null;
+  fiscalYear: number | null;
+  status: string;
+  createdAt: Date;
+};
+
+const CATS: Record<string, string> = {
+  BANK_STATEMENT: "Relevé bancaire", INVOICE: "Facture", TAX_NOTICE: "Avis de cotisation",
+  FINANCIAL_STATEMENT: "État financier", TPS_TVQ: "TPS/TVQ", CORPORATE: "Corporatif",
+  CONTRACT: "Contrat", RECEIPT: "Reçu", OTHER: "Autre",
+};
+
+async function handleDownload(docId: string) {
+  try {
+    const res = await fetch(`/api/documents/${docId}`);
+    if (res.ok) { const d = await res.json(); if (d.downloadUrl) window.open(d.downloadUrl, "_blank"); }
+  } catch {}
+}
+
+export function PortalArchive({ documents, years }: { documents: Doc[]; years: number[] }) {
+  const [search, setSearch] = useState("");
+  const [year, setYear] = useState<number | null>(null);
+  const [cat, setCat] = useState<string | null>(null);
+
+  const cats = useMemo(() => [...new Set(documents.map((d) => d.category).filter(Boolean))] as string[], [documents]);
+
+  const filtered = useMemo(() => {
+    return documents.filter((d) => {
+      if (search && !d.fileName.toLowerCase().includes(search.toLowerCase())) return false;
+      if (year && d.fiscalYear !== year) return false;
+      if (cat && d.category !== cat) return false;
+      return true;
+    });
+  }, [documents, search, year, cat]);
+
+  const active = search || year || cat;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Link href="/portal" className={buttonVariants({ variant: "ghost", size: "icon" })}>
+          <ArrowLeft className="size-4" />
+        </Link>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <Input placeholder="Rechercher..." className="pl-9 h-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          onClick={() => { setYear(null); setCat(null); }}
+          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${!active ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+        >
+          Tout ({documents.length})
+        </button>
+        {years.map((y) => (
+          <button key={y} onClick={() => setYear(year === y ? null : y)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${year === y ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+          >{y}</button>
+        ))}
+        {cats.map((c) => (
+          <button key={c} onClick={() => setCat(cat === c ? null : c)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${cat === c ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+          >{CATS[c] ?? c}</button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg">
+          <FolderOpen className="size-5 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">{active ? "Aucun résultat" : "Aucun document"}</p>
+        </div>
+      ) : (
+        <div className="rounded-lg border divide-y">
+          {filtered.map((doc) => (
+            <div key={doc.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-muted/30 transition-colors">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <FileText className="size-3.5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm truncate">{doc.fileName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {doc.status === "PROCESSED" ? "Traité" : doc.status === "REJECTED" ? "Rejeté" : "En attente"}
+                    {doc.category ? ` · ${CATS[doc.category] ?? doc.category}` : ""}
+                    {doc.fiscalYear ? ` · ${doc.fiscalYear}` : ""}
+                    {" · "}
+                    {new Date(doc.createdAt).toLocaleDateString("fr-CA", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => handleDownload(doc.id)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+                <Download className="size-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground text-center">
+        {filtered.length} document{filtered.length > 1 ? "s" : ""}
+        {active ? ` sur ${documents.length}` : ""}
+      </p>
+    </div>
+  );
+}
