@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Sidebar } from "@/components/cabinet/sidebar";
+import { MobileNav } from "@/components/cabinet/mobile-nav";
 
 export default async function CabinetLayout({
   children,
@@ -14,8 +15,13 @@ export default async function CabinetLayout({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 min-w-0 p-6 sm:p-8">{children}</main>
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
+      <div className="flex-1 min-w-0 flex flex-col">
+        <MobileNav />
+        <main className="flex-1 p-4 sm:p-6 md:p-8">{children}</main>
+      </div>
     </div>
   );
 }

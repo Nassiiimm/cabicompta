@@ -3,7 +3,8 @@ import { db } from "@/lib/db";
 import { documents, companies, users } from "@/lib/db/schema";
 import { desc, eq, ilike, and, isNull } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
-import { FileText } from "lucide-react";
+import { FileText, Upload } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { DocumentsActions } from "./documents-actions";
 import { DocumentSearch } from "./document-search";
 import { DocumentFilters } from "./document-filters";
@@ -82,12 +83,25 @@ export default async function DocumentsPage({
       <DocumentSearch defaultValue={q} />
 
       {docs.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg">
-          <FileText className="size-6 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            {q ? `Aucun résultat pour "${q}"` : "Aucun document"}
-          </p>
-        </div>
+        (q || status) ? (
+          <div className="text-center py-12 border rounded-lg">
+            <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              {q ? `Aucun résultat pour "${q}"` : "Aucun résultat pour ce filtre"}
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 border rounded-lg text-center">
+            <div className="rounded-full bg-muted p-4 mb-4">
+              <Upload className="size-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-medium mb-1">Aucun document</h3>
+            <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+              Téléversez votre premier document pour commencer à organiser vos fichiers.
+            </p>
+            <DocumentsActions />
+          </div>
+        )
       ) : (
         <div className="rounded-lg border divide-y">
           {docs.map((doc) => (

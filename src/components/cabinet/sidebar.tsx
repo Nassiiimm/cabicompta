@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const nav = [
   { label: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
@@ -108,13 +109,16 @@ export function Sidebar() {
           <User className="size-4" />
           Profil
         </Link>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 w-full transition-colors"
-        >
-          <LogOut className="size-4" />
-          Déconnexion
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <LogOut className="size-4" />
+            Déconnexion
+          </button>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );

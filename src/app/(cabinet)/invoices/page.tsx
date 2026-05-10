@@ -108,18 +108,31 @@ export default async function InvoicesPage({
       <Card>
         <CardContent className="p-0">
           {invoiceList.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <FileText className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <p className="text-sm text-muted-foreground">
-                Aucune facture pour le moment
-              </p>
-              <Link
-                href="/invoices/new"
-                className={buttonVariants({ variant: "outline", size: "sm" }) + " mt-4"}
-              >
-                Creer une facture
-              </Link>
-            </div>
+            statusFilter ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <FileText className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Aucun résultat pour ce filtre
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="rounded-full bg-muted p-4 mb-4">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-base font-medium mb-1">Aucune facture</h3>
+                <p className="text-sm text-muted-foreground mb-5 max-w-xs">
+                  Commencez par créer votre première facture pour suivre vos paiements.
+                </p>
+                <Link
+                  href="/invoices/new"
+                  className={buttonVariants({ size: "sm" })}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Créer votre première facture
+                </Link>
+              </div>
+            )
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

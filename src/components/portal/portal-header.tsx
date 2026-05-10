@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function PortalHeader() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export function PortalHeader() {
       <div className="max-w-2xl mx-auto px-4 sm:px-0 h-full flex items-center justify-between">
         <span className="text-sm font-semibold tracking-tight">CabiCompta</span>
         <div className="flex items-center gap-0.5">
+          <ThemeToggle />
           <NotificationBell />
           <Link
             href="/portal/profile"
