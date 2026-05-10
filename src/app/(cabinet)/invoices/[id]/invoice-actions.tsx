@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Send, CheckCircle, Trash2, Loader2, FileDown } from "lucide-react";
+import { Send, CheckCircle, Trash2, Loader2, FileDown, Link2 } from "lucide-react";
 
 interface InvoiceActionsProps {
   invoiceId: string;
@@ -45,6 +45,23 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
     window.open(`/api/invoices/${invoiceId}/pdf`, "_blank");
   };
 
+  const handlePaymentLink = async () => {
+    setLoading("PAYMENT_LINK");
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/payment-link`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const { paymentUrl } = await res.json();
+        await navigator.clipboard.writeText(paymentUrl);
+        alert("Lien de paiement copié dans le presse-papiers");
+      }
+    } catch {
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" onClick={handlePdf}>
@@ -71,6 +88,17 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
             Archiver
           </Button>
         </>
+      )}
+      {status === "SENT" && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePaymentLink}
+          disabled={loading !== null}
+        >
+          {loading === "PAYMENT_LINK" ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Link2 className="h-4 w-4 mr-1" />}
+          Lien de paiement
+        </Button>
       )}
       {(status === "SENT" || status === "OVERDUE") && (
         <Button

@@ -111,7 +111,15 @@ export const companies = pgTable("companies", {
   status: companyStatus("status").notNull().default("ACTIVE"),
   assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
-  deletedAt: timestamp("deleted_at"), // Soft delete — conservation légale
+  // KYC / Conformité
+  kycVerified: boolean("kyc_verified").notNull().default(false),
+  kycVerifiedAt: timestamp("kyc_verified_at"),
+  conflictCheck: boolean("conflict_check").notNull().default(false),
+  conflictCheckNotes: text("conflict_check_notes"),
+  // Email inbox
+  inboxEmail: varchar("inbox_email", { length: 255 }),
+  inboxActive: boolean("inbox_active").notNull().default(false),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -173,7 +181,11 @@ export const invoices = pgTable("invoices", {
   dueDate: date("due_date"),
   paidAt: timestamp("paid_at"),
   notes: text("notes"),
-  deletedAt: timestamp("deleted_at"), // Soft delete
+  // Stripe
+  stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 255 }),
+  stripePaymentUrl: text("stripe_payment_url"),
+  paymentMethod: varchar("payment_method", { length: 50 }),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -286,6 +298,25 @@ export const accessLogs = pgTable("access_logs", {
 });
 
 // ═══════════════════════════════════════════════════════════
+// KYC — Conformité anti-blanchiment / Ordre des CPA
+// ═══════════════════════════════════════════════════════════
+export const kycDocuments = pgTable("kyc_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "restrict" }),
+  adminName: varchar("admin_name", { length: 255 }).notNull(),
+  adminRole: varchar("admin_role", { length: 100 }).notNull(),
+  documentType: varchar("document_type", { length: 50 }).notNull(), // PASSPORT, DRIVERS_LICENSE, HEALTH_CARD, etc.
+  filePath: text("file_path"),
+  verified: boolean("verified").notNull().default(false),
+  verifiedBy: uuid("verified_by").references(() => users.id, { onDelete: "set null" }),
+  verifiedAt: timestamp("verified_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ═══════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════
 export type User = typeof users.$inferSelect;
@@ -300,3 +331,4 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type DocumentComment = typeof documentComments.$inferSelect;
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type AccessLog = typeof accessLogs.$inferSelect;
+export type KycDocument = typeof kycDocuments.$inferSelect;

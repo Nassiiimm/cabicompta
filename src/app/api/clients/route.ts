@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
 import { ilike, or, asc, isNull, and } from "drizzle-orm";
 import { z } from "zod";
+import { generateInboxEmail } from "@/lib/inbox";
 
 const createCompanySchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(255),
@@ -79,7 +80,13 @@ export async function POST(request: NextRequest) {
       ])
     ) as typeof parsed;
 
-    const [company] = await db.insert(companies).values(data).returning();
+    // Auto-generate inbox email
+    const inboxEmail = generateInboxEmail(data.name);
+
+    const [company] = await db
+      .insert(companies)
+      .values({ ...data, inboxEmail, inboxActive: true })
+      .returning();
 
     return Response.json(company, { status: 201 });
   } catch (error) {

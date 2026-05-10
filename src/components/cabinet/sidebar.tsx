@@ -10,6 +10,7 @@ import {
   LogOut,
   Shield,
   Eye,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ const nav = [
 ];
 
 const adminNav = [
+  { label: "Vue pratique", href: "/admin/practice", icon: BarChart3 },
   { label: "Journal d'audit", href: "/admin/audit", icon: Shield },
   { label: "Journal d'accès", href: "/admin/access", icon: Eye },
 ];

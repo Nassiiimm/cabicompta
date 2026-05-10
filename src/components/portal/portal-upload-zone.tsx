@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Upload, FileText, X, Loader2, Check, Camera } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Upload, FileText, X, Loader2, Check, Camera, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MobileScanner } from "./mobile-scanner";
 
 export function PortalUploadZone({ companyId }: { companyId: string }) {
   const [dragActive, setDragActive] = useState(false);
@@ -10,6 +11,19 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [uploaded, setUploaded] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
+  const [hasCamera, setHasCamera] = useState(false);
+
+  // Detect camera availability
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.mediaDevices?.enumerateDevices) {
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        if (devices.some((d) => d.kind === "videoinput")) {
+          setHasCamera(true);
+        }
+      }).catch(() => {});
+    }
+  }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -69,6 +83,15 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
 
   return (
     <div className="space-y-2">
+      {showScanner && (
+        <MobileScanner
+          onCapture={(file) => {
+            setFiles((prev) => [...prev, file]);
+            setShowScanner(false);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
       <div
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -86,12 +109,22 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
             <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.csv" onChange={handleInput} />
           </label>
         </p>
-        <div className="mt-3 sm:hidden">
+        <div className="mt-3 sm:hidden flex items-center justify-center gap-4">
           <label className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 cursor-pointer">
             <Camera className="size-4" />
             Photo
             <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleInput} />
           </label>
+          {hasCamera && (
+            <button
+              type="button"
+              onClick={() => setShowScanner(true)}
+              className="inline-flex items-center gap-1.5 text-sm underline underline-offset-4 cursor-pointer"
+            >
+              <ScanLine className="size-4" />
+              Scanner
+            </button>
+          )}
         </div>
       </div>
 

@@ -18,6 +18,7 @@ import { GenerateDeadlinesButton } from "./generate-deadlines-button";
 import { InviteClientButton } from "./invite-client";
 import { AssignStaff } from "./assign-staff";
 import { TimeTracker } from "./time-tracker";
+import { KycSection } from "./kyc-section";
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Actif",
@@ -100,6 +101,9 @@ export default async function ClientDetailPage({
 
       {/* Time tracking */}
       <TimeTracker companyId={client.id} />
+
+      {/* KYC / Conformité */}
+      <KycSection companyId={client.id} kycVerified={client.kycVerified} conflictCheck={client.conflictCheck} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
