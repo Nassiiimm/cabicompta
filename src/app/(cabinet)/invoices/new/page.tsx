@@ -56,6 +56,31 @@ export default function NewInvoicePage() {
         if (Array.isArray(data)) setClients(data);
       })
       .catch(() => {});
+
+    // Prefill from time-entry conversion
+    try {
+      const raw = sessionStorage.getItem("invoice-prefill");
+      if (raw) {
+        const prefill = JSON.parse(raw) as {
+          companyId: string;
+          items: { description: string; quantity: number; unitPrice: number; amount: number }[];
+        };
+        sessionStorage.removeItem("invoice-prefill");
+        if (prefill.companyId) setCompanyId(prefill.companyId);
+        if (prefill.items?.length) {
+          setItems(
+            prefill.items.map((item) => ({
+              id: generateTempId(),
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+            }))
+          );
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
   }, []);
 
   const addItem = useCallback(() => {

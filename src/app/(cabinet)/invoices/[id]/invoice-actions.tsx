@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Send, CheckCircle, Trash2, Loader2, FileDown, Link2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface InvoiceActionsProps {
   invoiceId: string;
@@ -22,7 +23,15 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (res.ok) router.refresh();
+      if (res.ok) {
+        const statusLabels: Record<string, string> = {
+          SENT: "Facture envoyée",
+          PAID: "Facture payée",
+          CANCELLED: "Facture archivée",
+        };
+        toast.success(statusLabels[newStatus] ?? "Statut mis à jour");
+        router.refresh();
+      }
     } catch {
     } finally {
       setLoading(null);
@@ -34,7 +43,10 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
     setLoading("DELETE");
     try {
       const res = await fetch(`/api/invoices/${invoiceId}`, { method: "DELETE" });
-      if (res.ok) router.push("/invoices");
+      if (res.ok) {
+        toast.success("Facture archivée");
+        router.push("/invoices");
+      }
     } catch {
     } finally {
       setLoading(null);
@@ -54,7 +66,7 @@ export function InvoiceActions({ invoiceId, status }: InvoiceActionsProps) {
       if (res.ok) {
         const { paymentUrl } = await res.json();
         await navigator.clipboard.writeText(paymentUrl);
-        alert("Lien de paiement copié dans le presse-papiers");
+        toast.success("Lien de paiement copié dans le presse-papiers");
       }
     } catch {
     } finally {

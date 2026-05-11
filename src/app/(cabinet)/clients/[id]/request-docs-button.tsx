@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function RequestDocsButton({
   companyId,
@@ -28,7 +29,10 @@ export function RequestDocsButton({
           link: "/portal",
         }),
       });
-      if (res.ok) setSent(true);
+      if (res.ok) {
+        setSent(true);
+        toast.success("Notification envoyée");
+      }
     } catch {
       // silently fail
     } finally {

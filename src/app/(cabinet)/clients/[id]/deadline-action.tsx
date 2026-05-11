@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export function DeadlineAction({
   deadlineId,
@@ -29,6 +30,7 @@ export function DeadlineAction({
       });
 
       if (res.ok) {
+        toast.success("Échéance marquée comme produite");
         router.refresh();
       }
     } catch {

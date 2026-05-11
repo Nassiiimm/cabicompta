@@ -1,44 +1,18 @@
-import Link from "next/link";
 import { db } from "@/lib/db";
 import { documents, companies, users } from "@/lib/db/schema";
 import { desc, eq, ilike, and, isNull } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
 import { FileText, Upload } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { DocumentsActions } from "./documents-actions";
 import { DocumentSearch } from "./document-search";
 import { DocumentFilters } from "./document-filters";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  BANK_STATEMENT: "Relevé bancaire",
-  INVOICE: "Facture",
-  TAX_NOTICE: "Avis de cotisation",
-  FINANCIAL_STATEMENT: "État financier",
-  TPS_TVQ: "TPS/TVQ",
-  CORPORATE: "Corporatif",
-  CONTRACT: "Contrat",
-  RECEIPT: "Reçu",
-  OTHER: "Autre",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "En attente",
-  PROCESSED: "Traité",
-  REJECTED: "Rejeté",
-};
-
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  PENDING: "outline",
-  PROCESSED: "default",
-  REJECTED: "destructive",
-};
+import { DocumentListActions } from "./document-list-actions";
 
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; companyId?: string }>;
 }) {
-  const { q, status } = await searchParams;
+  const { q, status, companyId } = await searchParams;
 
   const filters = [isNull(documents.deletedAt)];
 
@@ -49,6 +23,10 @@ export default async function DocumentsPage({
   const validStatuses = ["PENDING", "PROCESSED", "REJECTED"] as const;
   if (status && validStatuses.includes(status as typeof validStatuses[number])) {
     filters.push(eq(documents.status, status as typeof validStatuses[number]));
+  }
+
+  if (companyId) {
+    filters.push(eq(documents.companyId, companyId));
   }
 
   const conditions = and(...filters);
@@ -83,11 +61,11 @@ export default async function DocumentsPage({
       <DocumentSearch defaultValue={q} />
 
       {docs.length === 0 ? (
-        (q || status) ? (
+        (q || status || companyId) ? (
           <div className="text-center py-12 border rounded-lg">
             <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">
-              {q ? `Aucun résultat pour "${q}"` : "Aucun résultat pour ce filtre"}
+              {q ? `Aucun resultat pour "${q}"` : "Aucun resultat pour ce filtre"}
             </p>
           </div>
         ) : (
@@ -97,48 +75,18 @@ export default async function DocumentsPage({
             </div>
             <h3 className="text-base font-medium mb-1">Aucun document</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-xs">
-              Téléversez votre premier document pour commencer à organiser vos fichiers.
+              Televersez votre premier document pour commencer a organiser vos fichiers.
             </p>
             <DocumentsActions />
           </div>
         )
       ) : (
-        <div className="rounded-lg border divide-y">
-          {docs.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <FileText className="size-3.5 text-muted-foreground shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{doc.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doc.companyName ?? "—"}
-                    {doc.fiscalYear ? ` · ${doc.fiscalYear}` : ""}
-                    {" · "}
-                    {doc.uploaderName ?? "—"}
-                    {" · "}
-                    {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("fr-CA") : "—"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
-                <Badge variant="secondary" className="text-[10px]">
-                  {CATEGORY_LABELS[doc.category ?? "OTHER"] ?? doc.category}
-                </Badge>
-                <Badge variant={STATUS_VARIANT[doc.status] ?? "outline"} className="text-[10px]">
-                  {STATUS_LABELS[doc.status] ?? doc.status}
-                </Badge>
-                <a
-                  href={`/api/documents/${doc.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Voir
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
+        <DocumentListActions
+          documents={docs.map((doc) => ({
+            ...doc,
+            createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
+          }))}
+        />
       )}
     </div>
   );

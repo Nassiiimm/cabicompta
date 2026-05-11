@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Clock, Plus } from "lucide-react";
+import { Clock, Plus, Receipt } from "lucide-react";
 
 type Entry = {
   id: string;
@@ -14,10 +15,14 @@ type Entry = {
 };
 
 export function TimeTracker({ companyId }: { companyId: string }) {
+  const router = useRouter();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [hourlyRate, setHourlyRate] = useState(150);
+  const [invoicing, setInvoicing] = useState(false);
 
   useEffect(() => {
     fetch(`/api/time-entries?companyId=${companyId}`)
@@ -72,25 +77,89 @@ export function TimeTracker({ companyId }: { companyId: string }) {
     return h > 0 ? `${h}h${m > 0 ? ` ${m}min` : ""}` : `${m}min`;
   };
 
+  async function handleInvoice() {
+    if (entries.length === 0) return;
+    setInvoicing(true);
+    try {
+      const res = await fetch("/api/time-entries/to-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyId,
+          entryIds: entries.map((e) => e.id),
+          hourlyRate,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        sessionStorage.setItem(
+          "invoice-prefill",
+          JSON.stringify(data)
+        );
+        router.push("/invoices/new?prefill=true");
+      }
+    } catch {
+      // silent
+    } finally {
+      setInvoicing(false);
+    }
+  }
+
   return (
     <div className="rounded-lg border p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Clock className="size-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Temps passé</h3>
+          <h3 className="text-sm font-semibold">Temps passe</h3>
           <span className="text-xs text-muted-foreground">
             ({formatDuration(totalMinutes)} total)
           </span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen(!open)}
-        >
-          <Plus className="size-3 mr-1" />
-          Ajouter
-        </Button>
+        <div className="flex items-center gap-1">
+          {entries.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setInvoiceOpen(!invoiceOpen)}
+            >
+              <Receipt className="size-3 mr-1" />
+              Facturer le temps
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setOpen(!open)}
+          >
+            <Plus className="size-3 mr-1" />
+            Ajouter
+          </Button>
+        </div>
       </div>
+
+      {invoiceOpen && (
+        <div className="space-y-2 mb-3 p-3 bg-muted/30 rounded-md">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">
+              Taux horaire ($)
+            </label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(parseFloat(e.target.value) || 0)}
+              className="w-24 h-8 text-sm"
+            />
+            <Button size="sm" onClick={handleInvoice} disabled={invoicing}>
+              {invoicing ? "Chargement..." : "Generer la facture"}
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {entries.length} entree{entries.length > 1 ? "s" : ""} seront converties en lignes de facture.
+          </p>
+        </div>
+      )}
 
       {open && (
         <form onSubmit={handleSubmit} className="space-y-2 mb-3 p-3 bg-muted/30 rounded-md">

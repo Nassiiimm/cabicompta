@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, X, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export function InviteClientButton({ companyId }: { companyId: string }) {
   const [open, setOpen] = useState(false);
@@ -40,8 +41,10 @@ export function InviteClientButton({ companyId }: { companyId: string }) {
 
       if (data.tempPassword) {
         setResult(data);
+        toast.success("Compte client créé");
       } else {
         setResult({ tempPassword: "", message: "Utilisateur existant associé à la société." });
+        toast.success("Compte client créé");
       }
     } catch {
       setError("Erreur réseau");

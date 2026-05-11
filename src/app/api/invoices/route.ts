@@ -38,14 +38,19 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status");
+    const companyIdFilter = searchParams.get("companyId");
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50"), 200);
     const offset = (page - 1) * limit;
 
-    const conditions = statusFilter &&
-      ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"].includes(statusFilter)
-        ? and(eq(invoices.status, statusFilter as "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED"), isNull(invoices.deletedAt))
-        : isNull(invoices.deletedAt);
+    const filters = [isNull(invoices.deletedAt)];
+    if (statusFilter && ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"].includes(statusFilter)) {
+      filters.push(eq(invoices.status, statusFilter as "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED"));
+    }
+    if (companyIdFilter) {
+      filters.push(eq(invoices.companyId, companyIdFilter));
+    }
+    const conditions = filters.length === 1 ? filters[0] : and(...filters);
 
     const [totalResult] = await db.select({ total: count() }).from(invoices).where(conditions);
 

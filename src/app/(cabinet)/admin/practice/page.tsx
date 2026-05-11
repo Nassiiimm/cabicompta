@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/schema";
 import { sql, eq, and, isNull } from "drizzle-orm";
 import { ExportButton } from "@/components/cabinet/export-button";
+import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
 async function getPracticeData() {
   const now = new Date();
@@ -119,6 +120,47 @@ async function getPracticeData() {
       )
     );
 
+  // Revenue chart data — last 6 months
+  const MONTH_NAMES = ["jan", "fev", "mar", "avr", "mai", "jun", "jul", "aou", "sep", "oct", "nov", "dec"];
+  const revenueData: { month: string; facture: number; encaisse: number }[] = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const label = MONTH_NAMES[d.getMonth()];
+
+    const [factureMonth] = await db
+      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
+      .from(invoices)
+      .where(
+        and(
+          sql`${invoices.status} != 'DRAFT'`,
+          isNull(invoices.deletedAt),
+          sql`extract(year from ${invoices.createdAt}) = ${year}`,
+          sql`extract(month from ${invoices.createdAt}) = ${month}`
+        )
+      );
+
+    const [encaisseMonth] = await db
+      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
+      .from(invoices)
+      .where(
+        and(
+          sql`${invoices.status} = 'PAID'`,
+          isNull(invoices.deletedAt),
+          sql`extract(year from ${invoices.createdAt}) = ${year}`,
+          sql`extract(month from ${invoices.createdAt}) = ${month}`
+        )
+      );
+
+    revenueData.push({
+      month: label,
+      facture: parseFloat(factureMonth?.v ?? "0"),
+      encaisse: parseFloat(encaisseMonth?.v ?? "0"),
+    });
+  }
+
   return {
     totalFacture: parseFloat(totalFacture?.v ?? "0"),
     totalEncaisse: parseFloat(totalEncaisse?.v ?? "0"),
@@ -130,6 +172,7 @@ async function getPracticeData() {
     staffHours,
     kycNotVerified: kycNotVerified?.v ?? 0,
     conflictNotChecked: conflictNotChecked?.v ?? 0,
+    revenueData,
   };
 }
 
@@ -170,6 +213,9 @@ export default async function PracticePage() {
               <p className="text-xs text-muted-foreground mt-0.5">{m.label}</p>
             </div>
           ))}
+        </div>
+        <div className="rounded-lg border p-4 mt-3">
+          <RevenueChart data={data.revenueData} />
         </div>
       </div>
 

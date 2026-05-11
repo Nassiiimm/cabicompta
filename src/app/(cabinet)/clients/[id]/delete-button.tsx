@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function DeleteClientButton({
   clientId,
@@ -32,9 +33,10 @@ export function DeleteClientButton({
         throw new Error(body.error || "Erreur lors de la suppression");
       }
 
+      toast.success("Client archivé");
       router.push("/clients");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur inconnue");
+      toast.error(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }

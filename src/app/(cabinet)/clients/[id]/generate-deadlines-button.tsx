@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function GenerateDeadlinesButton({ companyId }: { companyId: string }) {
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ export function GenerateDeadlinesButton({ companyId }: { companyId: string }) {
       if (res.ok) {
         const data = await res.json();
         setResult(data);
+        toast.success("Échéances générées");
         setTimeout(() => window.location.reload(), 1500);
       }
     } catch {
