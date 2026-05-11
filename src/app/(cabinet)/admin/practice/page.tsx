@@ -7,6 +7,7 @@ import {
   companies,
 } from "@/lib/db/schema";
 import { sql, eq, and, isNull } from "drizzle-orm";
+import { ExportButton } from "@/components/cabinet/export-button";
 
 async function getPracticeData() {
   const now = new Date();
@@ -146,7 +147,14 @@ export default async function PracticePage() {
 
   return (
     <div className="max-w-4xl space-y-8">
-      <h1 className="text-lg font-semibold">Vue pratique</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold">Vue pratique</h1>
+        <div className="flex items-center gap-1">
+          <ExportButton href="/api/export/invoices" label="Factures" />
+          <ExportButton href="/api/export/time-entries" label="Temps" />
+          <ExportButton href="/api/export/clients" label="Clients" />
+        </div>
+      </div>
 
       {/* Revenue */}
       <div>

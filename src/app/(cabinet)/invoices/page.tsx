@@ -9,6 +9,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { InvoiceFilters } from "./invoice-filters";
+import { ExportButton } from "@/components/cabinet/export-button";
 
 function formatCAD(value: string | number): string {
   return new Intl.NumberFormat("fr-CA", {
@@ -97,10 +98,13 @@ export default async function InvoicesPage({
             Facturation et suivi des paiements
           </p>
         </div>
-        <Link href="/invoices/new" className={buttonVariants()}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouvelle facture
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton href="/api/export/invoices" />
+          <Link href="/invoices/new" className={buttonVariants()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle facture
+          </Link>
+        </div>
       </div>
 
       <InvoiceFilters currentStatus={status} />

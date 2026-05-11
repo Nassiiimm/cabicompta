@@ -7,6 +7,7 @@ import { asc, isNull, ilike, or, and, eq } from "drizzle-orm";
 import { Plus, Building2 } from "lucide-react";
 import { ClientSearch } from "./client-search";
 import { ClientFilters } from "./client-filters";
+import { ExportButton } from "@/components/cabinet/export-button";
 
 const statusLabels: Record<string, string> = {
   ACTIVE: "Actif",
@@ -55,10 +56,13 @@ export default async function ClientsPage({
     <div className="max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">Clients</h1>
-        <Link href="/clients/new" className={buttonVariants({ size: "sm" })}>
-          <Plus className="size-3.5 mr-1" />
-          Nouveau
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton href="/api/export/clients" />
+          <Link href="/clients/new" className={buttonVariants({ size: "sm" })}>
+            <Plus className="size-3.5 mr-1" />
+            Nouveau
+          </Link>
+        </div>
       </div>
 
       <ClientFilters currentStatus={status} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ExportButton } from "@/components/cabinet/export-button";
 
 type AuditEntry = {
   id: string;
@@ -29,10 +30,15 @@ export default function AuditLogsPage() {
 
   return (
     <div className="max-w-5xl space-y-4">
-      <h1 className="text-lg font-semibold">Journal d'audit</h1>
-      <p className="text-sm text-muted-foreground">
-        Historique des modifications — Conformité Ordre des CPA
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold">Journal d'audit</h1>
+          <p className="text-sm text-muted-foreground">
+            Historique des modifications — Conformité Ordre des CPA
+          </p>
+        </div>
+        <ExportButton href="/api/export/audit-logs" />
+      </div>
 
       <div className="rounded-lg border">
         {loading ? (
