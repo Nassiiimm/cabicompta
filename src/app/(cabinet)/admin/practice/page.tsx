@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   invoices,
@@ -5,8 +6,10 @@ import {
   timeEntries,
   users,
   companies,
+  workflows,
+  workflowTasks,
 } from "@/lib/db/schema";
-import { sql, eq, and, isNull } from "drizzle-orm";
+import { sql, eq, and, isNull, gte } from "drizzle-orm";
 import { ExportButton } from "@/components/cabinet/export-button";
 import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
@@ -120,46 +123,51 @@ async function getPracticeData() {
       )
     );
 
-  // Revenue chart data — last 6 months
+  // Revenue chart — 1 seule requête GROUP BY
   const MONTH_NAMES = ["jan", "fev", "mar", "avr", "mai", "jun", "jul", "aou", "sep", "oct", "nov", "dec"];
-  const revenueData: { month: string; facture: number; encaisse: number }[] = [];
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
+  const revenueRows = await db
+    .select({
+      year: sql<number>`extract(year from ${invoices.issuedAt})::int`,
+      month: sql<number>`extract(month from ${invoices.issuedAt})::int`,
+      facture: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} != 'DRAFT'), 0)`,
+      encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
+    })
+    .from(invoices)
+    .where(and(isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
+    .groupBy(sql`extract(year from ${invoices.issuedAt})`, sql`extract(month from ${invoices.issuedAt})`)
+    .orderBy(sql`extract(year from ${invoices.issuedAt})`, sql`extract(month from ${invoices.issuedAt})`);
+
+  const revenueMap = new Map(revenueRows.map((r) => [`${r.year}-${r.month}`, r]));
+  const revenueData: { month: string; facture: number; encaisse: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const label = MONTH_NAMES[d.getMonth()];
-
-    const [factureMonth] = await db
-      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
-      .from(invoices)
-      .where(
-        and(
-          sql`${invoices.status} != 'DRAFT'`,
-          isNull(invoices.deletedAt),
-          sql`extract(year from ${invoices.createdAt}) = ${year}`,
-          sql`extract(month from ${invoices.createdAt}) = ${month}`
-        )
-      );
-
-    const [encaisseMonth] = await db
-      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
-      .from(invoices)
-      .where(
-        and(
-          sql`${invoices.status} = 'PAID'`,
-          isNull(invoices.deletedAt),
-          sql`extract(year from ${invoices.createdAt}) = ${year}`,
-          sql`extract(month from ${invoices.createdAt}) = ${month}`
-        )
-      );
-
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    const row = revenueMap.get(key);
     revenueData.push({
-      month: label,
-      facture: parseFloat(factureMonth?.v ?? "0"),
-      encaisse: parseFloat(encaisseMonth?.v ?? "0"),
+      month: MONTH_NAMES[d.getMonth()],
+      facture: parseFloat(row?.facture ?? "0"),
+      encaisse: parseFloat(row?.encaisse ?? "0"),
     });
   }
+
+  // Charge workflows par comptable
+  const workflowLoad = await db
+    .select({
+      name: users.name,
+      activeWorkflows: sql<number>`count(distinct ${workflows.id}) filter (where ${workflows.status} IN ('NOT_STARTED','IN_PROGRESS'))::int`,
+      overdueTasks: sql<number>`count(${workflowTasks.id}) filter (where ${workflowTasks.dueDate} < current_date and ${workflowTasks.status} NOT IN ('DONE','SKIPPED'))::int`,
+    })
+    .from(users)
+    .leftJoin(workflows, eq(workflows.assignedTo, users.id))
+    .leftJoin(workflowTasks, and(
+      eq(workflowTasks.workflowId, workflows.id),
+      eq(workflowTasks.assignedTo, users.id)
+    ))
+    .where(sql`${users.role} IN ('ADMIN', 'STAFF')`)
+    .groupBy(users.id, users.name)
+    .orderBy(users.name);
 
   return {
     totalFacture: parseFloat(totalFacture?.v ?? "0"),
@@ -170,6 +178,7 @@ async function getPracticeData() {
     tpsTvq: tpsTvqCount?.v ?? 0,
     overdue: overdueCount?.v ?? 0,
     staffHours,
+    workflowLoad,
     kycNotVerified: kycNotVerified?.v ?? 0,
     conflictNotChecked: conflictNotChecked?.v ?? 0,
     revenueData,
@@ -184,6 +193,7 @@ function formatCurrency(amount: number) {
 }
 
 export default async function PracticePage() {
+  await requireAdmin();
   const data = await getPracticeData();
 
   const monthName = new Date().toLocaleDateString("fr-CA", { month: "long", year: "numeric" });
@@ -242,7 +252,7 @@ export default async function PracticePage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Staff Workload */}
         <div>
-          <h2 className="text-sm font-semibold mb-3">Charge de travail — {monthName}</h2>
+          <h2 className="text-sm font-semibold mb-3">Temps saisi — {monthName}</h2>
           <div className="rounded-lg border divide-y">
             {data.staffHours.length === 0 ? (
               <p className="text-sm text-muted-foreground p-4 text-center">Aucun employé</p>
@@ -256,6 +266,32 @@ export default async function PracticePage() {
                   </div>
                 );
               })
+            )}
+          </div>
+        </div>
+
+        {/* Workflow workload */}
+        <div>
+          <h2 className="text-sm font-semibold mb-3">Charge workflows</h2>
+          <div className="rounded-lg border divide-y">
+            {data.workflowLoad.length === 0 ? (
+              <p className="text-sm text-muted-foreground p-4 text-center">Aucun employé</p>
+            ) : (
+              data.workflowLoad.map((s) => (
+                <div key={s.name} className="flex items-center justify-between px-4 py-2.5">
+                  <p className="text-sm font-medium">{s.name}</p>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-muted-foreground">
+                      {s.activeWorkflows} workflow{s.activeWorkflows !== 1 ? "s" : ""}
+                    </span>
+                    {s.overdueTasks > 0 && (
+                      <span className="text-amber-600 font-medium">
+                        {s.overdueTasks} tâche{s.overdueTasks !== 1 ? "s" : ""} en retard
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

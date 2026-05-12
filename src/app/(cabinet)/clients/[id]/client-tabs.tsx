@@ -22,6 +22,7 @@ import {
   Upload,
   ChevronDown,
   ChevronRight,
+  GitBranch,
 } from "lucide-react";
 import { DeleteClientButton } from "./delete-button";
 import { RequestDocsButton } from "./request-docs-button";
@@ -32,12 +33,14 @@ import { TimeTracker } from "./time-tracker";
 import { KycSection } from "./kyc-section";
 import { DeadlineAction } from "./deadline-action";
 import { DocumentComments } from "@/components/cabinet/document-comments";
+import { WorkflowTab } from "./workflow-tab";
 
 const TABS = [
   { key: "apercu", label: "Aperçu", icon: LayoutDashboard },
   { key: "documents", label: "Documents", icon: FileText },
   { key: "factures", label: "Factures", icon: Receipt },
   { key: "echeances", label: "Échéances", icon: CalendarClock },
+  { key: "workflows", label: "Workflows", icon: GitBranch },
   { key: "temps", label: "Temps", icon: Clock },
   { key: "conformite", label: "Conformité", icon: ShieldCheck },
 ] as const;
@@ -204,6 +207,7 @@ export function ClientTabs({ client, deadlines }: ClientTabsProps) {
           keyDeadlines={keyDeadlines}
         />
       )}
+      {activeTab === "workflows" && <WorkflowTab companyId={client.id} />}
       {activeTab === "temps" && <TempsTab companyId={client.id} />}
       {activeTab === "conformite" && (
         <ConformiteTab

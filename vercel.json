@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/fiscal/check-deadlines",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/fiscal/check-invoices",
+      "schedule": "5 13 * * *"
+    },
+    {
+      "path": "/api/fiscal/auto-reminders",
+      "schedule": "10 13 * * *"
+    },
+    {
+      "path": "/api/workflows/check-overdue",
+      "schedule": "15 13 * * *"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import {
   BarChart3,
   UserCog,
   User,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -23,18 +24,20 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const nav = [
   { label: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
   { label: "Clients", href: "/clients", icon: Users },
+  { label: "Workflows", href: "/workflows", icon: GitBranch },
   { label: "Documents", href: "/documents", icon: FileText },
   { label: "Factures", href: "/invoices", icon: Receipt },
 ];
 
 const adminNav = [
   { label: "Vue pratique", href: "/admin/practice", icon: BarChart3 },
+  { label: "Modèles workflows", href: "/admin/workflow-templates", icon: GitBranch },
   { label: "Journal d'audit", href: "/admin/audit", icon: Shield },
   { label: "Journal d'accès", href: "/admin/access", icon: Eye },
   { label: "Équipe", href: "/admin/staff", icon: UserCog },
 ];
 
-export function Sidebar() {
+export function Sidebar({ role }: { role: string }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -72,7 +75,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="px-2 pb-1">
+      {role === "ADMIN" && <div className="px-2 pb-1">
         <p className="px-3 pt-3 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
           Admin
         </p>
@@ -94,7 +97,7 @@ export function Sidebar() {
             </Link>
           );
         })}
-      </div>
+      </div>}
 
       <div className="p-2 border-t space-y-0.5">
         <Link

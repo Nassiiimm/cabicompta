@@ -77,6 +77,9 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
         <p className="text-sm font-medium text-green-900 dark:text-green-200">
           {uploaded} fichier{uploaded > 1 ? "s" : ""} envoyé{uploaded > 1 ? "s" : ""}
         </p>
+        <p className="text-xs text-green-700 dark:text-green-400 mt-1">
+          Votre comptable sera notifié dès réception.
+        </p>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { documents, companies, users } from "@/lib/db/schema";
 import { desc, eq, ilike, and, isNull } from "drizzle-orm";
@@ -12,6 +13,7 @@ export default async function DocumentsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; companyId?: string }>;
 }) {
+  await requireStaff();
   const { q, status, companyId } = await searchParams;
 
   const filters = [isNull(documents.deletedAt)];

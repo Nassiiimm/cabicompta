@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +49,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireStaff();
   const { status } = await searchParams;
   let invoiceList: {
     id: string;
@@ -93,10 +95,7 @@ export default async function InvoicesPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Factures</h1>
-          <p className="text-muted-foreground mt-1">
-            Facturation et suivi des paiements
-          </p>
+          <h1 className="text-lg font-semibold">Factures</h1>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton href="/api/export/invoices" />

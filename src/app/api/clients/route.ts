@@ -5,6 +5,7 @@ import { companies } from "@/lib/db/schema";
 import { ilike, or, asc, isNull, and } from "drizzle-orm";
 import { z } from "zod";
 import { generateInboxEmail } from "@/lib/inbox";
+import { csrfGuard } from "@/lib/csrf";
 
 const createCompanySchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(255),
@@ -67,6 +68,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrf = csrfGuard(request);
+    if (csrf) return csrf;
     await requireStaff();
 
     const body = await request.json();

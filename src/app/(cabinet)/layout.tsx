@@ -9,17 +9,20 @@ export default async function CabinetLayout({
   children: React.ReactNode;
 }) {
   const user = await getCurrentUser();
-  if (user?.role === "CLIENT") {
+  if (!user) {
+    redirect("/login");
+  }
+  if (user.role === "CLIENT") {
     redirect("/portal");
   }
 
   return (
     <div className="flex min-h-screen">
       <div className="hidden md:flex">
-        <Sidebar />
+        <Sidebar role={user.role} />
       </div>
       <div className="flex-1 min-w-0 flex flex-col">
-        <MobileNav />
+        <MobileNav role={user.role} />
         <main className="flex-1 p-4 sm:p-6 md:p-8">{children}</main>
       </div>
     </div>

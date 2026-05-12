@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
@@ -26,6 +27,7 @@ export default async function ClientsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
+  await requireStaff();
   const { q, status } = await searchParams;
 
   const filters = [isNull(companies.deletedAt)];

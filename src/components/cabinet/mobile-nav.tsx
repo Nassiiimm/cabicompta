@@ -35,7 +35,7 @@ const adminNav = [
   { label: "Équipe", href: "/admin/staff", icon: UserCog },
 ];
 
-export function MobileNav() {
+export function MobileNav({ role }: { role: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -103,7 +103,7 @@ export function MobileNav() {
               })}
             </nav>
 
-            <div className="px-2 pb-1">
+            {role === "ADMIN" && <div className="px-2 pb-1">
               <p className="px-3 pt-3 pb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
                 Admin
               </p>
@@ -126,7 +126,7 @@ export function MobileNav() {
                   </Link>
                 );
               })}
-            </div>
+            </div>}
 
             <div className="p-2 border-t space-y-0.5">
               <Link

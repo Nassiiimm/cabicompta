@@ -78,6 +78,20 @@ export const fiscalStatus = pgEnum("fiscal_status", [
   "OVERDUE",
 ]);
 
+export const workflowStatus = pgEnum("workflow_status", [
+  "NOT_STARTED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+]);
+
+export const workflowTaskStatus = pgEnum("workflow_task_status", [
+  "TODO",
+  "IN_PROGRESS",
+  "DONE",
+  "SKIPPED",
+]);
+
 // ═══════════════════════════════════════════════════════════
 // Tables
 // ═══════════════════════════════════════════════════════════
@@ -317,6 +331,69 @@ export const kycDocuments = pgTable("kyc_documents", {
 });
 
 // ═══════════════════════════════════════════════════════════
+// Workflows — gestion de la production du cabinet
+// ═══════════════════════════════════════════════════════════
+
+export const workflowTemplates = pgTable("workflow_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const workflowTemplateTasks = pgTable("workflow_template_tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => workflowTemplates.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  order: integer("order").notNull().default(0),
+  estimatedMinutes: integer("estimated_minutes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const workflows = pgTable("workflows", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "restrict" }),
+  templateId: uuid("template_id").references(() => workflowTemplates.id, {
+    onDelete: "set null",
+  }),
+  name: varchar("name", { length: 255 }).notNull(),
+  status: workflowStatus("status").notNull().default("NOT_STARTED"),
+  assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
+  dueDate: date("due_date"),
+  fiscalPeriod: varchar("fiscal_period", { length: 50 }),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const workflowTasks = pgTable("workflow_tasks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowId: uuid("workflow_id")
+    .notNull()
+    .references(() => workflows.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  order: integer("order").notNull().default(0),
+  assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
+  status: workflowTaskStatus("status").notNull().default("TODO"),
+  blockedBy: uuid("blocked_by"), // FK auto-référentielle ajoutée via ALTER TABLE
+  dueDate: date("due_date"),
+  completedAt: timestamp("completed_at"),
+  completedBy: uuid("completed_by").references(() => users.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  estimatedMinutes: integer("estimated_minutes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ═══════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════
 export type User = typeof users.$inferSelect;
@@ -332,3 +409,7 @@ export type DocumentComment = typeof documentComments.$inferSelect;
 export type TimeEntry = typeof timeEntries.$inferSelect;
 export type AccessLog = typeof accessLogs.$inferSelect;
 export type KycDocument = typeof kycDocuments.$inferSelect;
+export type WorkflowTemplate = typeof workflowTemplates.$inferSelect;
+export type WorkflowTemplateTask = typeof workflowTemplateTasks.$inferSelect;
+export type Workflow = typeof workflows.$inferSelect;
+export type WorkflowTask = typeof workflowTasks.$inferSelect;

@@ -11,6 +11,7 @@ import { requireAuth, requireStaff } from "@/lib/auth";
 import { uploadFile } from "@/lib/supabase/storage";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { logAudit } from "@/lib/audit";
+import { csrfGuard } from "@/lib/csrf";
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,6 +124,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const csrf = csrfGuard(request);
+    if (csrf) return csrf;
     if (!rateLimitByIp(request, 20, 60000)) {
       return Response.json({ error: "Trop de requêtes" }, { status: 429 });
     }
@@ -166,6 +169,32 @@ export async function POST(request: NextRequest) {
     if (file.size > 10 * 1024 * 1024) {
       return Response.json(
         { error: "Le fichier dépasse 10 Mo" },
+        { status: 400 }
+      );
+    }
+
+    // Whitelist MIME types — seuls les types documentaires sont acceptés
+    const ALLOWED_MIME_TYPES = new Set([
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/tiff",
+      "image/heic",
+      "image/heif",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
+      "text/csv",
+    ]);
+
+    if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      return Response.json(
+        { error: "Type de fichier non autorisé. Formats acceptés : PDF, images, Word, Excel, CSV." },
         { status: 400 }
       );
     }

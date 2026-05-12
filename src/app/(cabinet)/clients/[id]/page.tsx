@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { requireStaff } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { companies, fiscalDeadlines } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import { ClientTabs } from "./client-tabs";
 import { Suspense } from "react";
@@ -29,12 +30,13 @@ export default async function ClientDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireStaff();
   const { id } = await params;
 
   const [client] = await db
     .select()
     .from(companies)
-    .where(eq(companies.id, id))
+    .where(and(eq(companies.id, id), isNull(companies.deletedAt)))
     .limit(1);
 
   if (!client) {

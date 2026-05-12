@@ -1,18 +1,22 @@
 import Link from "next/link";
+import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   companies,
   documents,
   invoices,
   fiscalDeadlines,
+  workflowTasks,
+  workflows,
 } from "@/lib/db/schema";
-import { count, eq, sql, desc, and, lte, isNull } from "drizzle-orm";
-import { ArrowRight, CheckCircle2, AlertTriangle, FileText, CalendarClock, Receipt } from "lucide-react";
+import { count, eq, sql, desc, and, lte, isNull, gte, lt, isNotNull } from "drizzle-orm";
+import { ArrowRight, CheckCircle2, AlertTriangle, FileText, CalendarClock, Receipt, GitBranch } from "lucide-react";
 import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
-async function getStats() {
-  const today = new Date();
-  const in7Days = new Date(today);
+async function getStats(userId: string) {
+  const todayDate = new Date();
+  const todayStr = todayDate.toISOString().split("T")[0];
+  const in7Days = new Date(todayDate);
   in7Days.setDate(in7Days.getDate() + 7);
 
   const [clients] = await db.select({ v: count() }).from(companies).where(eq(companies.status, "ACTIVE"));
@@ -33,6 +37,20 @@ async function getStats() {
     );
   const weekDeadlineCount = weekDeadlines[0]?.v ?? 0;
 
+  const [overdueTasksResult] = await db
+    .select({ v: sql<number>`count(*)::int` })
+    .from(workflowTasks)
+    .innerJoin(workflows, eq(workflowTasks.workflowId, workflows.id))
+    .where(
+      and(
+        eq(workflowTasks.assignedTo, userId),
+        isNotNull(workflowTasks.dueDate),
+        lt(workflowTasks.dueDate, todayStr),
+        sql`${workflowTasks.status} NOT IN ('DONE', 'SKIPPED')`,
+        sql`${workflows.status} != 'CANCELLED'`
+      )
+    );
+
   const recentDocs = await db
     .select({
       id: documents.id,
@@ -40,6 +58,7 @@ async function getStats() {
       status: documents.status,
       createdAt: documents.createdAt,
       companyName: companies.name,
+      companyId: documents.companyId,
     })
     .from(documents)
     .leftJoin(companies, eq(documents.companyId, companies.id))
@@ -59,44 +78,47 @@ async function getStats() {
     .orderBy(fiscalDeadlines.dueDate)
     .limit(5);
 
-  // Revenue chart data — last 6 months
+  // Revenue chart data — last 6 months (1 query avec GROUP BY)
   const MONTH_NAMES = ["jan", "fev", "mar", "avr", "mai", "jun", "jul", "aou", "sep", "oct", "nov", "dec"];
+
+  const sixMonthsAgo = new Date(todayDate.getFullYear(), todayDate.getMonth() - 5, 1);
+
+  const revenueRows = await db
+    .select({
+      year: sql<number>`extract(year from ${invoices.issuedAt})::int`,
+      month: sql<number>`extract(month from ${invoices.issuedAt})::int`,
+      facture: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} != 'DRAFT'), 0)`,
+      encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
+    })
+    .from(invoices)
+    .where(
+      and(
+        isNull(invoices.deletedAt),
+        gte(invoices.issuedAt, sixMonthsAgo)
+      )
+    )
+    .groupBy(
+      sql`extract(year from ${invoices.issuedAt})`,
+      sql`extract(month from ${invoices.issuedAt})`
+    )
+    .orderBy(
+      sql`extract(year from ${invoices.issuedAt})`,
+      sql`extract(month from ${invoices.issuedAt})`
+    );
+
+  const revenueMap = new Map(
+    revenueRows.map((r) => [`${r.year}-${r.month}`, r])
+  );
+
   const revenueData: { month: string; facture: number; encaisse: number }[] = [];
-
   for (let i = 5; i >= 0; i--) {
-    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const label = MONTH_NAMES[d.getMonth()];
-
-    const [facture] = await db
-      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
-      .from(invoices)
-      .where(
-        and(
-          sql`${invoices.status} != 'DRAFT'`,
-          isNull(invoices.deletedAt),
-          sql`extract(year from ${invoices.createdAt}) = ${year}`,
-          sql`extract(month from ${invoices.createdAt}) = ${month}`
-        )
-      );
-
-    const [encaisse] = await db
-      .select({ v: sql<string>`coalesce(sum(${invoices.total}), 0)` })
-      .from(invoices)
-      .where(
-        and(
-          sql`${invoices.status} = 'PAID'`,
-          isNull(invoices.deletedAt),
-          sql`extract(year from ${invoices.createdAt}) = ${year}`,
-          sql`extract(month from ${invoices.createdAt}) = ${month}`
-        )
-      );
-
+    const d = new Date(todayDate.getFullYear(), todayDate.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    const row = revenueMap.get(key);
     revenueData.push({
-      month: label,
-      facture: parseFloat(facture?.v ?? "0"),
-      encaisse: parseFloat(encaisse?.v ?? "0"),
+      month: MONTH_NAMES[d.getMonth()],
+      facture: parseFloat(row?.facture ?? "0"),
+      encaisse: parseFloat(row?.encaisse ?? "0"),
     });
   }
 
@@ -107,6 +129,7 @@ async function getStats() {
     unpaidInvoices: unpaidInvoicesResult?.v ?? 0,
     upcomingDeadlines: allDeadlines?.v ?? 0,
     weekDeadlineCount,
+    overdueMyTasks: overdueTasksResult?.v ?? 0,
     recentDocs,
     nextDeadlines: upcomingDeadlines,
     revenueData,
@@ -114,7 +137,8 @@ async function getStats() {
 }
 
 export default async function DashboardPage() {
-  const data = await getStats();
+  const user = await requireStaff();
+  const data = await getStats(user.id);
 
   const todoItems = [
     {
@@ -140,6 +164,14 @@ export default async function DashboardPage() {
       icon: Receipt,
       color: "text-red-600 dark:text-red-400",
       bg: "bg-red-50 dark:bg-red-950",
+    },
+    {
+      count: data.overdueMyTasks,
+      label: `tâche${data.overdueMyTasks > 1 ? "s" : ""} workflow en retard`,
+      href: "/workflows",
+      icon: GitBranch,
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-50 dark:bg-purple-950",
     },
   ].filter((item) => item.count > 0);
 
@@ -222,7 +254,11 @@ export default async function DashboardPage() {
               <p className="text-sm text-muted-foreground p-4 text-center">Aucun document</p>
             ) : (
               data.recentDocs.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between px-4 py-2.5">
+                <Link
+                  key={doc.id}
+                  href={`/documents?companyId=${doc.companyId}`}
+                  className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors"
+                >
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{doc.fileName}</p>
                     <p className="text-xs text-muted-foreground">{doc.companyName}</p>
@@ -234,7 +270,7 @@ export default async function DashboardPage() {
                   }`}>
                     {doc.status === "PROCESSED" ? "Traité" : "En attente"}
                   </span>
-                </div>
+                </Link>
               ))
             )}
           </div>

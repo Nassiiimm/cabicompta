@@ -1,5 +1,6 @@
 import { requireStaff } from "@/lib/auth";
 import { db, getDb } from "@/lib/db";
+import { csrfGuard } from "@/lib/csrf";
 import { invoices, invoiceItems, companies } from "@/lib/db/schema";
 import { eq, desc, and, isNull, count } from "drizzle-orm";
 import { z } from "zod";
@@ -95,6 +96,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const csrf = csrfGuard(request as Parameters<typeof csrfGuard>[0]);
+    if (csrf) return csrf;
     const user = await requireStaff();
 
     const body = await request.json();
