@@ -9,18 +9,7 @@ import { Plus, Building2 } from "lucide-react";
 import { ClientSearch } from "./client-search";
 import { ClientFilters } from "./client-filters";
 import { ExportButton } from "@/components/cabinet/export-button";
-
-const statusLabels: Record<string, string> = {
-  ACTIVE: "Actif",
-  INACTIVE: "Inactif",
-  ARCHIVED: "Archivé",
-};
-
-const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  ACTIVE: "default",
-  INACTIVE: "secondary",
-  ARCHIVED: "destructive",
-};
+import { getTranslations } from "next-intl/server";
 
 export default async function ClientsPage({
   searchParams,
@@ -28,7 +17,20 @@ export default async function ClientsPage({
   searchParams: Promise<{ q?: string; status?: string }>;
 }) {
   await requireStaff();
+  const t = await getTranslations("clients");
   const { q, status } = await searchParams;
+
+  const statusLabels: Record<string, string> = {
+    ACTIVE: t("active"),
+    INACTIVE: t("inactive"),
+    ARCHIVED: t("archived"),
+  };
+
+  const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    ACTIVE: "default",
+    INACTIVE: "secondary",
+    ARCHIVED: "destructive",
+  };
 
   const filters = [isNull(companies.deletedAt)];
 
@@ -57,12 +59,12 @@ export default async function ClientsPage({
   return (
     <div className="max-w-4xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Clients</h1>
+        <h1 className="text-lg font-semibold">{t("title")}</h1>
         <div className="flex items-center gap-2">
           <ExportButton href="/api/export/clients" />
           <Link href="/clients/new" className={buttonVariants({ size: "sm" })}>
             <Plus className="size-3.5 mr-1" />
-            Nouveau
+            {t("new")}
           </Link>
         </div>
       </div>
@@ -74,7 +76,7 @@ export default async function ClientsPage({
         <div className="text-center py-12 border rounded-lg">
           <Building2 className="size-6 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {q ? `Aucun résultat pour "${q}"` : "Aucun client"}
+            {q ? t("noClientsSearch", { q }) : t("noClients")}
           </p>
         </div>
       ) : (

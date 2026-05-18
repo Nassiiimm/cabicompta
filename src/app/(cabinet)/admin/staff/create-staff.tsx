@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, X, Copy, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function CreateStaffForm() {
+  const t = useTranslations("admin.team");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
@@ -44,7 +47,7 @@ export function CreateStaffForm() {
 
       setResult(data);
     } catch {
-      setError("Erreur reseau");
+      setError(tc("error"));
     } finally {
       setLoading(false);
     }
@@ -62,7 +65,7 @@ export function CreateStaffForm() {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <UserPlus className="size-3.5 mr-1.5" />
-        Creer un comptable
+        {t("create")}
       </Button>
     );
   }
@@ -70,7 +73,7 @@ export function CreateStaffForm() {
   return (
     <div className="rounded-lg border p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Creer un membre de l&apos;equipe</h3>
+        <h3 className="text-sm font-semibold">{t("createTitle")}</h3>
         <button
           onClick={() => {
             setOpen(false);
@@ -106,7 +109,7 @@ export function CreateStaffForm() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            Communiquez ces identifiants au nouveau membre.
+            {t("shareCredentials")}
           </p>
           <Button
             size="sm"
@@ -117,7 +120,7 @@ export function CreateStaffForm() {
               window.location.reload();
             }}
           >
-            Fermer
+            {tc("close")}
           </Button>
         </div>
       ) : (
@@ -126,7 +129,7 @@ export function CreateStaffForm() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="staff-name" className="text-xs">
-                Nom
+                {t("name")}
               </Label>
               <Input
                 id="staff-name"
@@ -138,7 +141,7 @@ export function CreateStaffForm() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="staff-email" className="text-xs">
-                Courriel
+                {t("email")}
               </Label>
               <Input
                 id="staff-email"
@@ -153,13 +156,13 @@ export function CreateStaffForm() {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label htmlFor="staff-password" className="text-xs">
-                Mot de passe
+                {t("password")}
               </Label>
               <Input
                 id="staff-password"
                 name="password"
                 type="password"
-                placeholder="8 caracteres minimum"
+                placeholder={t("passwordHint")}
                 minLength={8}
                 required
                 className="h-8 text-sm"
@@ -167,7 +170,7 @@ export function CreateStaffForm() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="staff-role" className="text-xs">
-                Role
+                {t("role")}
               </Label>
               <select
                 id="staff-role"
@@ -175,14 +178,14 @@ export function CreateStaffForm() {
                 defaultValue="STAFF"
                 className="h-8 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
-                <option value="STAFF">Comptable</option>
-                <option value="INTERN">Stagiaire</option>
-                <option value="ADMIN">Administrateur</option>
+                <option value="STAFF">{t("roles.STAFF")}</option>
+                <option value="INTERN">{t("roles.INTERN")}</option>
+                <option value="ADMIN">{t("roles.ADMIN")}</option>
               </select>
             </div>
           </div>
           <Button type="submit" size="sm" disabled={loading}>
-            {loading ? "Creation..." : "Creer le compte"}
+            {loading ? t("submitting") : t("submit")}
           </Button>
         </form>
       )}

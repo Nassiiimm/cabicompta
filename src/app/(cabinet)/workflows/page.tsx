@@ -2,27 +2,27 @@ import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { workflows, companies, users, workflowTasks } from "@/lib/db/schema";
 import { eq, desc, count, and, sql } from "drizzle-orm";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import { GitBranch } from "lucide-react";
 import { WorkflowsView } from "./workflows-view";
-
-const STATUS_LABELS: Record<string, string> = {
-  NOT_STARTED: "Non démarré",
-  IN_PROGRESS: "En cours",
-  COMPLETED: "Terminé",
-  CANCELLED: "Annulé",
-};
-
-const STATUS_VARIANTS: Record<string, "outline" | "default" | "secondary" | "destructive"> = {
-  NOT_STARTED: "outline",
-  IN_PROGRESS: "default",
-  COMPLETED: "secondary",
-  CANCELLED: "destructive",
-};
+import { getTranslations } from "next-intl/server";
 
 export default async function WorkflowsPage() {
   const user = await requireStaff();
+  const t = await getTranslations("workflows");
+
+  const STATUS_LABELS: Record<string, string> = {
+    NOT_STARTED: t("statuses.NOT_STARTED"),
+    IN_PROGRESS: t("statuses.IN_PROGRESS"),
+    COMPLETED: t("statuses.COMPLETED"),
+    CANCELLED: t("statuses.CANCELLED"),
+  };
+
+  const STATUS_VARIANTS: Record<string, "outline" | "default" | "secondary" | "destructive"> = {
+    NOT_STARTED: "outline",
+    IN_PROGRESS: "default",
+    COMPLETED: "secondary",
+    CANCELLED: "destructive",
+  };
 
   const rows = await db
     .select({
@@ -70,9 +70,9 @@ export default async function WorkflowsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold flex items-center gap-2">
           <GitBranch className="size-5" />
-          Workflows
+          {t("title")}
         </h1>
-        <span className="text-sm text-muted-foreground">{rows.length} au total</span>
+        <span className="text-sm text-muted-foreground">{t("total", { count: rows.length })}</span>
       </div>
       <WorkflowsView workflows={enriched} statusLabels={STATUS_LABELS} statusVariants={STATUS_VARIANTS} currentUserId={user.id} />
     </div>

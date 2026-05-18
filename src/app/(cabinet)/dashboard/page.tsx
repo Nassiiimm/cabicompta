@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
+import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import {
   companies,
@@ -138,12 +139,14 @@ async function getStats(userId: string) {
 
 export default async function DashboardPage() {
   const user = await requireStaff();
-  const data = await getStats(user.id);
+  const [data, t] = await Promise.all([getStats(user.id), getTranslations("dashboard")]);
+  const tc = await getTranslations("common");
+  const td = await getTranslations("documents");
 
   const todoItems = [
     {
       count: data.weekDeadlineCount,
-      label: `échéance${data.weekDeadlineCount > 1 ? "s" : ""} cette semaine`,
+      label: t("deadlinesThisWeek", { count: data.weekDeadlineCount, plural: data.weekDeadlineCount > 1 ? "s" : "" }),
       href: "/clients",
       icon: CalendarClock,
       color: "text-amber-600 dark:text-amber-400",
@@ -151,7 +154,7 @@ export default async function DashboardPage() {
     },
     {
       count: data.pendingDocs,
-      label: `document${data.pendingDocs > 1 ? "s" : ""} à traiter`,
+      label: t("docsPending", { count: data.pendingDocs, plural: data.pendingDocs > 1 ? "s" : "" }),
       href: "/documents",
       icon: FileText,
       color: "text-blue-600 dark:text-blue-400",
@@ -159,7 +162,7 @@ export default async function DashboardPage() {
     },
     {
       count: data.overdueInvoices,
-      label: `facture${data.overdueInvoices > 1 ? "s" : ""} en retard`,
+      label: t("invoicesOverdue", { count: data.overdueInvoices, plural: data.overdueInvoices > 1 ? "s" : "" }),
       href: "/invoices",
       icon: Receipt,
       color: "text-red-600 dark:text-red-400",
@@ -167,7 +170,7 @@ export default async function DashboardPage() {
     },
     {
       count: data.overdueMyTasks,
-      label: `tâche${data.overdueMyTasks > 1 ? "s" : ""} workflow en retard`,
+      label: t("tasksOverdue", { count: data.overdueMyTasks, plural: data.overdueMyTasks > 1 ? "s" : "" }),
       href: "/workflows",
       icon: GitBranch,
       color: "text-purple-600 dark:text-purple-400",
@@ -179,19 +182,18 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-4xl space-y-8">
-      <h1 className="text-lg font-semibold">Tableau de bord</h1>
+      <h1 className="text-lg font-semibold">{t("title")}</h1>
 
-      {/* A faire aujourd'hui */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold flex items-center gap-2">
           <AlertTriangle className="size-4" />
-          À faire aujourd&apos;hui
+          {t("todo")}
         </h2>
         {allClear ? (
           <div className="rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950 p-4 flex items-center gap-3">
             <CheckCircle2 className="size-5 text-green-600 dark:text-green-400 shrink-0" />
             <p className="text-sm font-medium text-green-700 dark:text-green-300">
-              Tout est à jour
+              {t("allClear")}
             </p>
           </div>
         ) : (
@@ -213,13 +215,12 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Clients actifs", value: data.activeClients, href: "/clients" },
-          { label: "Docs en attente", value: data.pendingDocs, href: "/documents" },
-          { label: "Factures impayées", value: data.unpaidInvoices, href: "/invoices" },
-          { label: "Échéances à venir", value: data.upcomingDeadlines, href: "/clients" },
+          { label: t("metrics.activeClients"), value: data.activeClients, href: "/clients" },
+          { label: t("metrics.pendingDocs"), value: data.pendingDocs, href: "/documents" },
+          { label: t("metrics.unpaidInvoices"), value: data.unpaidInvoices, href: "/invoices" },
+          { label: t("metrics.upcomingDeadlines"), value: data.upcomingDeadlines, href: "/clients" },
         ].map((m) => (
           <Link
             key={m.label}
@@ -232,26 +233,24 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Revenue Chart */}
       <div>
-        <h2 className="text-sm font-semibold mb-3">Revenus — 6 derniers mois</h2>
+        <h2 className="text-sm font-semibold mb-3">{t("revenue")}</h2>
         <div className="rounded-lg border p-4">
           <RevenueChart data={data.revenueData} />
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Recent docs */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">Documents récents</h2>
+            <h2 className="text-sm font-semibold">{t("recentDocs")}</h2>
             <Link href="/documents" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              Voir tout <ArrowRight className="size-3" />
+              {tc("viewAll")} <ArrowRight className="size-3" />
             </Link>
           </div>
           <div className="rounded-lg border divide-y">
             {data.recentDocs.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">Aucun document</p>
+              <p className="text-sm text-muted-foreground p-4 text-center">{t("noDocs")}</p>
             ) : (
               data.recentDocs.map((doc) => (
                 <Link
@@ -268,7 +267,7 @@ export default async function DashboardPage() {
                       ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400"
                       : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
                   }`}>
-                    {doc.status === "PROCESSED" ? "Traité" : "En attente"}
+                    {doc.status === "PROCESSED" ? td("processed") : td("pending")}
                   </span>
                 </Link>
               ))
@@ -276,14 +275,13 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Upcoming deadlines */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">Prochaines échéances</h2>
+            <h2 className="text-sm font-semibold">{t("upcomingDeadlines")}</h2>
           </div>
           <div className="rounded-lg border divide-y">
             {data.nextDeadlines.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-4 text-center">Aucune échéance</p>
+              <p className="text-sm text-muted-foreground p-4 text-center">{t("noDeadlines")}</p>
             ) : (
               data.nextDeadlines.map((d) => {
                 const days = Math.ceil((new Date(d.dueDate).getTime() - Date.now()) / 86400000);
@@ -296,7 +294,7 @@ export default async function DashboardPage() {
                     <span className={`text-[11px] font-medium whitespace-nowrap ${
                       days <= 7 ? "text-red-600" : days <= 14 ? "text-amber-600" : "text-muted-foreground"
                     }`}>
-                      {days <= 0 ? "Aujourd'hui" : `${days}j`}
+                      {days <= 0 ? tc("today") : tc("days", { count: days })}
                     </span>
                   </div>
                 );

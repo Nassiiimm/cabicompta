@@ -4,21 +4,23 @@ import { users } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { CreateStaffForm } from "./create-staff";
-
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "Administrateur",
-  STAFF: "Comptable",
-  INTERN: "Stagiaire",
-};
-
-const ROLE_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
-  ADMIN: "default",
-  STAFF: "secondary",
-  INTERN: "outline",
-};
+import { getTranslations } from "next-intl/server";
 
 export default async function StaffPage() {
   await requireAdmin();
+  const t = await getTranslations("admin.team");
+
+  const ROLE_LABELS: Record<string, string> = {
+    ADMIN: t("roles.ADMIN"),
+    STAFF: t("roles.STAFF"),
+    INTERN: t("roles.INTERN"),
+  };
+
+  const ROLE_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
+    ADMIN: "default",
+    STAFF: "secondary",
+    INTERN: "outline",
+  };
 
   const staffUsers = await db
     .select({
@@ -35,25 +37,23 @@ export default async function StaffPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Equipe</h1>
+        <h1 className="text-lg font-semibold">{t("title")}</h1>
         <CreateStaffForm />
       </div>
 
       {staffUsers.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Aucun membre dans l&apos;equipe.
+          {t("noTeam")}
         </p>
       ) : (
         <div className="rounded-lg border">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left font-medium px-4 py-2">Nom</th>
-                <th className="text-left font-medium px-4 py-2">Courriel</th>
-                <th className="text-left font-medium px-4 py-2">Role</th>
-                <th className="text-left font-medium px-4 py-2">
-                  Date de creation
-                </th>
+                <th className="text-left font-medium px-4 py-2">{t("name")}</th>
+                <th className="text-left font-medium px-4 py-2">{t("email")}</th>
+                <th className="text-left font-medium px-4 py-2">{t("role")}</th>
+                <th className="text-left font-medium px-4 py-2">{t("createdAt")}</th>
               </tr>
             </thead>
             <tbody>

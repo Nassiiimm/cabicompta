@@ -7,6 +7,7 @@ import { DocumentsActions } from "./documents-actions";
 import { DocumentSearch } from "./document-search";
 import { DocumentFilters } from "./document-filters";
 import { DocumentListActions } from "./document-list-actions";
+import { getTranslations } from "next-intl/server";
 
 export default async function DocumentsPage({
   searchParams,
@@ -14,6 +15,7 @@ export default async function DocumentsPage({
   searchParams: Promise<{ q?: string; status?: string; companyId?: string }>;
 }) {
   await requireStaff();
+  const t = await getTranslations("documents");
   const { q, status, companyId } = await searchParams;
 
   const filters = [isNull(documents.deletedAt)];
@@ -55,7 +57,7 @@ export default async function DocumentsPage({
   return (
     <div className="max-w-5xl space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Documents</h1>
+        <h1 className="text-lg font-semibold">{t("title")}</h1>
         <DocumentsActions />
       </div>
 
@@ -67,7 +69,7 @@ export default async function DocumentsPage({
           <div className="text-center py-12 border rounded-lg">
             <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">
-              {q ? `Aucun resultat pour "${q}"` : "Aucun resultat pour ce filtre"}
+              {q ? t("noResultSearch", { query: q }) : t("noResultFilter")}
             </p>
           </div>
         ) : (
@@ -75,9 +77,9 @@ export default async function DocumentsPage({
             <div className="rounded-full bg-muted p-4 mb-4">
               <Upload className="size-8 text-muted-foreground" />
             </div>
-            <h3 className="text-base font-medium mb-1">Aucun document</h3>
+            <h3 className="text-base font-medium mb-1">{t("noDocuments")}</h3>
             <p className="text-sm text-muted-foreground mb-5 max-w-xs">
-              Televersez votre premier document pour commencer a organiser vos fichiers.
+              {t("noDocumentsDesc")}
             </p>
             <DocumentsActions />
           </div>

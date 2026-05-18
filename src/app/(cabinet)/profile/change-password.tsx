@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export function ChangePasswordForm() {
+  const t = useTranslations("profile");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +23,7 @@ export function ChangePasswordForm() {
     const confirm = fd.get("confirm") as string;
 
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("passwordMismatch"));
       setLoading(false);
       return;
     }
@@ -35,14 +37,14 @@ export function ChangePasswordForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Erreur lors de la mise a jour");
+        setError(data.error ?? t("passwordMismatch"));
         return;
       }
 
       setSuccess(true);
       (e.target as HTMLFormElement).reset();
     } catch {
-      setError("Erreur reseau");
+      setError(t("passwordMismatch"));
     } finally {
       setLoading(false);
     }
@@ -53,19 +55,19 @@ export function ChangePasswordForm() {
       {error && <p className="text-xs text-destructive">{error}</p>}
       {success && (
         <p className="text-xs text-green-700 dark:text-green-400">
-          Mot de passe mis a jour avec succes.
+          {t("passwordUpdated")}
         </p>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="pw-new" className="text-xs">
-            Nouveau mot de passe
+            {t("newPassword")}
           </Label>
           <Input
             id="pw-new"
             name="password"
             type="password"
-            placeholder="8 caracteres minimum"
+            placeholder="8 min"
             minLength={8}
             required
             className="h-8 text-sm"
@@ -73,13 +75,13 @@ export function ChangePasswordForm() {
         </div>
         <div className="space-y-1">
           <Label htmlFor="pw-confirm" className="text-xs">
-            Confirmer le mot de passe
+            {t("confirmPassword")}
           </Label>
           <Input
             id="pw-confirm"
             name="confirm"
             type="password"
-            placeholder="Confirmer"
+            placeholder="Confirm"
             minLength={8}
             required
             className="h-8 text-sm"
@@ -87,7 +89,7 @@ export function ChangePasswordForm() {
         </div>
       </div>
       <Button type="submit" size="sm" disabled={loading}>
-        {loading ? "Mise a jour..." : "Changer le mot de passe"}
+        {loading ? t("saving") : t("changePassword")}
       </Button>
     </form>
   );

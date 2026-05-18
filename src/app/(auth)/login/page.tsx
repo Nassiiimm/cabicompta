@@ -7,8 +7,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export default function LoginPage() {
+  const t = useTranslations("auth.login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +26,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError("Identifiants invalides");
+      setError(t("error"));
       setLoading(false);
       return;
     }
@@ -43,7 +45,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-base font-semibold tracking-tight">CabiCompta</span>
+          <span className="text-base font-semibold tracking-tight">{t("title")}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -54,13 +56,13 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">Courriel</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nom@cabinet.ca"
+              placeholder={t("emailPlaceholder")}
               autoFocus
               required
             />
@@ -68,9 +70,9 @@ export default function LoginPage() {
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">{t("passwordLabel")}</Label>
               <Link href="/reset-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                Oublié ?
+                {t("forgotPassword")}
               </Link>
             </div>
             <Input
@@ -83,14 +85,14 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter"}
+            {loading ? t("submitting") : t("submit")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Pas de compte ?{" "}
+          {t("noAccount")}{" "}
           <Link href="/register" className="text-foreground underline underline-offset-4 hover:text-foreground/80">
-            Créer un compte
+            {t("register")}
           </Link>
         </p>
       </div>

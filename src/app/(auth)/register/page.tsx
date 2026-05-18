@@ -7,8 +7,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth.register");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,51 +54,51 @@ export default function RegisterPage() {
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="name">Nom complet</Label>
+            <Label htmlFor="name">{t("nameLabel")}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Jean Tremblay"
+              placeholder={t("namePlaceholder")}
               autoFocus
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="email">Courriel</Label>
+            <Label htmlFor="email">{t("emailLabel")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nom@cabinet.ca"
+              placeholder={t("emailPlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t("passwordLabel")}</Label>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="8 caractères minimum"
+              placeholder="8 min"
               minLength={8}
               required
             />
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Création..." : "Créer un compte"}
+            {loading ? t("submitting") : t("submit")}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Déjà un compte ?{" "}
+          {t("hasAccount")}{" "}
           <Link href="/login" className="text-foreground underline underline-offset-4 hover:text-foreground/80">
-            Se connecter
+            {t("login")}
           </Link>
         </p>
       </div>

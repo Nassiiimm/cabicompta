@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { LayoutList, Columns3, AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type WorkflowRow = {
   id: string;
@@ -45,6 +45,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
 }
 
 function DaysLabel({ dueDate }: { dueDate: string | null }) {
+  const tc = useTranslations("common");
   if (!dueDate) return null;
   const days = Math.ceil((new Date(dueDate).getTime() - Date.now()) / 86400000);
   return (
@@ -53,7 +54,7 @@ function DaysLabel({ dueDate }: { dueDate: string | null }) {
       : days <= 7 ? "text-amber-600"
       : "text-muted-foreground"
     }`}>
-      {days < 0 ? `${Math.abs(days)}j retard` : days === 0 ? "Aujourd'hui" : `${days}j`}
+      {days < 0 ? tc("overdue", { count: Math.abs(days) }) : days === 0 ? tc("today") : tc("days", { count: days })}
     </span>
   );
 }
@@ -89,6 +90,7 @@ function WorkflowCard({
 }
 
 export function WorkflowsView({ workflows, statusLabels, statusVariants, currentUserId }: Props) {
+  const t = useTranslations("workflows");
   const [view, setView] = useState<"list" | "kanban">("list");
   const [mine, setMine] = useState(false);
 
@@ -100,9 +102,9 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
   if (workflows.length === 0) {
     return (
       <div className="rounded-lg border p-12 text-center">
-        <p className="text-sm font-medium">Aucun workflow</p>
+        <p className="text-sm font-medium">{t("noWorkflows")}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Créez des workflows depuis la fiche d&apos;un client.
+          {t("noWorkflowsDesc")}
         </p>
       </div>
     );
@@ -126,7 +128,7 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
           }`}
         >
           <LayoutList className="size-3.5" />
-          Liste
+          {t("list")}
         </button>
         <button
           onClick={() => setView("kanban")}
@@ -135,7 +137,7 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
           }`}
         >
           <Columns3 className="size-3.5" />
-          Kanban
+          {t("kanban")}
         </button>
         </div>
         <button
@@ -144,7 +146,7 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
             mine ? "bg-foreground text-background border-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          {mine ? `Mes workflows (${visible.length})` : "Tout voir"}
+          {mine ? t("mine", { count: visible.length }) : t("all")}
         </button>
       </div>
 
@@ -162,10 +164,6 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
                 </div>
                 <div className="rounded-lg border divide-y">
                   {items.map((w) => {
-                    const today = new Date().toISOString().split("T")[0];
-                    const daysLeft = w.dueDate
-                      ? Math.ceil((new Date(w.dueDate).getTime() - Date.now()) / 86400000)
-                      : null;
                     return (
                       <Link
                         key={w.id}
@@ -232,7 +230,7 @@ export function WorkflowsView({ workflows, statusLabels, statusVariants, current
                   ))}
                   {items.length === 0 && (
                     <div className="rounded-lg border border-dashed p-4 text-center">
-                      <p className="text-xs text-muted-foreground">Vide</p>
+                      <p className="text-xs text-muted-foreground">{t("empty")}</p>
                     </div>
                   )}
                 </div>

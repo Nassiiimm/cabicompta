@@ -4,6 +4,7 @@ import { documents, companyMembers, companies } from "@/lib/db/schema";
 import { eq, and, desc, sql, count } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { PortalArchive } from "@/components/portal/portal-archive";
+import { getTranslations } from "next-intl/server";
 
 async function getArchiveData(userId: string) {
   const membership = await db
@@ -44,17 +45,20 @@ export default async function PortalDocumentsPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const data = await getArchiveData(user.id);
+  const [data, t] = await Promise.all([
+    getArchiveData(user.id),
+    getTranslations("portal.documents"),
+  ]);
   if (!data) redirect("/portal");
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">
-          Mes documents
+          {t("title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Tous vos documents déposés et reçus
+          {t("noDocumentsDesc")}
         </p>
       </div>
 

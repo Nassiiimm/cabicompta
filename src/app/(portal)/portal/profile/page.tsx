@@ -7,13 +7,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChangePasswordForm } from "@/app/(cabinet)/profile/change-password";
+import { getTranslations } from "next-intl/server";
 
 export default async function PortalProfilePage() {
   const user = await requireAuth();
+  const t = await getTranslations("portal.profile");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Mon profil</h1>
+      <h1 className="text-lg font-semibold">{t("title")}</h1>
 
       <Card>
         <CardHeader>
@@ -21,11 +23,11 @@ export default async function PortalProfilePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Nom</span>
+            <span className="text-muted-foreground">{t("name")}</span>
             <span className="font-medium">{user.name}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Courriel</span>
+            <span className="text-muted-foreground">{t("email")}</span>
             <span className="font-medium">{user.email}</span>
           </div>
           <div className="flex justify-between text-sm">
@@ -37,7 +39,7 @@ export default async function PortalProfilePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Changer le mot de passe</CardTitle>
+          <CardTitle>{t("changePassword")}</CardTitle>
         </CardHeader>
         <CardContent>
           <ChangePasswordForm />

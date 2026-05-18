@@ -16,29 +16,34 @@ import {
   BarChart3,
   UserCog,
   User,
+  GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-const nav = [
-  { label: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Clients", href: "/clients", icon: Users },
-  { label: "Documents", href: "/documents", icon: FileText },
-  { label: "Factures", href: "/invoices", icon: Receipt },
-];
-
-const adminNav = [
-  { label: "Vue pratique", href: "/admin/practice", icon: BarChart3 },
-  { label: "Journal d'audit", href: "/admin/audit", icon: Shield },
-  { label: "Journal d'accès", href: "/admin/access", icon: Eye },
-  { label: "Équipe", href: "/admin/staff", icon: UserCog },
-];
+import { LocaleToggle } from "@/components/locale-toggle";
+import { useTranslations } from "next-intl";
 
 export function MobileNav({ role }: { role: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("nav");
+
+  const nav = [
+    { label: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { label: t("clients"), href: "/clients", icon: Users },
+    { label: t("workflows"), href: "/workflows", icon: GitBranch },
+    { label: t("documents"), href: "/documents", icon: FileText },
+    { label: t("invoices"), href: "/invoices", icon: Receipt },
+  ];
+
+  const adminNav = [
+    { label: t("practice"), href: "/admin/practice", icon: BarChart3 },
+    { label: t("audit"), href: "/admin/audit", icon: Shield },
+    { label: t("access"), href: "/admin/access", icon: Eye },
+    { label: t("team"), href: "/admin/staff", icon: UserCog },
+  ];
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -140,7 +145,7 @@ export function MobileNav({ role }: { role: string }) {
                 )}
               >
                 <User className="size-4" />
-                Profil
+                {t("profile")}
               </Link>
               <div className="flex items-center justify-between">
                 <button
@@ -148,9 +153,12 @@ export function MobileNav({ role }: { role: string }) {
                   className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                 >
                   <LogOut className="size-4" />
-                  Déconnexion
+                  {t("logout")}
                 </button>
-                <ThemeToggle />
+                <div className="flex items-center gap-1">
+                  <LocaleToggle />
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </aside>

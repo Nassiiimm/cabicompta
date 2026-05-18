@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type AccessEntry = {
   id: string;
@@ -15,6 +16,8 @@ type AccessEntry = {
 };
 
 export default function AccessLogsPage() {
+  const t = useTranslations("admin.access");
+  const tc = useTranslations("common");
   const [logs, setLogs] = useState<AccessEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,26 +31,26 @@ export default function AccessLogsPage() {
 
   return (
     <div className="max-w-5xl space-y-4">
-      <h1 className="text-lg font-semibold">Journal d'accès</h1>
+      <h1 className="text-lg font-semibold">{t("title")}</h1>
       <p className="text-sm text-muted-foreground">
         Qui a accédé à quoi — Conformité Loi 25
       </p>
 
       <div className="rounded-lg border">
         {loading ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Chargement...</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{tc("loading")}</p>
         ) : logs.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Aucune entrée</p>
+          <p className="text-sm text-muted-foreground text-center py-8">{t("noLogs")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50 text-left">
-                  <th className="px-3 py-2 font-medium">Date</th>
-                  <th className="px-3 py-2 font-medium">Utilisateur</th>
-                  <th className="px-3 py-2 font-medium">Action</th>
-                  <th className="px-3 py-2 font-medium">Ressource</th>
-                  <th className="px-3 py-2 font-medium">IP</th>
+                  <th className="px-3 py-2 font-medium">{t("date")}</th>
+                  <th className="px-3 py-2 font-medium">{t("user")}</th>
+                  <th className="px-3 py-2 font-medium">{t("action")}</th>
+                  <th className="px-3 py-2 font-medium">{t("resource")}</th>
+                  <th className="px-3 py-2 font-medium">{t("ip")}</th>
                 </tr>
               </thead>
               <tbody>

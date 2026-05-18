@@ -1,0 +1,517 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No",
+    "error": "Error",
+    "success": "Success",
+    "viewAll": "View all",
+    "noResults": "No results",
+    "required": "required",
+    "optional": "optional",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "notes": "Notes",
+    "create": "Create",
+    "add": "Add",
+    "remove": "Remove",
+    "download": "Download",
+    "upload": "Upload",
+    "export": "Export",
+    "days": "{count}d",
+    "today": "Today",
+    "overdue": "{count}d overdue",
+    "new": "New",
+    "unknown": "Unknown"
+  },
+  "locale": {
+    "toggle": "Français",
+    "current": "English"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "clients": "Clients",
+    "documents": "Documents",
+    "invoices": "Invoices",
+    "workflows": "Workflows",
+    "profile": "Profile",
+    "logout": "Sign out",
+    "admin": "Admin",
+    "practice": "Practice overview",
+    "audit": "Audit log",
+    "access": "Access log",
+    "team": "Team",
+    "templates": "Workflow templates"
+  },
+  "home": {
+    "tagline": "Accounting firm — Quebec",
+    "headline": "Your accounting, taken care of.",
+    "subheadline": "We support Quebec SMEs and entrepreneurs with their accounting, taxation and growth — with rigour and transparency.",
+    "cta": "Book a meeting",
+    "seeServices": "Our services",
+    "stats": {
+      "years": "years of experience",
+      "clients": "clients served",
+      "compliance": "compliance guaranteed",
+      "response": "response time"
+    },
+    "services": {
+      "title": "Our services",
+      "subtitle": "Accounting solutions tailored to every stage of your business.",
+      "bookkeeping": {
+        "title": "Bookkeeping",
+        "desc": "Accounting entries, bank reconciliation and monthly or quarterly financial statements for SMEs and self-employed workers."
+      },
+      "tax": {
+        "title": "Tax returns",
+        "desc": "Filing T2, CO-17, GST/QST returns and payroll source deduction reports. Full compliance with all Quebec government deadlines."
+      },
+      "payroll": {
+        "title": "Payroll & HR",
+        "desc": "Payroll processing, RL-1 and T4 filing, calculation of contributions and taxable benefits."
+      },
+      "advisory": {
+        "title": "Advisory & planning",
+        "desc": "Strategic guidance: tax optimization, retirement planning, business valuation and financing."
+      }
+    },
+    "approach": {
+      "title": "A trusted relationship, not just a file",
+      "p1": "At CabiCompta, every client has a dedicated contact who knows their file. We don't manage numbers — we support entrepreneurs.",
+      "p2": "Through our secure portal, you submit documents online, track deadlines in real time and access your financial statements at any time.",
+      "points": {
+        "dedicated": "Dedicated contact for your file",
+        "portal": "Secure client portal 24/7",
+        "reminders": "Automatic deadline reminders",
+        "response": "48-hour response guarantee",
+        "compliance": "CPA compliance and Quebec standards"
+      }
+    },
+    "contact": {
+      "title": "Contact us",
+      "subtitle": "A no-obligation first call to assess your needs.",
+      "phone": "Phone",
+      "phoneHours": "Mon–Fri, 9am–5pm",
+      "emailLabel": "Email",
+      "emailResponse": "Reply within 48h",
+      "addressLabel": "Address",
+      "existing": "Already a client?",
+      "existingDesc": "Access your secure space to submit documents and track your files.",
+      "clientPortal": "Client portal"
+    },
+    "footer": "Certified accounting firm, Quebec",
+    "rights": "All rights reserved."
+  },
+  "auth": {
+    "login": {
+      "title": "CabiCompta",
+      "emailLabel": "Email",
+      "emailPlaceholder": "name@firm.ca",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "No account?",
+      "register": "Create account",
+      "error": "Invalid credentials"
+    },
+    "register": {
+      "title": "Create an account",
+      "nameLabel": "Full name",
+      "namePlaceholder": "John Smith",
+      "emailLabel": "Email",
+      "emailPlaceholder": "john@example.ca",
+      "passwordLabel": "Password",
+      "submit": "Create account",
+      "submitting": "Creating...",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in"
+    },
+    "resetPassword": {
+      "title": "Reset your password",
+      "emailLabel": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending...",
+      "successTitle": "Email sent",
+      "successDesc": "Check your inbox.",
+      "backToLogin": "Back to sign in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "todo": "To do today",
+    "allClear": "Everything is up to date",
+    "deadlinesThisWeek": "{count} deadline{plural} this week",
+    "docsPending": "{count} document{plural} to process",
+    "invoicesOverdue": "{count} invoice{plural} overdue",
+    "tasksOverdue": "{count} workflow task{plural} overdue",
+    "metrics": {
+      "activeClients": "Active clients",
+      "pendingDocs": "Pending docs",
+      "unpaidInvoices": "Unpaid invoices",
+      "upcomingDeadlines": "Upcoming deadlines"
+    },
+    "revenue": "Revenue — last 6 months",
+    "recentDocs": "Recent documents",
+    "upcomingDeadlines": "Upcoming deadlines",
+    "noDocs": "No documents",
+    "noDeadlines": "No deadlines",
+    "months": {
+      "jan": "Jan", "fev": "Feb", "mar": "Mar", "avr": "Apr",
+      "mai": "May", "jun": "Jun", "jul": "Jul", "aou": "Aug",
+      "sep": "Sep", "oct": "Oct", "nov": "Nov", "dec": "Dec"
+    },
+    "chart": {
+      "invoiced": "Invoiced",
+      "collected": "Collected"
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "new": "New client",
+    "edit": "Edit client",
+    "noClients": "No clients",
+    "noClientsDesc": "Start by adding your first client.",
+    "noClientsSearch": "No results for \"{q}\"",
+    "active": "Active",
+    "inactive": "Inactive",
+    "archived": "Archived",
+    "type": {
+      "label": "Client type",
+      "T1_PARTICULIER": "T1 — Individual",
+      "T1_AUTONOME": "T1 — Self-employed",
+      "T2_SOCIETE": "T2 — Corporation"
+    },
+    "fields": {
+      "name": "Name",
+      "neq": "NEQ",
+      "arc": "CRA Business Number",
+      "rq": "Revenu Québec Number",
+      "fiscalYearEnd": "Fiscal year end",
+      "city": "City",
+      "province": "Province",
+      "postalCode": "Postal code",
+      "status": "Status",
+      "assignedTo": "Assigned to",
+      "notes": "Internal notes"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "documents": "Documents",
+      "invoices": "Invoices",
+      "deadlines": "Deadlines",
+      "workflows": "Workflows",
+      "members": "Members",
+      "kyc": "KYC"
+    },
+    "invite": "Invite to portal",
+    "assign": "Assign",
+    "kyc": {
+      "title": "KYC — Identity verification",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "verify": "Mark as verified"
+    },
+    "deadlines": {
+      "generate": "Generate deadlines",
+      "generating": "Generating...",
+      "noDeadlines": "No deadlines",
+      "filed": "Filed",
+      "upcoming": "Upcoming",
+      "inProgress": "In progress",
+      "overdue": "Overdue"
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "upload": "Upload",
+    "uploadTitle": "Upload a document",
+    "noDocuments": "No documents",
+    "noDocumentsDesc": "Upload your first document to get started.",
+    "pending": "Pending",
+    "processed": "Processed",
+    "rejected": "Rejected",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "fiscalYear": "Fiscal year",
+    "company": "Company",
+    "selectCompany": "Select a company",
+    "selectSubcategory": "— Select —",
+    "dropzone": "Drop files here or",
+    "browse": "browse",
+    "dropzoneHint": "PDF, images, Word, Excel — max 10 MB",
+    "scan": "Scan with AI",
+    "scanning": "Analyzing...",
+    "scanDone": "Analysis complete",
+    "uploading": "Uploading...",
+    "uploadError": "Select a file and a company",
+    "categories": {
+      "DAS": "01 — Source Deductions (DAS)",
+      "TPS_TVQ": "02 — GST/QST",
+      "FINANCIAL_STATEMENT": "03 — T2/CO-17",
+      "T1": "04 — T1",
+      "REQ_DOC": "05 — REQ",
+      "IMMOBILISATION": "06 — Capital assets & investments",
+      "BANK_STATEMENT": "Bank statement",
+      "INVOICE": "Invoice",
+      "TAX_NOTICE": "Notice of assessment",
+      "CORPORATE": "Corporate document",
+      "CONTRACT": "Contract",
+      "RECEIPT": "Receipt",
+      "OTHER": "Other"
+    },
+    "subcategories": {
+      "DAS_A": "A — Pay stubs",
+      "DAS_B": "B — Government DAS report",
+      "DAS_C": "C — Other",
+      "TPS_TVQ_A": "A — GST/QST invoices by period",
+      "TPS_TVQ_B": "B — Government GST/QST report",
+      "TPS_TVQ_C": "C — Other GST/QST",
+      "FINANCIAL_STATEMENT_A": "A — Financial statements",
+      "FINANCIAL_STATEMENT_B": "B — T2/CO-17 government report",
+      "FINANCIAL_STATEMENT_C": "C — Other T2/CO-17"
+    },
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "processed": "Processed",
+      "rejected": "Rejected"
+    },
+    "noResultFilter": "No results for this filter",
+    "noResultSearch": "No results for \"{query}\""
+  },
+  "invoices": {
+    "title": "Invoices",
+    "new": "New invoice",
+    "noInvoices": "No invoices",
+    "noInvoicesDesc": "Create your first invoice to start tracking payments.",
+    "createFirst": "Create your first invoice",
+    "noResultFilter": "No results for this filter",
+    "number": "Invoice #",
+    "client": "Client",
+    "total": "Total (tax incl.)",
+    "status": "Status",
+    "dueDate": "Due date",
+    "actions": "Actions",
+    "statuses": {
+      "DRAFT": "Draft",
+      "SENT": "Sent",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue",
+      "CANCELLED": "Cancelled"
+    },
+    "filters": {
+      "all": "All",
+      "draft": "Draft",
+      "sent": "Sent",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "cancelled": "Cancelled"
+    },
+    "detail": {
+      "issuedAt": "Issued",
+      "dueDate": "Due date",
+      "amountHt": "Subtotal",
+      "tps": "GST (5%)",
+      "tvq": "QST (9.975%)",
+      "total": "Total (tax incl.)",
+      "markSent": "Mark as sent",
+      "markPaid": "Mark as paid",
+      "markOverdue": "Mark as overdue",
+      "cancel": "Cancel invoice",
+      "downloadPdf": "Download PDF",
+      "paymentLink": "Payment link",
+      "items": "Line items",
+      "description": "Description",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "amount": "Amount"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "total": "{count} total",
+    "noWorkflows": "No workflows",
+    "noWorkflowsDesc": "Create workflows from a client file.",
+    "mine": "My workflows ({count})",
+    "all": "View all",
+    "list": "List",
+    "kanban": "Kanban",
+    "empty": "Empty",
+    "statuses": {
+      "NOT_STARTED": "Not started",
+      "IN_PROGRESS": "In progress",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "tasks": {
+      "TODO": "To do",
+      "IN_PROGRESS": "In progress",
+      "DONE": "Done",
+      "SKIPPED": "Skipped"
+    }
+  },
+  "portal": {
+    "welcome": "Hello, {name}",
+    "subtitle": "Your CabiCompta client portal",
+    "nav": {
+      "home": "Home",
+      "documents": "Documents",
+      "invoices": "Invoices",
+      "profile": "Profile"
+    },
+    "home": {
+      "uploadTitle": "Submit documents",
+      "uploadDesc": "Share your receipts, statements and other accounting documents.",
+      "upload": "Upload a document",
+      "deadlinesTitle": "Upcoming deadlines",
+      "noDeadlines": "No upcoming deadlines.",
+      "notifTitle": "Your accountant will be notified upon receipt.",
+      "noDocs": "No documents"
+    },
+    "documents": {
+      "title": "My documents",
+      "noDocuments": "No documents",
+      "noDocumentsDesc": "You have no documents yet.",
+      "pending": "Pending",
+      "processed": "Processed",
+      "rejected": "Rejected",
+      "download": "Download"
+    },
+    "invoices": {
+      "title": "My invoices",
+      "toPay": "To pay",
+      "paid": "Paid",
+      "other": "Other",
+      "noInvoices": "No invoices",
+      "pay": "Pay online",
+      "statuses": {
+        "SENT": "To pay",
+        "OVERDUE": "Overdue",
+        "PAID": "Paid",
+        "DRAFT": "Draft",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "profile": {
+      "title": "My profile",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "save": "Save",
+      "changePassword": "Change password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "logout": "Sign out"
+    }
+  },
+  "admin": {
+    "practice": {
+      "title": "Practice overview",
+      "revenue": "Revenue",
+      "clients": "Clients",
+      "documents": "Documents",
+      "invoices": "Invoices"
+    },
+    "team": {
+      "title": "Team",
+      "create": "Create member",
+      "createTitle": "Create a team member",
+      "noTeam": "No team members.",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "createdAt": "Created",
+      "roles": {
+        "ADMIN": "Administrator",
+        "STAFF": "Accountant",
+        "INTERN": "Intern"
+      },
+      "password": "Password",
+      "passwordHint": "Minimum 8 characters",
+      "submit": "Create account",
+      "submitting": "Creating...",
+      "created": "Account created for {name}.",
+      "copyPassword": "Copy password",
+      "shareCredentials": "Share these credentials with the new member."
+    },
+    "audit": {
+      "title": "Audit log",
+      "action": "Action",
+      "table": "Table",
+      "user": "User",
+      "date": "Date",
+      "noLogs": "No events"
+    },
+    "access": {
+      "title": "Access log",
+      "action": "Action",
+      "resource": "Resource",
+      "user": "User",
+      "ip": "IP address",
+      "date": "Date",
+      "noLogs": "No access recorded"
+    }
+  },
+  "fiscal": {
+    "types": {
+      "T2": "T2 — Federal return",
+      "CO17": "CO-17 — Provincial return",
+      "TPS_TVQ": "GST/QST",
+      "TPS_TVQ_INSTALMENT": "GST/QST instalment",
+      "T4": "T4 — Slips",
+      "T4_SUMMARY": "T4 Summary",
+      "RL1": "RL-1 — Slips",
+      "RL1_SUMMARY": "RL-1 Summary",
+      "DAS": "DAS — Source deductions",
+      "CNESST": "CNESST — Payroll declaration",
+      "T2_PAYMENT": "T2 — Payment",
+      "CO17_PAYMENT": "CO-17 — Payment",
+      "INSTALMENT": "Tax instalment",
+      "REQ_ANNUAL": "REQ — Annual declaration",
+      "T5": "T5",
+      "RL3": "RL-3"
+    },
+    "statuses": {
+      "UPCOMING": "Upcoming",
+      "IN_PROGRESS": "In progress",
+      "FILED": "Filed",
+      "OVERDUE": "Overdue"
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "personalInfo": "Personal information",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "save": "Save",
+    "saving": "Saving...",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm",
+    "passwordMismatch": "Passwords do not match",
+    "passwordUpdated": "Password updated"
+  }
+}

@@ -1,0 +1,517 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "all": "Tout",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non",
+    "error": "Erreur",
+    "success": "Succès",
+    "viewAll": "Voir tout",
+    "noResults": "Aucun résultat",
+    "required": "requis",
+    "optional": "optionnel",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "confirm": "Confirmer",
+    "actions": "Actions",
+    "status": "Statut",
+    "date": "Date",
+    "name": "Nom",
+    "email": "Courriel",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "notes": "Notes",
+    "create": "Créer",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "export": "Exporter",
+    "days": "{count}j",
+    "today": "Aujourd'hui",
+    "overdue": "{count}j retard",
+    "new": "Nouveau",
+    "unknown": "Inconnu"
+  },
+  "locale": {
+    "toggle": "English",
+    "current": "Français"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "clients": "Clients",
+    "documents": "Documents",
+    "invoices": "Factures",
+    "workflows": "Workflows",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "admin": "Admin",
+    "practice": "Vue pratique",
+    "audit": "Journal d'audit",
+    "access": "Journal d'accès",
+    "team": "Équipe",
+    "templates": "Modèles de workflow"
+  },
+  "home": {
+    "tagline": "Cabinet comptable — Québec",
+    "headline": "Votre comptabilité, prise en charge.",
+    "subheadline": "Nous accompagnons les PME et entrepreneurs québécois dans leur comptabilité, leur fiscalité et leur développement — avec rigueur et transparence.",
+    "cta": "Prendre rendez-vous",
+    "seeServices": "Nos services",
+    "stats": {
+      "years": "années d'expérience",
+      "clients": "clients accompagnés",
+      "compliance": "conformité garantie",
+      "response": "délai de réponse"
+    },
+    "services": {
+      "title": "Nos services",
+      "subtitle": "Des solutions comptables adaptées à chaque étape de la vie de votre entreprise.",
+      "bookkeeping": {
+        "title": "Tenue de livres",
+        "desc": "Saisie comptable, conciliation bancaire et états financiers mensuels ou trimestriels pour les PME et travailleurs autonomes."
+      },
+      "tax": {
+        "title": "Déclarations fiscales",
+        "desc": "Production des déclarations T2, CO-17, TPS/TVQ et des rapports DAS. Respect de toutes les échéances gouvernementales québécoises."
+      },
+      "payroll": {
+        "title": "Paie et ressources humaines",
+        "desc": "Gestion de la paie, production des relevés RL-1 et T4, calcul des cotisations et des avantages imposables."
+      },
+      "advisory": {
+        "title": "Conseil et planification",
+        "desc": "Accompagnement stratégique : optimisation fiscale, planification de la retraite, évaluation d'entreprise et financement."
+      }
+    },
+    "approach": {
+      "title": "Une relation de confiance, pas juste un dossier",
+      "p1": "Chez CabiCompta, chaque client a un interlocuteur dédié qui connaît son dossier. Nous ne gérons pas des numéros — nous accompagnons des entrepreneurs.",
+      "p2": "Grâce à notre portail sécurisé, vous déposez vos documents en ligne, suivez vos échéances en temps réel et consultez vos états financiers à tout moment.",
+      "points": {
+        "dedicated": "Interlocuteur dédié à votre dossier",
+        "portal": "Portail client sécurisé 24/7",
+        "reminders": "Rappels automatiques des échéances",
+        "response": "Réponse garantie sous 48 heures",
+        "compliance": "Conformité CPA et normes québécoises"
+      }
+    },
+    "contact": {
+      "title": "Nous contacter",
+      "subtitle": "Un premier échange sans engagement pour évaluer vos besoins.",
+      "phone": "Téléphone",
+      "phoneHours": "Lun–Ven, 9h–17h",
+      "emailLabel": "Courriel",
+      "emailResponse": "Réponse sous 48h",
+      "addressLabel": "Adresse",
+      "existing": "Déjà client ?",
+      "existingDesc": "Accédez à votre espace sécurisé pour déposer des documents et suivre vos dossiers.",
+      "clientPortal": "Espace client"
+    },
+    "footer": "Cabinet comptable agréé, Québec",
+    "rights": "Tous droits réservés."
+  },
+  "auth": {
+    "login": {
+      "title": "CabiCompta",
+      "emailLabel": "Courriel",
+      "emailPlaceholder": "nom@cabinet.ca",
+      "passwordLabel": "Mot de passe",
+      "forgotPassword": "Oublié ?",
+      "submit": "Se connecter",
+      "submitting": "Connexion...",
+      "noAccount": "Pas de compte ?",
+      "register": "Créer un compte",
+      "error": "Identifiants invalides"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "nameLabel": "Nom complet",
+      "namePlaceholder": "Jean Tremblay",
+      "emailLabel": "Courriel",
+      "emailPlaceholder": "jean@exemple.ca",
+      "passwordLabel": "Mot de passe",
+      "submit": "Créer le compte",
+      "submitting": "Création...",
+      "hasAccount": "Déjà un compte ?",
+      "login": "Se connecter"
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "emailLabel": "Courriel",
+      "submit": "Envoyer le lien",
+      "submitting": "Envoi...",
+      "successTitle": "Courriel envoyé",
+      "successDesc": "Vérifiez votre boîte de réception.",
+      "backToLogin": "Retour à la connexion"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "todo": "À faire aujourd'hui",
+    "allClear": "Tout est à jour",
+    "deadlinesThisWeek": "{count} échéance{plural} cette semaine",
+    "docsPending": "{count} document{plural} à traiter",
+    "invoicesOverdue": "{count} facture{plural} en retard",
+    "tasksOverdue": "{count} tâche{plural} workflow en retard",
+    "metrics": {
+      "activeClients": "Clients actifs",
+      "pendingDocs": "Docs en attente",
+      "unpaidInvoices": "Factures impayées",
+      "upcomingDeadlines": "Échéances à venir"
+    },
+    "revenue": "Revenus — 6 derniers mois",
+    "recentDocs": "Documents récents",
+    "upcomingDeadlines": "Prochaines échéances",
+    "noDocs": "Aucun document",
+    "noDeadlines": "Aucune échéance",
+    "months": {
+      "jan": "jan", "fev": "fév", "mar": "mar", "avr": "avr",
+      "mai": "mai", "jun": "jun", "jul": "jul", "aou": "aoû",
+      "sep": "sep", "oct": "oct", "nov": "nov", "dec": "déc"
+    },
+    "chart": {
+      "invoiced": "Facturé",
+      "collected": "Encaissé"
+    }
+  },
+  "clients": {
+    "title": "Clients",
+    "new": "Nouveau client",
+    "edit": "Modifier le client",
+    "noClients": "Aucun client",
+    "noClientsDesc": "Commencez par ajouter votre premier client.",
+    "noClientsSearch": "Aucun résultat pour \"{q}\"",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "archived": "Archivé",
+    "type": {
+      "label": "Type de client",
+      "T1_PARTICULIER": "T1 — Particulier",
+      "T1_AUTONOME": "T1 — Travailleur autonome",
+      "T2_SOCIETE": "T2 — Société"
+    },
+    "fields": {
+      "name": "Nom",
+      "neq": "NEQ",
+      "arc": "Numéro ARC",
+      "rq": "Numéro RQ",
+      "fiscalYearEnd": "Fin d'exercice fiscal",
+      "city": "Ville",
+      "province": "Province",
+      "postalCode": "Code postal",
+      "status": "Statut",
+      "assignedTo": "Assigné à",
+      "notes": "Notes internes"
+    },
+    "tabs": {
+      "overview": "Aperçu",
+      "documents": "Documents",
+      "invoices": "Factures",
+      "deadlines": "Échéances",
+      "workflows": "Workflows",
+      "members": "Membres",
+      "kyc": "KYC"
+    },
+    "invite": "Inviter au portail",
+    "assign": "Assigner",
+    "kyc": {
+      "title": "KYC — Vérification d'identité",
+      "verified": "Vérifié",
+      "notVerified": "Non vérifié",
+      "verify": "Marquer comme vérifié"
+    },
+    "deadlines": {
+      "generate": "Générer les échéances",
+      "generating": "Génération...",
+      "noDeadlines": "Aucune échéance",
+      "filed": "Déclaré",
+      "upcoming": "À venir",
+      "inProgress": "En cours",
+      "overdue": "En retard"
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "upload": "Téléverser",
+    "uploadTitle": "Téléverser un document",
+    "noDocuments": "Aucun document",
+    "noDocumentsDesc": "Téléversez votre premier document pour commencer.",
+    "pending": "En attente",
+    "processed": "Traité",
+    "rejected": "Rejeté",
+    "category": "Catégorie",
+    "subcategory": "Sous-catégorie",
+    "fiscalYear": "Année fiscale",
+    "company": "Entreprise",
+    "selectCompany": "Sélectionner une entreprise",
+    "selectSubcategory": "— Sélectionner —",
+    "dropzone": "Glissez vos fichiers ici ou",
+    "browse": "parcourez",
+    "dropzoneHint": "PDF, images, Word, Excel — max 10 Mo",
+    "scan": "Scanner avec l'IA",
+    "scanning": "Analyse en cours...",
+    "scanDone": "Analyse terminée",
+    "uploading": "Téléversement...",
+    "uploadError": "Sélectionnez un fichier et une entreprise",
+    "categories": {
+      "DAS": "01 — DAS (Déductions à la source)",
+      "TPS_TVQ": "02 — TPS/TVQ",
+      "FINANCIAL_STATEMENT": "03 — T2/CO-17",
+      "T1": "04 — T1",
+      "REQ_DOC": "05 — REQ",
+      "IMMOBILISATION": "06 — Immobilisation & investissements",
+      "BANK_STATEMENT": "Relevé bancaire",
+      "INVOICE": "Facture",
+      "TAX_NOTICE": "Avis de cotisation",
+      "CORPORATE": "Document corporatif",
+      "CONTRACT": "Contrat",
+      "RECEIPT": "Reçu",
+      "OTHER": "Autre"
+    },
+    "subcategories": {
+      "DAS_A": "A — Fiches de paies",
+      "DAS_B": "B — Rapport DAS gouvernements",
+      "DAS_C": "C — Autres",
+      "TPS_TVQ_A": "A — Factures TPS/TVQ par période",
+      "TPS_TVQ_B": "B — Rapport TPS/TVQ gouvernements",
+      "TPS_TVQ_C": "C — Autres TPS/TVQ",
+      "FINANCIAL_STATEMENT_A": "A — États financiers",
+      "FINANCIAL_STATEMENT_B": "B — Rapport T2/CO-17 gouvernements",
+      "FINANCIAL_STATEMENT_C": "C — Autres T2/CO-17"
+    },
+    "filters": {
+      "all": "Tous",
+      "pending": "En attente",
+      "processed": "Traités",
+      "rejected": "Rejetés"
+    },
+    "noResultFilter": "Aucun résultat pour ce filtre",
+    "noResultSearch": "Aucun résultat pour \"{query}\""
+  },
+  "invoices": {
+    "title": "Factures",
+    "new": "Nouvelle facture",
+    "noInvoices": "Aucune facture",
+    "noInvoicesDesc": "Commencez par créer votre première facture pour suivre vos paiements.",
+    "createFirst": "Créer votre première facture",
+    "noResultFilter": "Aucun résultat pour ce filtre",
+    "number": "N° Facture",
+    "client": "Client",
+    "total": "Total TTC",
+    "status": "Statut",
+    "dueDate": "Échéance",
+    "actions": "Actions",
+    "statuses": {
+      "DRAFT": "Brouillon",
+      "SENT": "Envoyée",
+      "PAID": "Payée",
+      "OVERDUE": "En retard",
+      "CANCELLED": "Annulée"
+    },
+    "filters": {
+      "all": "Toutes",
+      "draft": "Brouillon",
+      "sent": "Envoyées",
+      "paid": "Payées",
+      "overdue": "En retard",
+      "cancelled": "Annulées"
+    },
+    "detail": {
+      "issuedAt": "Émise le",
+      "dueDate": "Échéance",
+      "amountHt": "Montant HT",
+      "tps": "TPS (5%)",
+      "tvq": "TVQ (9,975%)",
+      "total": "Total TTC",
+      "markSent": "Marquer comme envoyée",
+      "markPaid": "Marquer comme payée",
+      "markOverdue": "Marquer en retard",
+      "cancel": "Annuler la facture",
+      "downloadPdf": "Télécharger PDF",
+      "paymentLink": "Lien de paiement",
+      "items": "Postes",
+      "description": "Description",
+      "qty": "Qté",
+      "unitPrice": "Prix unitaire",
+      "amount": "Montant"
+    }
+  },
+  "workflows": {
+    "title": "Workflows",
+    "total": "{count} au total",
+    "noWorkflows": "Aucun workflow",
+    "noWorkflowsDesc": "Créez des workflows depuis la fiche d'un client.",
+    "mine": "Mes workflows ({count})",
+    "all": "Tout voir",
+    "list": "Liste",
+    "kanban": "Kanban",
+    "empty": "Vide",
+    "statuses": {
+      "NOT_STARTED": "Non démarré",
+      "IN_PROGRESS": "En cours",
+      "COMPLETED": "Terminé",
+      "CANCELLED": "Annulé"
+    },
+    "tasks": {
+      "TODO": "À faire",
+      "IN_PROGRESS": "En cours",
+      "DONE": "Terminé",
+      "SKIPPED": "Ignoré"
+    }
+  },
+  "portal": {
+    "welcome": "Bonjour, {name}",
+    "subtitle": "Votre espace client CabiCompta",
+    "nav": {
+      "home": "Accueil",
+      "documents": "Documents",
+      "invoices": "Factures",
+      "profile": "Profil"
+    },
+    "home": {
+      "uploadTitle": "Déposer des documents",
+      "uploadDesc": "Partagez vos reçus, relevés et autres pièces comptables.",
+      "upload": "Téléverser un document",
+      "deadlinesTitle": "Prochaines échéances",
+      "noDeadlines": "Aucune échéance à venir.",
+      "notifTitle": "Votre comptable sera notifié dès réception.",
+      "noDocs": "Aucun document"
+    },
+    "documents": {
+      "title": "Mes documents",
+      "noDocuments": "Aucun document",
+      "noDocumentsDesc": "Vous n'avez pas encore de documents.",
+      "pending": "En attente",
+      "processed": "Traité",
+      "rejected": "Rejeté",
+      "download": "Télécharger"
+    },
+    "invoices": {
+      "title": "Mes factures",
+      "toPay": "À payer",
+      "paid": "Payées",
+      "other": "Autres",
+      "noInvoices": "Aucune facture",
+      "pay": "Payer en ligne",
+      "statuses": {
+        "SENT": "À payer",
+        "OVERDUE": "En retard",
+        "PAID": "Payée",
+        "DRAFT": "Brouillon",
+        "CANCELLED": "Annulée"
+      }
+    },
+    "profile": {
+      "title": "Mon profil",
+      "name": "Nom",
+      "email": "Courriel",
+      "phone": "Téléphone",
+      "save": "Enregistrer",
+      "changePassword": "Changer de mot de passe",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "logout": "Se déconnecter"
+    }
+  },
+  "admin": {
+    "practice": {
+      "title": "Vue pratique",
+      "revenue": "Revenus",
+      "clients": "Clients",
+      "documents": "Documents",
+      "invoices": "Factures"
+    },
+    "team": {
+      "title": "Équipe",
+      "create": "Créer un membre",
+      "createTitle": "Créer un membre de l'équipe",
+      "noTeam": "Aucun membre dans l'équipe.",
+      "name": "Nom",
+      "email": "Courriel",
+      "role": "Rôle",
+      "createdAt": "Date de création",
+      "roles": {
+        "ADMIN": "Administrateur",
+        "STAFF": "Comptable",
+        "INTERN": "Stagiaire"
+      },
+      "password": "Mot de passe",
+      "passwordHint": "8 caractères minimum",
+      "submit": "Créer le compte",
+      "submitting": "Création...",
+      "created": "Compte créé pour {name}.",
+      "copyPassword": "Copier le mot de passe",
+      "shareCredentials": "Communiquez ces identifiants au nouveau membre."
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "action": "Action",
+      "table": "Table",
+      "user": "Utilisateur",
+      "date": "Date",
+      "noLogs": "Aucun événement"
+    },
+    "access": {
+      "title": "Journal d'accès",
+      "action": "Action",
+      "resource": "Ressource",
+      "user": "Utilisateur",
+      "ip": "Adresse IP",
+      "date": "Date",
+      "noLogs": "Aucun accès enregistré"
+    }
+  },
+  "fiscal": {
+    "types": {
+      "T2": "T2 — Déclaration fédérale",
+      "CO17": "CO-17 — Déclaration provinciale",
+      "TPS_TVQ": "TPS/TVQ",
+      "TPS_TVQ_INSTALMENT": "Acompte TPS/TVQ",
+      "T4": "T4 — Feuillets",
+      "T4_SUMMARY": "T4 Sommaire",
+      "RL1": "RL-1 — Relevés",
+      "RL1_SUMMARY": "RL-1 Sommaire",
+      "DAS": "DAS — Retenues à la source",
+      "CNESST": "CNESST — Déclaration des salaires",
+      "T2_PAYMENT": "T2 — Paiement",
+      "CO17_PAYMENT": "CO-17 — Paiement",
+      "INSTALMENT": "Acompte provisionnel",
+      "REQ_ANNUAL": "REQ — Déclaration annuelle",
+      "T5": "T5",
+      "RL3": "RL-3"
+    },
+    "statuses": {
+      "UPCOMING": "À venir",
+      "IN_PROGRESS": "En cours",
+      "FILED": "Déclaré",
+      "OVERDUE": "En retard"
+    }
+  },
+  "profile": {
+    "title": "Mon profil",
+    "personalInfo": "Informations personnelles",
+    "name": "Nom",
+    "email": "Courriel",
+    "phone": "Téléphone",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "changePassword": "Changer de mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordUpdated": "Mot de passe mis à jour"
+  }
+}

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import {
   FileText,
   CalendarCheck,
@@ -10,50 +9,49 @@ import {
   MapPin,
   ArrowRight,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-const SERVICES = [
-  {
-    icon: FileText,
-    title: "Tenue de livres",
-    description:
-      "Saisie comptable, conciliation bancaire et états financiers mensuels ou trimestriels pour les PME et travailleurs autonomes.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Déclarations fiscales",
-    description:
-      "Production des déclarations T2, CO-17, TPS/TVQ et rapports DAS. Respect de toutes les échéances gouvernementales québécoises.",
-  },
-  {
-    icon: Users,
-    title: "Paie et ressources humaines",
-    description:
-      "Gestion de la paie, production des relevés RL-1 et T4, calcul des cotisations et des avantages imposables.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Conseil et planification",
-    description:
-      "Optimisation fiscale, planification de la retraite, évaluation d'entreprise et accompagnement au financement.",
-  },
-];
+export default async function HomePage() {
+  const t = await getTranslations("home");
 
-const STATS = [
-  { value: "15+", label: "années d'expérience" },
-  { value: "200+", label: "clients accompagnés" },
-  { value: "100%", label: "conformité garantie" },
-  { value: "48h", label: "délai de réponse" },
-];
+  const SERVICES = [
+    {
+      icon: FileText,
+      title: t("services.bookkeeping.title"),
+      description: t("services.bookkeeping.desc"),
+    },
+    {
+      icon: CalendarCheck,
+      title: t("services.tax.title"),
+      description: t("services.tax.desc"),
+    },
+    {
+      icon: Users,
+      title: t("services.payroll.title"),
+      description: t("services.payroll.desc"),
+    },
+    {
+      icon: TrendingUp,
+      title: t("services.advisory.title"),
+      description: t("services.advisory.desc"),
+    },
+  ];
 
-const POINTS = [
-  "Interlocuteur dédié à votre dossier",
-  "Portail client sécurisé 24/7",
-  "Rappels automatiques des échéances",
-  "Réponse garantie sous 48 heures",
-  "Conformité CPA et normes québécoises",
-];
+  const STATS = [
+    { value: "15+", label: t("stats.years") },
+    { value: "200+", label: t("stats.clients") },
+    { value: "100%", label: t("stats.compliance") },
+    { value: "48h", label: t("stats.response") },
+  ];
 
-export default function HomePage() {
+  const POINTS = [
+    t("approach.points.dedicated"),
+    t("approach.points.portal"),
+    t("approach.points.reminders"),
+    t("approach.points.response"),
+    t("approach.points.compliance"),
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-neutral-900">
       {/* Header */}
@@ -65,7 +63,7 @@ export default function HomePage() {
             </div>
             <div>
               <p className="text-sm font-bold leading-none">CabiCompta</p>
-              <p className="text-[10px] text-neutral-400 leading-none mt-0.5">Cabinet comptable agréé</p>
+              <p className="text-[10px] text-neutral-400 leading-none mt-0.5">{t("footer")}</p>
             </div>
           </div>
           <nav className="flex items-center gap-6">
@@ -79,7 +77,7 @@ export default function HomePage() {
               href="/login"
               className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-neutral-900 text-white text-sm font-medium hover:bg-neutral-700 transition-colors"
             >
-              Espace client
+              {t("contact.clientPortal")}
               <ArrowRight className="size-3.5" />
             </Link>
           </nav>
@@ -92,30 +90,28 @@ export default function HomePage() {
           <div className="max-w-5xl mx-auto px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
             <span className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-500 uppercase tracking-widest mb-6">
               <span className="inline-block size-1.5 rounded-full bg-green-500" />
-              Cabinet comptable — Québec
+              {t("tagline")}
             </span>
             <h1 className="text-4xl sm:text-[52px] font-bold tracking-tight leading-[1.1] max-w-2xl text-neutral-900">
-              Votre comptabilité,{" "}
-              <span className="text-neutral-400">prise en charge.</span>
+              {t("headline").split(",")[0]},{" "}
+              <span className="text-neutral-400">{t("headline").split(",").slice(1).join(",")}</span>
             </h1>
             <p className="mt-6 text-neutral-500 text-lg max-w-xl leading-relaxed">
-              Nous accompagnons les PME et entrepreneurs québécois dans leur
-              comptabilité, leur fiscalité et leur développement — avec rigueur
-              et transparence.
+              {t("subheadline")}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <a
                 href="#contact"
                 className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-700 transition-colors"
               >
-                Prendre rendez-vous
+                {t("cta")}
                 <ArrowRight className="size-4" />
               </a>
               <a
                 href="#services"
                 className="inline-flex items-center justify-center h-11 px-6 rounded-lg border border-neutral-200 text-neutral-700 text-sm font-medium hover:bg-neutral-50 transition-colors"
               >
-                Nos services
+                {t("seeServices")}
               </a>
             </div>
           </div>
@@ -138,12 +134,12 @@ export default function HomePage() {
         {/* Services */}
         <section id="services" className="border-b border-neutral-100">
           <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-3">Services</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-3">{t("services.title")}</p>
             <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-2">
               Ce que nous faisons
             </h2>
             <p className="text-neutral-400 text-sm mb-10 max-w-md">
-              Des solutions comptables adaptées à chaque étape de la vie de votre entreprise.
+              {t("services.subtitle")}
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               {SERVICES.map((s) => (
@@ -169,17 +165,13 @@ export default function HomePage() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-3">Notre approche</p>
                 <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-4">
-                  Une relation de confiance, pas juste un dossier
+                  {t("approach.title")}
                 </h2>
                 <p className="text-neutral-500 text-sm leading-relaxed mb-4">
-                  Chez CabiCompta, chaque client a un interlocuteur dédié qui
-                  connaît son dossier. Nous ne gérons pas des numéros — nous
-                  accompagnons des entrepreneurs.
+                  {t("approach.p1")}
                 </p>
                 <p className="text-neutral-500 text-sm leading-relaxed">
-                  Grâce à notre portail sécurisé, vous déposez vos documents en
-                  ligne, suivez vos échéances en temps réel et consultez vos
-                  états financiers à tout moment.
+                  {t("approach.p2")}
                 </p>
               </div>
               <div className="space-y-3">
@@ -202,9 +194,9 @@ export default function HomePage() {
         <section id="contact" className="border-b border-neutral-100 bg-neutral-50">
           <div className="max-w-5xl mx-auto px-6 py-16 sm:py-20">
             <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400 mb-3">Contact</p>
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-2">Nous contacter</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-neutral-900 mb-2">{t("contact.title")}</h2>
             <p className="text-neutral-400 text-sm mb-10">
-              Un premier échange sans engagement pour évaluer vos besoins.
+              {t("contact.subtitle")}
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               <a
@@ -215,9 +207,9 @@ export default function HomePage() {
                   <Phone className="size-4 text-neutral-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">Téléphone</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">{t("contact.phone")}</p>
                   <p className="text-sm font-medium text-neutral-900">+1 (514) 123-4567</p>
-                  <p className="text-xs text-neutral-400 mt-0.5">Lun–Ven, 9h–17h</p>
+                  <p className="text-xs text-neutral-400 mt-0.5">{t("contact.phoneHours")}</p>
                 </div>
               </a>
               <a
@@ -228,9 +220,9 @@ export default function HomePage() {
                   <Mail className="size-4 text-neutral-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">Courriel</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">{t("contact.emailLabel")}</p>
                   <p className="text-sm font-medium text-neutral-900">info@cabicompta.ca</p>
-                  <p className="text-xs text-neutral-400 mt-0.5">Réponse sous 48h</p>
+                  <p className="text-xs text-neutral-400 mt-0.5">{t("contact.emailResponse")}</p>
                 </div>
               </a>
               <div className="flex items-start gap-4 rounded-xl border border-neutral-200 bg-white p-5">
@@ -238,7 +230,7 @@ export default function HomePage() {
                   <MapPin className="size-4 text-neutral-600" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">Adresse</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400 mb-1">{t("contact.addressLabel")}</p>
                   <p className="text-sm font-medium text-neutral-900">1234 rue Sherbrooke O.</p>
                   <p className="text-xs text-neutral-400 mt-0.5">Montréal, QC H3G 1G1</p>
                 </div>
@@ -247,16 +239,16 @@ export default function HomePage() {
 
             <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <p className="font-semibold text-neutral-900">Déjà client ?</p>
+                <p className="font-semibold text-neutral-900">{t("contact.existing")}</p>
                 <p className="text-sm text-neutral-400 mt-0.5">
-                  Accédez à votre espace sécurisé pour déposer vos documents et suivre vos dossiers.
+                  {t("contact.existingDesc")}
                 </p>
               </div>
               <Link
                 href="/login"
                 className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-neutral-900 text-white text-sm font-semibold hover:bg-neutral-700 transition-colors shrink-0"
               >
-                Espace client
+                {t("contact.clientPortal")}
                 <ArrowRight className="size-4" />
               </Link>
             </div>
@@ -270,9 +262,9 @@ export default function HomePage() {
             <div className="size-5 rounded bg-neutral-900 flex items-center justify-center">
               <span className="text-white text-[8px] font-bold">CC</span>
             </div>
-            <span>CabiCompta — Cabinet comptable agréé, Québec</span>
+            <span>CabiCompta — {t("footer")}</span>
           </div>
-          <span>&copy; {new Date().getFullYear()} CabiCompta. Tous droits réservés.</span>
+          <span>&copy; {new Date().getFullYear()} CabiCompta. {t("rights")}</span>
         </div>
       </footer>
     </div>

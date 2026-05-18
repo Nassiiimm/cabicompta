@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslations } from "next-intl";
 
 export default function ResetPasswordPage() {
   return (
@@ -16,7 +17,8 @@ export default function ResetPasswordPage() {
 }
 
 function ResetPasswordForm() {
-  const [step, setStep] = useState<"request" | "update">("request");
+  const t = useTranslations("auth.resetPassword");
+  const tp = useTranslations("profile");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -26,7 +28,6 @@ function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // If we have a code in URL, show update form
   const hasCode = searchParams.get("code");
 
   async function handleRequest(e: React.FormEvent) {
@@ -38,14 +39,14 @@ function ResetPasswordForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
-    setMessage("Si ce courriel existe, un lien de réinitialisation a été envoyé.");
+    setMessage(t("successDesc"));
     setLoading(false);
   }
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(tp("passwordMismatch"));
       return;
     }
     setLoading(true);
@@ -58,7 +59,7 @@ function ResetPasswordForm() {
     });
 
     if (res.ok) {
-      setMessage("Mot de passe mis à jour. Redirection...");
+      setMessage(tp("passwordUpdated"));
       setTimeout(() => router.push("/login"), 2000);
     } else {
       const data = await res.json();
@@ -78,31 +79,31 @@ function ResetPasswordForm() {
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">{message}</p>
             <Link href="/login" className="text-sm text-foreground underline underline-offset-4">
-              Retour à la connexion
+              {t("backToLogin")}
             </Link>
           </div>
         ) : hasCode ? (
           <form onSubmit={handleUpdate} className="space-y-4">
-            <h1 className="text-lg font-semibold">Nouveau mot de passe</h1>
+            <h1 className="text-lg font-semibold">{t("title")}</h1>
             {error && (
               <div className="text-sm text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-3 py-2">
                 {error}
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="password">Nouveau mot de passe</Label>
+              <Label htmlFor="password">{tp("newPassword")}</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="8 caractères minimum"
+                placeholder="8 min"
                 minLength={8}
                 required
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="confirm">Confirmer</Label>
+              <Label htmlFor="confirm">{tp("confirmPassword")}</Label>
               <Input
                 id="confirm"
                 type="password"
@@ -112,14 +113,14 @@ function ResetPasswordForm() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Mise à jour..." : "Mettre à jour"}
+              {loading ? t("submitting") : t("submit")}
             </Button>
           </form>
         ) : (
           <form onSubmit={handleRequest} className="space-y-4">
-            <h1 className="text-lg font-semibold">Réinitialiser le mot de passe</h1>
+            <h1 className="text-lg font-semibold">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">
-              Entrez votre courriel pour recevoir un lien de réinitialisation.
+              {t("successTitle")}
             </p>
             {error && (
               <div className="text-sm text-destructive bg-destructive/5 border border-destructive/10 rounded-md px-3 py-2">
@@ -127,7 +128,7 @@ function ResetPasswordForm() {
               </div>
             )}
             <div className="space-y-1.5">
-              <Label htmlFor="email">Courriel</Label>
+              <Label htmlFor="email">{t("emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -138,11 +139,11 @@ function ResetPasswordForm() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Envoi..." : "Envoyer le lien"}
+              {loading ? t("submitting") : t("submit")}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               <Link href="/login" className="text-foreground underline underline-offset-4">
-                Retour à la connexion
+                {t("backToLogin")}
               </Link>
             </p>
           </form>

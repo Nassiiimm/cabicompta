@@ -13,6 +13,7 @@ import { PortalUploadZone } from "@/components/portal/portal-upload-zone";
 import { PortalDocumentList } from "@/components/portal/portal-document-list";
 import { PortalInvoiceList } from "@/components/portal/portal-invoice-list";
 import { ArrowRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 async function getPortalData(userId: string) {
   const membership = await db
@@ -64,7 +65,11 @@ export default async function PortalPage() {
   const user = await getCurrentUser();
   if (!user) return null;
 
-  const data = await getPortalData(user.id);
+  const [data, t, tc] = await Promise.all([
+    getPortalData(user.id),
+    getTranslations("portal.home"),
+    getTranslations("common"),
+  ]);
 
   if (!data) {
     return (
@@ -81,7 +86,7 @@ export default async function PortalPage() {
       {/* Header */}
       <div>
         <h1 className="text-lg font-semibold">
-          Bonjour{user.name ? `, ${user.name.split(" ")[0]}` : ""}
+          {user.name ? `${user.name.split(" ")[0]}` : ""}
         </h1>
         <p className="text-sm text-muted-foreground">{data.companyName}</p>
       </div>
@@ -108,7 +113,7 @@ export default async function PortalPage() {
         <div className="rounded-lg border p-4 space-y-3">
           {data.deadlines.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Prochaines échéances</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">{t("deadlinesTitle")}</p>
               {data.deadlines.map((d) => (
                 <div key={d.id} className="flex items-center justify-between text-sm py-1">
                   <span>{d.label}</span>
@@ -135,7 +140,7 @@ export default async function PortalPage() {
 
       {/* Upload */}
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Envoyer des documents</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t("uploadTitle")}</p>
         <PortalUploadZone companyId={data.companyId} />
       </div>
 
@@ -153,14 +158,14 @@ export default async function PortalPage() {
           <p className="text-xs font-medium text-muted-foreground">Documents ({data.totalDocs})</p>
           {data.totalDocs > 0 && (
             <Link href="/portal/documents" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              Tout voir <ArrowRight className="size-3" />
+              {tc("viewAll")} <ArrowRight className="size-3" />
             </Link>
           )}
         </div>
         {data.documents.length > 0 ? (
           <PortalDocumentList documents={data.documents} />
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg">Aucun document</p>
+          <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg">{t("noDeadlines")}</p>
         )}
       </div>
     </div>

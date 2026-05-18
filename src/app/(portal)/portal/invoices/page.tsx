@@ -4,6 +4,7 @@ import { invoices, companyMembers, companies } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { PortalInvoiceList } from "@/components/portal/portal-invoice-list";
+import { getTranslations } from "next-intl/server";
 
 async function getInvoices(userId: string) {
   const [membership] = await db
@@ -35,7 +36,10 @@ export default async function PortalInvoicesPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const rows = await getInvoices(user.id);
+  const [rows, t] = await Promise.all([
+    getInvoices(user.id),
+    getTranslations("portal.invoices"),
+  ]);
   if (rows === null) redirect("/portal");
 
   const unpaid = rows.filter((i) => i.status === "SENT" || i.status === "OVERDUE");
@@ -44,18 +48,18 @@ export default async function PortalInvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Mes factures</h1>
+      <h1 className="text-lg font-semibold">{t("title")}</h1>
 
       {rows.length === 0 ? (
         <div className="rounded-lg border py-16 text-center">
-          <p className="text-sm text-muted-foreground">Aucune facture pour l&apos;instant</p>
+          <p className="text-sm text-muted-foreground">{t("noInvoices")}</p>
         </div>
       ) : (
         <>
           {unpaid.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                À payer ({unpaid.length})
+                {t("toPay")} ({unpaid.length})
               </p>
               <PortalInvoiceList invoices={unpaid} />
             </div>
@@ -63,7 +67,7 @@ export default async function PortalInvoicesPage() {
           {paid.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Payées ({paid.length})
+                {t("paid")} ({paid.length})
               </p>
               <PortalInvoiceList invoices={paid} />
             </div>
@@ -71,7 +75,7 @@ export default async function PortalInvoicesPage() {
           {other.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
-                Autres ({other.length})
+                {t("other")} ({other.length})
               </p>
               <PortalInvoiceList invoices={other} />
             </div>
