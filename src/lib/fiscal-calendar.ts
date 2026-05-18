@@ -169,6 +169,15 @@ export function generateFiscalDeadlines(
   });
 
   deadlines.push({
+    type: "T4_SUMMARY",
+    label: "T4 Sommaire — Sommaire de la rémunération payée",
+    period: `${year}`,
+    dueDate: t4Due,
+    description:
+      "Production du sommaire T4 accompagnant les feuillets T4. Due le dernier jour de février de l'année suivante. Art. 200(1) LIR.",
+  });
+
+  deadlines.push({
     type: "RL1",
     label: "RL-1 — Relevés de rémunération (Québec)",
     period: `${year}`,
@@ -176,6 +185,50 @@ export function generateFiscalDeadlines(
     description:
       "Production des relevés RL-1 (Revenus d'emploi et revenus divers). Due le dernier jour de février de l'année suivante. Art. 1086R1 du Règlement sur les impôts.",
   });
+
+  deadlines.push({
+    type: "RL1_SUMMARY",
+    label: "RL-1 Sommaire — Sommaire des retenues et cotisations",
+    period: `${year}`,
+    dueDate: t4Due,
+    description:
+      "Production du sommaire RL-1 accompagnant les relevés RL-1. Due le dernier jour de février de l'année suivante.",
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // CNESST — Déclaration des salaires
+  //    Avant le 15 mars de l'année suivante
+  // ═══════════════════════════════════════════════════════
+  deadlines.push({
+    type: "CNESST",
+    label: "CNESST — Déclaration des salaires",
+    period: `${year}`,
+    dueDate: new Date(year + 1, 2, 15), // 15 mars
+    description:
+      "Déclaration annuelle des salaires à la CNESST. Due le 15 mars de l'année suivante. Art. 34 LATMP.",
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // Acomptes provisionnels TPS/TVQ — trimestriels
+  //    Art. 237 LTA / Art. 466 LTVQ
+  // ═══════════════════════════════════════════════════════
+  const tpsInstalments = [
+    { q: 1, label: "T1 (jan–mars)", dueMonth: 3, dueDay: 30 },
+    { q: 2, label: "T2 (avr–juin)", dueMonth: 6, dueDay: 31 },
+    { q: 3, label: "T3 (juil–sept)", dueMonth: 9, dueDay: 31 },
+    { q: 4, label: "T4 (oct–déc)", dueMonth: 0, dueDay: 31 },
+  ];
+  for (const q of tpsInstalments) {
+    const dueYear = q.q === 4 ? year + 1 : year;
+    deadlines.push({
+      type: "TPS_TVQ_INSTALMENT",
+      label: `Acompte TPS/TVQ — ${q.label}`,
+      period: `${year}-Q${q.q}`,
+      dueDate: new Date(dueYear, q.dueMonth, q.dueDay),
+      description:
+        `Acompte provisionnel trimestriel TPS/TVQ pour ${q.label}. Art. 237 LTA / Art. 466 LTVQ.`,
+    });
+  }
 
   // ═══════════════════════════════════════════════════════
   // 9. Déclaration annuelle REQ

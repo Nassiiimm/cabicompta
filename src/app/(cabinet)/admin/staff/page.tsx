@@ -8,11 +8,13 @@ import { CreateStaffForm } from "./create-staff";
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Administrateur",
   STAFF: "Comptable",
+  INTERN: "Stagiaire",
 };
 
-const ROLE_VARIANTS: Record<string, "default" | "secondary"> = {
+const ROLE_VARIANTS: Record<string, "default" | "secondary" | "outline"> = {
   ADMIN: "default",
   STAFF: "secondary",
+  INTERN: "outline",
 };
 
 export default async function StaffPage() {
@@ -27,7 +29,7 @@ export default async function StaffPage() {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(sql`${users.role} IN ('ADMIN', 'STAFF')`)
+    .where(sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`)
     .orderBy(users.createdAt);
 
   return (

@@ -13,7 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Enums
-export const userRole = pgEnum("user_role", ["ADMIN", "STAFF", "CLIENT"]);
+export const userRole = pgEnum("user_role", ["ADMIN", "STAFF", "INTERN", "CLIENT"]);
 export const companyStatus = pgEnum("company_status", [
   "ACTIVE",
   "INACTIVE",
@@ -25,11 +25,17 @@ export const memberRole = pgEnum("member_role", [
   "CONTACT",
 ]);
 export const documentCategory = pgEnum("document_category", [
+  // Catégories structurées (01-06)
+  "DAS",
+  "TPS_TVQ",
+  "FINANCIAL_STATEMENT",
+  "T1",
+  "REQ_DOC",
+  "IMMOBILISATION",
+  // Catégories génériques
   "BANK_STATEMENT",
   "INVOICE",
   "TAX_NOTICE",
-  "FINANCIAL_STATEMENT",
-  "TPS_TVQ",
   "CORPORATE",
   "CONTRACT",
   "RECEIPT",
@@ -61,9 +67,13 @@ export const fiscalType = pgEnum("fiscal_type", [
   "TPS",
   "TVQ",
   "TPS_TVQ",
+  "TPS_TVQ_INSTALMENT",
   "T4",
+  "T4_SUMMARY",
   "RL1",
+  "RL1_SUMMARY",
   "DAS",
+  "CNESST",
   "T2_PAYMENT",
   "CO17_PAYMENT",
   "INSTALMENT",
@@ -76,6 +86,12 @@ export const fiscalStatus = pgEnum("fiscal_status", [
   "IN_PROGRESS",
   "FILED",
   "OVERDUE",
+]);
+
+export const companyType = pgEnum("company_type", [
+  "T1_PARTICULIER",
+  "T1_AUTONOME",
+  "T2_SOCIETE",
 ]);
 
 export const workflowStatus = pgEnum("workflow_status", [
@@ -122,6 +138,7 @@ export const companies = pgTable("companies", {
   postalCode: varchar("postal_code", { length: 10 }),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 255 }),
+  type: companyType("type"),
   status: companyStatus("status").notNull().default("ACTIVE"),
   assignedTo: uuid("assigned_to").references(() => users.id, { onDelete: "set null" }),
   notes: text("notes"),
@@ -166,6 +183,7 @@ export const documents = pgTable("documents", {
   fileSize: integer("file_size"),
   mimeType: varchar("mime_type", { length: 100 }),
   category: documentCategory("category").default("OTHER"),
+  subcategory: varchar("subcategory", { length: 50 }),
   fiscalYear: integer("fiscal_year"),
   extractedData: jsonb("extracted_data"),
   status: documentStatus("status").notNull().default("PENDING"),

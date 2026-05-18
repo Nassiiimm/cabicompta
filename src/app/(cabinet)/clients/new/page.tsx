@@ -29,6 +29,7 @@ export default function NewClientPage() {
     const formData = new FormData(e.currentTarget);
     const data = {
       name: formData.get("name") as string,
+      type: formData.get("type") as string,
       neq: formData.get("neq") as string,
       arcNumber: formData.get("arcNumber") as string,
       rqNumber: formData.get("rqNumber") as string,
@@ -95,13 +96,27 @@ export default function NewClientPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="name">Nom de la societe *</Label>
+              <Label htmlFor="name">Nom *</Label>
               <Input
                 id="name"
                 name="name"
                 required
-                placeholder="Ex: ABC Inc."
+                placeholder="Ex: ABC Inc. ou Jean Tremblay"
               />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="type">Type de client *</Label>
+              <select
+                id="type"
+                name="type"
+                required
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">— Sélectionner —</option>
+                <option value="T1_PARTICULIER">T1 — Particulier</option>
+                <option value="T1_AUTONOME">T1 — Travailleur autonome (entreprise individuelle)</option>
+                <option value="T2_SOCIETE">T2 — Société (Inc. / Ltée)</option>
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="neq">NEQ</Label>

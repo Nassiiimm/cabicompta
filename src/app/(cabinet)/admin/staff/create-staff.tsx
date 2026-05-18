@@ -176,6 +176,7 @@ export function CreateStaffForm() {
                 className="h-8 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="STAFF">Comptable</option>
+                <option value="INTERN">Stagiaire</option>
                 <option value="ADMIN">Administrateur</option>
               </select>
             </div>

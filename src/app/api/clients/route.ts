@@ -7,8 +7,11 @@ import { z } from "zod";
 import { generateInboxEmail } from "@/lib/inbox";
 import { csrfGuard } from "@/lib/csrf";
 
+const COMPANY_TYPES = ["T1_PARTICULIER", "T1_AUTONOME", "T2_SOCIETE"] as const;
+
 const createCompanySchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(255),
+  type: z.enum(COMPANY_TYPES).optional().nullable(),
   neq: z.string().max(20).optional().nullable(),
   arcNumber: z.string().max(20).optional().nullable(),
   rqNumber: z.string().max(20).optional().nullable(),

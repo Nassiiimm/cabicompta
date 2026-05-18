@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File | null;
     const companyId = formData.get("companyId") as string | null;
     const category = formData.get("category") as string | null;
+    const subcategory = formData.get("subcategory") as string | null;
     const fiscalYear = formData.get("fiscalYear") as string | null;
 
     if (!file) {
@@ -207,18 +208,14 @@ export async function POST(request: NextRequest) {
     await uploadFile("documents", storagePath, buffer, file.type);
 
     const validCategories = [
-      "BANK_STATEMENT",
-      "INVOICE",
-      "TAX_NOTICE",
-      "FINANCIAL_STATEMENT",
-      "TPS_TVQ",
-      "CORPORATE",
-      "CONTRACT",
-      "RECEIPT",
-      "OTHER",
+      "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION",
+      "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER",
     ];
     const docCategory =
       category && validCategories.includes(category) ? category : "OTHER";
+    const validSubcategories = ["A", "B", "C"];
+    const docSubcategory =
+      subcategory && validSubcategories.includes(subcategory) ? subcategory : null;
 
     const [doc] = await db
       .insert(documents)
@@ -230,6 +227,7 @@ export async function POST(request: NextRequest) {
         fileSize: file.size,
         mimeType: file.type,
         category: docCategory as typeof documents.$inferInsert.category,
+        subcategory: docSubcategory,
         fiscalYear: fiscalYear ? parseInt(fiscalYear, 10) : null,
         status: "PENDING",
       })

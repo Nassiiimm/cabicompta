@@ -9,7 +9,7 @@ const createSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
   email: z.string().email("Courriel invalide"),
   password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  role: z.enum(["STAFF", "ADMIN"]),
+  role: z.enum(["STAFF", "INTERN", "ADMIN"]),
 });
 
 export async function GET() {
@@ -25,7 +25,7 @@ export async function GET() {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(sql`${users.role} IN ('ADMIN', 'STAFF')`)
+      .where(sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`)
       .orderBy(users.createdAt);
 
     return Response.json(staffUsers);
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         name: newUser.name,
         role: newUser.role,
         tempPassword: data.password,
-        message: `Compte ${data.role === "ADMIN" ? "administrateur" : "comptable"} créé pour ${data.name}.`,
+        message: `Compte ${data.role === "ADMIN" ? "administrateur" : data.role === "INTERN" ? "stagiaire" : "comptable"} créé pour ${data.name}.`,
       },
       { status: 201 }
     );

@@ -19,16 +19,38 @@ type Company = {
 };
 
 const CATEGORIES = [
+  { value: "DAS", label: "01 — DAS (Déductions à la source)" },
+  { value: "TPS_TVQ", label: "02 — TPS/TVQ" },
+  { value: "FINANCIAL_STATEMENT", label: "03 — T2/CO-17" },
+  { value: "T1", label: "04 — T1" },
+  { value: "REQ_DOC", label: "05 — REQ" },
+  { value: "IMMOBILISATION", label: "06 — Immobilisation & investissements" },
   { value: "BANK_STATEMENT", label: "Relevé bancaire" },
   { value: "INVOICE", label: "Facture" },
   { value: "TAX_NOTICE", label: "Avis de cotisation" },
-  { value: "FINANCIAL_STATEMENT", label: "État financier" },
-  { value: "TPS_TVQ", label: "TPS/TVQ" },
   { value: "CORPORATE", label: "Document corporatif" },
   { value: "CONTRACT", label: "Contrat" },
   { value: "RECEIPT", label: "Reçu" },
   { value: "OTHER", label: "Autre" },
-] as const;
+];
+
+const SUBCATEGORIES: Record<string, { value: string; label: string }[]> = {
+  DAS: [
+    { value: "A", label: "A — Fiches de paies" },
+    { value: "B", label: "B — Rapport DAS gouvernements" },
+    { value: "C", label: "C — Autres" },
+  ],
+  TPS_TVQ: [
+    { value: "A", label: "A — Factures TPS/TVQ par période" },
+    { value: "B", label: "B — Rapport TPS/TVQ gouvernements" },
+    { value: "C", label: "C — Autres TPS/TVQ" },
+  ],
+  FINANCIAL_STATEMENT: [
+    { value: "A", label: "A — États financiers" },
+    { value: "B", label: "B — Rapport T2/CO-17 gouvernements" },
+    { value: "C", label: "C — Autres T2/CO-17" },
+  ],
+};
 
 export function UploadDialog({
   open,
@@ -43,6 +65,7 @@ export function UploadDialog({
   const [files, setFiles] = useState<File[]>([]);
   const [companyId, setCompanyId] = useState("");
   const [category, setCategory] = useState("OTHER");
+  const [subcategory, setSubcategory] = useState("");
   const [fiscalYear, setFiscalYear] = useState(
     new Date().getFullYear().toString()
   );
@@ -133,6 +156,7 @@ export function UploadDialog({
         formData.append("file", file);
         formData.append("companyId", companyId);
         formData.append("category", category);
+        if (subcategory) formData.append("subcategory", subcategory);
         formData.append("fiscalYear", fiscalYear);
 
         const res = await fetch("/api/documents", {
@@ -149,6 +173,7 @@ export function UploadDialog({
       setFiles([]);
       setCompanyId("");
       setCategory("OTHER");
+      setSubcategory("");
       setScanResult(null);
       onSuccess();
       onClose();
@@ -165,6 +190,7 @@ export function UploadDialog({
     setFiles([]);
     setCompanyId("");
     setCategory("OTHER");
+    setSubcategory("");
     setFiscalYear(new Date().getFullYear().toString());
     setScanResult(null);
     setError("");
@@ -272,7 +298,7 @@ export function UploadDialog({
             <select
               id="category"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => { setCategory(e.target.value); setSubcategory(""); }}
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               {CATEGORIES.map((c) => (
@@ -282,6 +308,26 @@ export function UploadDialog({
               ))}
             </select>
           </div>
+
+          {/* Subcategory select — shown only for categories with subcategories */}
+          {SUBCATEGORIES[category] && (
+            <div className="space-y-2">
+              <Label htmlFor="subcategory">Sous-catégorie</Label>
+              <select
+                id="subcategory"
+                value={subcategory}
+                onChange={(e) => setSubcategory(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">— Sélectionner —</option>
+                {SUBCATEGORIES[category].map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Fiscal year */}
           <div className="space-y-2">
