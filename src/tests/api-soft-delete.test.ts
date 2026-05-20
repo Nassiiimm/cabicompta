@@ -27,6 +27,7 @@ vi.mock("@/lib/db/schema", () => ({
   documents: { companyId: "company_id", deletedAt: "deleted_at", updatedAt: "updated_at" },
   invoices: { companyId: "company_id", deletedAt: "deleted_at", updatedAt: "updated_at" },
   fiscalDeadlines: { companyId: "company_id", deletedAt: "deleted_at" },
+  workflows: { companyId: "company_id", status: "status", updatedAt: "updated_at" },
 }));
 
 describe("DELETE /api/clients/[id] — soft delete cascade", () => {
@@ -42,8 +43,8 @@ describe("DELETE /api/clients/[id] — soft delete cascade", () => {
     const res = await DELETE(req, { params: Promise.resolve({ id: "comp-1" }) });
     expect(res.status).toBe(200);
 
-    // Should call update 4 times (company, documents, invoices, fiscal_deadlines)
-    expect(mockDb.update).toHaveBeenCalledTimes(4);
+    // Should call update 5 times (company, documents, invoices, fiscal_deadlines, workflows)
+    expect(mockDb.update).toHaveBeenCalledTimes(5);
     // Should NOT call delete
     expect(mockDb.delete).not.toHaveBeenCalled();
   });

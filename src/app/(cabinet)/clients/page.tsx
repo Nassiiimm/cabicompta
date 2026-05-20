@@ -11,14 +11,20 @@ import { ClientFilters } from "./client-filters";
 import { ExportButton } from "@/components/cabinet/export-button";
 import { getTranslations } from "next-intl/server";
 
+const TYPE_LABELS: Record<string, string> = {
+  T1_PARTICULIER: "T1 — Particulier",
+  T1_AUTONOME: "T1 — Autonome",
+  T2_SOCIETE: "T2 — Société",
+};
+
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; type?: string }>;
 }) {
   await requireStaff();
   const t = await getTranslations("clients");
-  const { q, status } = await searchParams;
+  const { q, status, type } = await searchParams;
 
   const statusLabels: Record<string, string> = {
     ACTIVE: t("active"),
@@ -48,6 +54,11 @@ export default async function ClientsPage({
     filters.push(eq(companies.status, status));
   }
 
+  const VALID_TYPES = ["T1_PARTICULIER", "T1_AUTONOME", "T2_SOCIETE"] as const;
+  if (type && VALID_TYPES.includes(type as typeof VALID_TYPES[number])) {
+    filters.push(eq(companies.type, type as typeof VALID_TYPES[number]));
+  }
+
   const conditions = and(...filters);
 
   const clientList = await db
@@ -69,7 +80,7 @@ export default async function ClientsPage({
         </div>
       </div>
 
-      <ClientFilters currentStatus={status} />
+      <ClientFilters currentStatus={status} currentType={type} />
       <ClientSearch defaultValue={q} />
 
       {clientList.length === 0 ? (
@@ -90,7 +101,11 @@ export default async function ClientsPage({
               <div className="min-w-0">
                 <p className="text-sm font-medium">{client.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {[client.neq ? `NEQ ${client.neq}` : null, client.email].filter(Boolean).join(" · ") || "—"}
+                  {[
+                    client.type ? TYPE_LABELS[client.type] : null,
+                    client.neq ? `NEQ ${client.neq}` : null,
+                    client.email,
+                  ].filter(Boolean).join(" · ") || "—"}
                 </p>
               </div>
               <Badge variant={statusVariants[client.status] ?? "secondary"}>

@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "STAFF" | "CLIENT";
+export type UserRole = "ADMIN" | "STAFF" | "INTERN" | "CLIENT";
 
 export type NavItem = {
   label: string;

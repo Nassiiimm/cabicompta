@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
+import type { UserRole } from "@/types";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
@@ -30,7 +31,7 @@ export default async function ClientDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireStaff();
+  const staff = await requireStaff();
   const { id } = await params;
 
   const [client] = await db
@@ -52,6 +53,8 @@ export default async function ClientDetailPage({
     .limit(50);
 
   // Serialize for client component
+  const canSeeBanking = staff.role === "ADMIN" || staff.role === "STAFF";
+
   const serializedClient = {
     id: client.id,
     name: client.name,
@@ -72,6 +75,13 @@ export default async function ClientDetailPage({
     conflictCheck: client.conflictCheck,
     createdAt: client.createdAt.toISOString(),
     updatedAt: client.updatedAt.toISOString(),
+    // Informations bancaires — transmises seulement si ADMIN ou STAFF
+    bankName: canSeeBanking ? client.bankName : null,
+    bankTransitNumber: canSeeBanking ? client.bankTransitNumber : null,
+    bankInstitutionNumber: canSeeBanking ? client.bankInstitutionNumber : null,
+    bankAccountNumber: canSeeBanking ? client.bankAccountNumber : null,
+    bankOnlineId: canSeeBanking ? client.bankOnlineId : null,
+    bankPassword: canSeeBanking ? client.bankPassword : null,
   };
 
   const serializedDeadlines = deadlines.map((d) => ({
@@ -108,7 +118,7 @@ export default async function ClientDetailPage({
       </div>
 
       <Suspense fallback={<div className="text-sm text-muted-foreground py-8 text-center">Chargement...</div>}>
-        <ClientTabs client={serializedClient} deadlines={serializedDeadlines} />
+        <ClientTabs client={serializedClient} deadlines={serializedDeadlines} userRole={staff.role as UserRole} />
       </Suspense>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { UserRole } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -23,6 +24,9 @@ import {
   ChevronDown,
   ChevronRight,
   GitBranch,
+  Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import { DeleteClientButton } from "./delete-button";
 import { RequestDocsButton } from "./request-docs-button";
@@ -38,7 +42,6 @@ import { WorkflowTab } from "./workflow-tab";
 const TABS = [
   { key: "apercu", label: "Aperçu", icon: LayoutDashboard },
   { key: "documents", label: "Documents", icon: FileText },
-  { key: "factures", label: "Factures", icon: Receipt },
   { key: "echeances", label: "Échéances", icon: CalendarClock },
   { key: "workflows", label: "Workflows", icon: GitBranch },
   { key: "temps", label: "Temps", icon: Clock },
@@ -95,8 +98,15 @@ interface ClientTabsProps {
     conflictCheck: boolean;
     createdAt: string;
     updatedAt: string;
+    bankName: string | null;
+    bankTransitNumber: string | null;
+    bankInstitutionNumber: string | null;
+    bankAccountNumber: string | null;
+    bankOnlineId: string | null;
+    bankPassword: string | null;
   };
   deadlines: Deadline[];
+  userRole: UserRole;
 }
 
 const DEADLINE_STATUS_LABELS: Record<string, string> = {
@@ -135,7 +145,7 @@ const INVOICE_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destruc
   CANCELLED: "outline",
 };
 
-export function ClientTabs({ client, deadlines }: ClientTabsProps) {
+export function ClientTabs({ client, deadlines, userRole }: ClientTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabKey) || "apercu";
@@ -196,10 +206,10 @@ export function ClientTabs({ client, deadlines }: ClientTabsProps) {
           deadlines={deadlines}
           nextDeadlineDays={nextDeadlineDays}
           formatDate={formatDate}
+          userRole={userRole}
         />
       )}
       {activeTab === "documents" && <DocumentsTab companyId={client.id} />}
-      {activeTab === "factures" && <FacturesTab companyId={client.id} />}
       {activeTab === "echeances" && (
         <EcheancesTab
           companyId={client.id}
@@ -226,11 +236,13 @@ function ApercuTab({
   deadlines,
   nextDeadlineDays,
   formatDate,
+  userRole,
 }: {
   client: ClientTabsProps["client"];
   deadlines: Deadline[];
   nextDeadlineDays: number | null;
   formatDate: (d: string | null) => string;
+  userRole: UserRole;
 }) {
   const [docCount, setDocCount] = useState<{ total: number; pending: number } | null>(null);
   const [invoiceCount, setInvoiceCount] = useState<{ total: number; unpaid: number } | null>(null);
@@ -345,6 +357,11 @@ function ApercuTab({
           </CardContent>
         </Card>
       </div>
+
+      {/* Informations bancaires — ADMIN/STAFF uniquement */}
+      {(userRole === "ADMIN" || userRole === "STAFF") && (
+        <BankingCard client={client} />
+      )}
 
       {/* Notes */}
       {client.notes && (
@@ -660,6 +677,97 @@ function ConformiteTab({
   conflictCheck: boolean;
 }) {
   return <KycSection companyId={companyId} kycVerified={kycVerified} conflictCheck={conflictCheck} />;
+}
+
+// ─── Banking Card ────────────────────────────────────────────
+function BankingCard({ client }: { client: ClientTabsProps["client"] }) {
+  const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({
+    bankName: client.bankName ?? "",
+    bankTransitNumber: client.bankTransitNumber ?? "",
+    bankInstitutionNumber: client.bankInstitutionNumber ?? "",
+    bankAccountNumber: client.bankAccountNumber ?? "",
+    bankOnlineId: client.bankOnlineId ?? "",
+    bankPassword: client.bankPassword ?? "",
+  });
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`/api/clients/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="size-4 text-muted-foreground" />
+          Informations bancaires
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <BankField label="Banque" value={form.bankName} onChange={(v) => setForm((f) => ({ ...f, bankName: v }))} />
+          <BankField label="N° de transit (5 chiffres)" value={form.bankTransitNumber} onChange={(v) => setForm((f) => ({ ...f, bankTransitNumber: v }))} />
+          <BankField label="N° d'institution (3 chiffres)" value={form.bankInstitutionNumber} onChange={(v) => setForm((f) => ({ ...f, bankInstitutionNumber: v }))} />
+          <BankField label="N° de compte" value={form.bankAccountNumber} onChange={(v) => setForm((f) => ({ ...f, bankAccountNumber: v }))} />
+          <BankField label="Identifiant bancaire en ligne" value={form.bankOnlineId} onChange={(v) => setForm((f) => ({ ...f, bankOnlineId: v }))} />
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Mot de passe bancaire</label>
+            <div className="flex items-center gap-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={form.bankPassword}
+                onChange={(e) => setForm((f) => ({ ...f, bankPassword: e.target.value }))}
+                className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-8 px-3 rounded-md border border-input bg-transparent text-sm hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {saving ? "Enregistrement..." : saved ? "Enregistré ✓" : "Enregistrer"}
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function BankField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs text-muted-foreground">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      />
+    </div>
+  );
 }
 
 // ─── Shared ────────────────────────────────────────────

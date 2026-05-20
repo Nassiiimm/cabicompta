@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { documents, companyMembers } from "@/lib/db/schema";
+import { documents, companyMembers, companies } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requireStaff } from "@/lib/auth";
 import { getSignedUrl, deleteFile } from "@/lib/supabase/storage";
@@ -44,6 +44,17 @@ export async function GET(
       }
     } else {
       await requireStaff();
+      // INTERN : seulement les documents des clients qui lui sont assignés
+      if (user.role === "INTERN") {
+        const [company] = await db
+          .select({ assignedTo: companies.assignedTo })
+          .from(companies)
+          .where(eq(companies.id, doc.companyId))
+          .limit(1);
+        if (!company || company.assignedTo !== user.id) {
+          return Response.json({ error: "Accès refusé" }, { status: 403 });
+        }
+      }
     }
 
     const signedUrl = await getSignedUrl("documents", doc.filePath);
@@ -98,15 +109,8 @@ export async function PATCH(
     };
 
     const validCategories = [
-      "BANK_STATEMENT",
-      "INVOICE",
-      "TAX_NOTICE",
-      "FINANCIAL_STATEMENT",
-      "TPS_TVQ",
-      "CORPORATE",
-      "CONTRACT",
-      "RECEIPT",
-      "OTHER",
+      "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION",
+      "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER",
     ];
     if (category && validCategories.includes(category)) {
       updateData.category = category;

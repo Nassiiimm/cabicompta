@@ -9,7 +9,8 @@ import { eq, and, lt, isNotNull, isNull, or, sql } from "drizzle-orm";
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
     return Response.json({ error: "Non autorisé" }, { status: 401 });
   }
 

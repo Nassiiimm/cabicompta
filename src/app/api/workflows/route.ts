@@ -34,9 +34,17 @@ const createSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
+
+    // INTERN : seulement les workflows des clients qui lui sont assignés
+    const internFilter =
+      user.role === "INTERN" ? eq(companies.assignedTo, user.id) : undefined;
+    const companyFilter = companyId ? eq(workflows.companyId, companyId) : undefined;
+    const whereCondition = internFilter && companyFilter
+      ? and(companyFilter, internFilter)
+      : internFilter ?? companyFilter;
 
     const rows = await db
       .select({
@@ -55,7 +63,7 @@ export async function GET(request: NextRequest) {
       .from(workflows)
       .leftJoin(companies, eq(workflows.companyId, companies.id))
       .leftJoin(users, eq(workflows.assignedTo, users.id))
-      .where(companyId ? eq(workflows.companyId, companyId) : undefined)
+      .where(whereCondition)
       .orderBy(desc(workflows.createdAt));
 
     return Response.json({ workflows: rows });

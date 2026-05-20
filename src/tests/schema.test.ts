@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as schema from "@/lib/db/schema";
 
 describe("database schema", () => {
-  it("exports all 13 table definitions", () => {
+  it("exports all 17 table definitions", () => {
     expect(schema.users).toBeDefined();
     expect(schema.companies).toBeDefined();
     expect(schema.companyMembers).toBeDefined();
@@ -15,6 +15,11 @@ describe("database schema", () => {
     expect(schema.documentComments).toBeDefined();
     expect(schema.timeEntries).toBeDefined();
     expect(schema.accessLogs).toBeDefined();
+    expect(schema.kycDocuments).toBeDefined();
+    expect(schema.workflowTemplates).toBeDefined();
+    expect(schema.workflowTemplateTasks).toBeDefined();
+    expect(schema.workflows).toBeDefined();
+    expect(schema.workflowTasks).toBeDefined();
   });
 
   it("does NOT export removed tables (tasks, appointments)", () => {
@@ -49,6 +54,9 @@ describe("database schema", () => {
     expect(schema.notificationType).toBeDefined();
     expect(schema.fiscalType).toBeDefined();
     expect(schema.fiscalStatus).toBeDefined();
+    expect(schema.companyType).toBeDefined();
+    expect(schema.workflowStatus).toBeDefined();
+    expect(schema.workflowTaskStatus).toBeDefined();
   });
 
   it("does NOT export removed enums", () => {
@@ -58,17 +66,19 @@ describe("database schema", () => {
   });
 
   it("userRole has correct values", () => {
-    expect(schema.userRole.enumValues).toEqual(["ADMIN", "STAFF", "CLIENT"]);
+    expect(schema.userRole.enumValues).toEqual(["ADMIN", "STAFF", "INTERN", "CLIENT"]);
   });
 
   it("companyStatus has correct values", () => {
     expect(schema.companyStatus.enumValues).toEqual(["ACTIVE", "INACTIVE", "ARCHIVED"]);
   });
 
-  it("documentCategory has all 9 categories", () => {
-    expect(schema.documentCategory.enumValues).toHaveLength(9);
+  it("documentCategory has all 13 categories", () => {
+    expect(schema.documentCategory.enumValues).toHaveLength(13);
     expect(schema.documentCategory.enumValues).toContain("BANK_STATEMENT");
     expect(schema.documentCategory.enumValues).toContain("TPS_TVQ");
+    expect(schema.documentCategory.enumValues).toContain("DAS");
+    expect(schema.documentCategory.enumValues).toContain("IMMOBILISATION");
   });
 
   it("invoiceStatus has all 5 statuses", () => {
@@ -91,6 +101,27 @@ describe("database schema", () => {
     expect(schema.companies.assignedTo).toBeDefined();
   });
 
+  it("companies table has banking fields", () => {
+    expect(schema.companies.bankName).toBeDefined();
+    expect(schema.companies.bankTransitNumber).toBeDefined();
+    expect(schema.companies.bankInstitutionNumber).toBeDefined();
+    expect(schema.companies.bankAccountNumber).toBeDefined();
+    expect(schema.companies.bankOnlineId).toBeDefined();
+    expect(schema.companies.bankPassword).toBeDefined();
+  });
+
+  it("companies table has type field", () => {
+    expect(schema.companies.type).toBeDefined();
+  });
+
+  it("documents table has subcategory field", () => {
+    expect(schema.documents.subcategory).toBeDefined();
+  });
+
+  it("workflows table has fiscalDeadlineId field", () => {
+    expect(schema.workflows.fiscalDeadlineId).toBeDefined();
+  });
+
   it("exports type helpers", () => {
     const _user: schema.User | undefined = undefined;
     const _company: schema.Company | undefined = undefined;
@@ -102,6 +133,11 @@ describe("database schema", () => {
     const _comment: schema.DocumentComment | undefined = undefined;
     const _time: schema.TimeEntry | undefined = undefined;
     const _access: schema.AccessLog | undefined = undefined;
+    const _kyc: schema.KycDocument | undefined = undefined;
+    const _wfTemplate: schema.WorkflowTemplate | undefined = undefined;
+    const _wfTemplateTask: schema.WorkflowTemplateTask | undefined = undefined;
+    const _wf: schema.Workflow | undefined = undefined;
+    const _wfTask: schema.WorkflowTask | undefined = undefined;
     expect(true).toBe(true);
   });
 });

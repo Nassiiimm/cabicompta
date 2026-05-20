@@ -1,6 +1,6 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { companies, documents, invoices, fiscalDeadlines } from "@/lib/db/schema";
+import { companies, documents, invoices, fiscalDeadlines, workflows } from "@/lib/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
@@ -19,6 +19,13 @@ const updateCompanySchema = z.object({
   email: z.string().email("Courriel invalide").max(255).optional().nullable().or(z.literal("")),
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
   notes: z.string().optional().nullable(),
+  // Informations bancaires — ADMIN/STAFF uniquement
+  bankName: z.string().max(255).optional().nullable(),
+  bankTransitNumber: z.string().max(20).optional().nullable(),
+  bankInstitutionNumber: z.string().max(10).optional().nullable(),
+  bankAccountNumber: z.string().max(50).optional().nullable(),
+  bankOnlineId: z.string().max(255).optional().nullable(),
+  bankPassword: z.string().optional().nullable(),
 });
 
 export async function GET(
@@ -26,7 +33,7 @@ export async function GET(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { id } = await segmentData.params;
 
     const [company] = await db
@@ -37,6 +44,17 @@ export async function GET(
 
     if (!company) {
       return Response.json({ error: "Client introuvable" }, { status: 404 });
+    }
+
+    if (user.role === "INTERN" && company.assignedTo !== user.id) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
+
+    // Masquer les informations bancaires pour les stagiaires
+    if (user.role === "INTERN") {
+      const { bankName, bankTransitNumber, bankInstitutionNumber, bankAccountNumber, bankOnlineId, bankPassword, ...safeCompany } = company;
+      void bankName; void bankTransitNumber; void bankInstitutionNumber; void bankAccountNumber; void bankOnlineId; void bankPassword;
+      return Response.json(safeCompany);
     }
 
     return Response.json(company);
@@ -73,8 +91,22 @@ export async function PATCH(
       return Response.json({ error: "Client introuvable" }, { status: 404 });
     }
 
+    if (user.role === "INTERN" && current.assignedTo !== user.id) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = updateCompanySchema.parse(body);
+
+    // Retirer les champs bancaires pour les stagiaires
+    if (user.role === "INTERN") {
+      delete (parsed as Record<string, unknown>).bankName;
+      delete (parsed as Record<string, unknown>).bankTransitNumber;
+      delete (parsed as Record<string, unknown>).bankInstitutionNumber;
+      delete (parsed as Record<string, unknown>).bankAccountNumber;
+      delete (parsed as Record<string, unknown>).bankOnlineId;
+      delete (parsed as Record<string, unknown>).bankPassword;
+    }
 
     const data = Object.fromEntries(
       Object.entries(parsed).map(([key, value]) => [key, value === "" ? null : value])
@@ -124,6 +156,9 @@ export async function DELETE(
 ) {
   try {
     const user = await requireStaff();
+    if (user.role === "INTERN") {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
     const { id } = await segmentData.params;
 
     const [company] = await db
@@ -158,6 +193,11 @@ export async function DELETE(
       .update(fiscalDeadlines)
       .set({ deletedAt: now })
       .where(eq(fiscalDeadlines.companyId, id));
+
+    await db
+      .update(workflows)
+      .set({ status: "CANCELLED", updatedAt: now })
+      .where(eq(workflows.companyId, id));
 
     logAudit({
       userId: user.id,

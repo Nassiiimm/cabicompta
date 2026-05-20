@@ -60,16 +60,21 @@ export async function GET(request: NextRequest) {
       return Response.json({ documents: docs });
     }
 
-    // STAFF / ADMIN
+    // STAFF / ADMIN / INTERN
     await requireStaff();
 
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50"), 200);
     const offset = (page - 1) * limit;
 
-    const conditions = companyId
+    let conditions = companyId
       ? and(eq(documents.companyId, companyId), isNull(documents.deletedAt))
       : isNull(documents.deletedAt);
+
+    // INTERN : seulement les documents des clients qui lui sont assignés
+    if (user.role === "INTERN") {
+      conditions = and(conditions, eq(companies.assignedTo, user.id));
+    }
 
     const [totalResult] = await db
       .select({ total: count() })
@@ -162,6 +167,18 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (membership.length === 0) {
+        return Response.json({ error: "Accès refusé" }, { status: 403 });
+      }
+    }
+
+    // INTERN : seulement les clients qui lui sont assignés
+    if (user.role === "INTERN") {
+      const [company] = await db
+        .select({ assignedTo: companies.assignedTo })
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+      if (!company || company.assignedTo !== user.id) {
         return Response.json({ error: "Accès refusé" }, { status: 403 });
       }
     }

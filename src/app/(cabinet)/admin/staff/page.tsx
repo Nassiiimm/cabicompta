@@ -4,6 +4,7 @@ import { users } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { CreateStaffForm } from "./create-staff";
+import { DeleteStaffButton } from "./delete-staff";
 import { getTranslations } from "next-intl/server";
 
 export default async function StaffPage() {
@@ -54,6 +55,7 @@ export default async function StaffPage() {
                 <th className="text-left font-medium px-4 py-2">{t("email")}</th>
                 <th className="text-left font-medium px-4 py-2">{t("role")}</th>
                 <th className="text-left font-medium px-4 py-2">{t("createdAt")}</th>
+                <th className="px-4 py-2" />
               </tr>
             </thead>
             <tbody>
@@ -73,6 +75,9 @@ export default async function StaffPage() {
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground">
                     {user.createdAt.toLocaleDateString("fr-CA")}
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <DeleteStaffButton id={user.id} name={user.name ?? user.email} />
                   </td>
                 </tr>
               ))}

@@ -150,6 +150,13 @@ export const companies = pgTable("companies", {
   // Email inbox
   inboxEmail: varchar("inbox_email", { length: 255 }),
   inboxActive: boolean("inbox_active").notNull().default(false),
+  // Informations bancaires — accès restreint ADMIN/STAFF uniquement
+  bankName: varchar("bank_name", { length: 255 }),
+  bankTransitNumber: varchar("bank_transit_number", { length: 20 }),
+  bankInstitutionNumber: varchar("bank_institution_number", { length: 10 }),
+  bankAccountNumber: varchar("bank_account_number", { length: 50 }),
+  bankOnlineId: varchar("bank_online_id", { length: 255 }),
+  bankPassword: text("bank_password"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -379,6 +386,9 @@ export const workflows = pgTable("workflows", {
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
   templateId: uuid("template_id").references(() => workflowTemplates.id, {
+    onDelete: "set null",
+  }),
+  fiscalDeadlineId: uuid("fiscal_deadline_id").references(() => fiscalDeadlines.id, {
     onDelete: "set null",
   }),
   name: varchar("name", { length: 255 }).notNull(),

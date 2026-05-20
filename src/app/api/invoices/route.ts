@@ -35,7 +35,7 @@ const TVQ_RATE = 0.09975;
 
 export async function GET(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status");
@@ -50,6 +50,10 @@ export async function GET(request: Request) {
     }
     if (companyIdFilter) {
       filters.push(eq(invoices.companyId, companyIdFilter));
+    }
+    // INTERN : seulement les factures des clients qui lui sont assignés
+    if (user.role === "INTERN") {
+      filters.push(eq(companies.assignedTo, user.id));
     }
     const conditions = filters.length === 1 ? filters[0] : and(...filters);
 

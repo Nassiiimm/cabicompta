@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
-import { ilike, or, asc, isNull, and } from "drizzle-orm";
+import { ilike, or, asc, isNull, and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { generateInboxEmail } from "@/lib/inbox";
 import { csrfGuard } from "@/lib/csrf";
@@ -33,7 +33,7 @@ const createCompanySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const search = request.nextUrl.searchParams.get("search");
 
@@ -49,10 +49,16 @@ export async function GET(request: NextRequest) {
         )
       : notDeleted;
 
+    // INTERN : seulement les clients qui lui sont assignés
+    const conditions =
+      user.role === "INTERN"
+        ? and(searchCondition, eq(companies.assignedTo, user.id))
+        : searchCondition;
+
     const result = await db
       .select()
       .from(companies)
-      .where(searchCondition)
+      .where(conditions)
       .orderBy(asc(companies.name));
     return Response.json(result);
   } catch (error) {

@@ -12,11 +12,11 @@ import { getTranslations } from "next-intl/server";
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; companyId?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; companyId?: string; category?: string; subcategory?: string }>;
 }) {
   await requireStaff();
   const t = await getTranslations("documents");
-  const { q, status, companyId } = await searchParams;
+  const { q, status, companyId, category, subcategory } = await searchParams;
 
   const filters = [isNull(documents.deletedAt)];
 
@@ -31,6 +31,15 @@ export default async function DocumentsPage({
 
   if (companyId) {
     filters.push(eq(documents.companyId, companyId));
+  }
+
+  const VALID_CATEGORIES = ["DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION", "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER"] as const;
+  if (category && VALID_CATEGORIES.includes(category as typeof VALID_CATEGORIES[number])) {
+    filters.push(eq(documents.category, category as typeof VALID_CATEGORIES[number]));
+  }
+
+  if (subcategory && ["A", "B", "C"].includes(subcategory)) {
+    filters.push(eq(documents.subcategory, subcategory));
   }
 
   const conditions = and(...filters);
@@ -61,11 +70,11 @@ export default async function DocumentsPage({
         <DocumentsActions />
       </div>
 
-      <DocumentFilters currentStatus={status} />
+      <DocumentFilters currentStatus={status} currentCategory={category} currentSubcategory={subcategory} />
       <DocumentSearch defaultValue={q} />
 
       {docs.length === 0 ? (
-        (q || status || companyId) ? (
+        (q || status || companyId || category || subcategory) ? (
           <div className="text-center py-12 border rounded-lg">
             <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">

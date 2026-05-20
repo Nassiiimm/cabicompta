@@ -24,11 +24,14 @@ export type FiscalDeadlineEntry = {
  *
  * @param fiscalYearEnd - Date de fin d'exercice (ex: "2026-12-31")
  * @param year - Année pour laquelle générer les échéances
+ * @param companyType - Type de client (T2_SOCIETE génère tout, T1 exclut T2/CO17/INSTALMENT/REQ)
  */
 export function generateFiscalDeadlines(
   fiscalYearEnd: string,
-  year: number
+  year: number,
+  companyType?: string | null
 ): FiscalDeadlineEntry[] {
+  const isCorp = !companyType || companyType === "T2_SOCIETE";
   const deadlines: FiscalDeadlineEntry[] = [];
   const fyEnd = new Date(fiscalYearEnd);
   // Adjust to the correct year
@@ -37,59 +40,61 @@ export function generateFiscalDeadlines(
   // ═══════════════════════════════════════════════════════
   // 1. T2 — Déclaration de revenus des sociétés (fédéral)
   //    Art. 150(1) LIR: 6 mois après la fin de l'exercice
+  //    Applicable: T2 Société uniquement
   // ═══════════════════════════════════════════════════════
-  const t2Due = addMonths(fyEndThisYear, 6);
-  deadlines.push({
-    type: "T2",
-    label: "T2 — Déclaration fédérale des sociétés",
-    period: `${year}`,
-    dueDate: t2Due,
-    description:
-      "Déclaration de revenus des sociétés (fédéral). Due 6 mois après la fin de l'exercice financier. Art. 150(1) LIR.",
-  });
+  if (isCorp) {
+    const t2Due = addMonths(fyEndThisYear, 6);
+    deadlines.push({
+      type: "T2",
+      label: "T2 — Déclaration fédérale des sociétés",
+      period: `${year}`,
+      dueDate: t2Due,
+      description:
+        "Déclaration de revenus des sociétés (fédéral). Due 6 mois après la fin de l'exercice financier. Art. 150(1) LIR.",
+    });
 
-  // ═══════════════════════════════════════════════════════
-  // 2. Paiement T2 — Solde d'impôt fédéral
-  //    Art. 157(1) LIR: 2 mois après fin d'exercice
-  //    (3 mois pour SPCC avec revenu imposable ≤ 500K$)
-  // ═══════════════════════════════════════════════════════
-  const t2PayDue = addMonths(fyEndThisYear, 2);
-  deadlines.push({
-    type: "T2_PAYMENT",
-    label: "T2 — Paiement du solde d'impôt fédéral",
-    period: `${year}`,
-    dueDate: t2PayDue,
-    description:
-      "Solde d'impôt fédéral des sociétés. Dû 2 mois après la fin de l'exercice (3 mois pour SPCC admissibles). Art. 157(1) LIR.",
-  });
+    // ═══════════════════════════════════════════════════════
+    // 2. Paiement T2 — Solde d'impôt fédéral
+    //    Art. 157(1) LIR: 2 mois après fin d'exercice
+    // ═══════════════════════════════════════════════════════
+    const t2PayDue = addMonths(fyEndThisYear, 2);
+    deadlines.push({
+      type: "T2_PAYMENT",
+      label: "T2 — Paiement du solde d'impôt fédéral",
+      period: `${year}`,
+      dueDate: t2PayDue,
+      description:
+        "Solde d'impôt fédéral des sociétés. Dû 2 mois après la fin de l'exercice (3 mois pour SPCC admissibles). Art. 157(1) LIR.",
+    });
 
-  // ═══════════════════════════════════════════════════════
-  // 3. CO-17 — Déclaration de revenus des sociétés (Québec)
-  //    Art. 1000 LI: 6 mois après la fin de l'exercice
-  // ═══════════════════════════════════════════════════════
-  const co17Due = addMonths(fyEndThisYear, 6);
-  deadlines.push({
-    type: "CO17",
-    label: "CO-17 — Déclaration provinciale des sociétés",
-    period: `${year}`,
-    dueDate: co17Due,
-    description:
-      "Déclaration de revenus des sociétés (Québec). Due 6 mois après la fin de l'exercice. Art. 1000 de la Loi sur les impôts (L.R.Q., c. I-3).",
-  });
+    // ═══════════════════════════════════════════════════════
+    // 3. CO-17 — Déclaration de revenus des sociétés (Québec)
+    //    Art. 1000 LI: 6 mois après la fin de l'exercice
+    // ═══════════════════════════════════════════════════════
+    const co17Due = addMonths(fyEndThisYear, 6);
+    deadlines.push({
+      type: "CO17",
+      label: "CO-17 — Déclaration provinciale des sociétés",
+      period: `${year}`,
+      dueDate: co17Due,
+      description:
+        "Déclaration de revenus des sociétés (Québec). Due 6 mois après la fin de l'exercice. Art. 1000 de la Loi sur les impôts (L.R.Q., c. I-3).",
+    });
 
-  // ═══════════════════════════════════════════════════════
-  // 4. Paiement CO-17 — Solde d'impôt provincial
-  //    Art. 1027 LI: 2 mois après fin d'exercice
-  // ═══════════════════════════════════════════════════════
-  const co17PayDue = addMonths(fyEndThisYear, 2);
-  deadlines.push({
-    type: "CO17_PAYMENT",
-    label: "CO-17 — Paiement du solde d'impôt provincial",
-    period: `${year}`,
-    dueDate: co17PayDue,
-    description:
-      "Solde d'impôt provincial des sociétés. Dû 2 mois après la fin de l'exercice (3 mois pour SPCC admissibles). Art. 1027 LI.",
-  });
+    // ═══════════════════════════════════════════════════════
+    // 4. Paiement CO-17 — Solde d'impôt provincial
+    //    Art. 1027 LI: 2 mois après fin d'exercice
+    // ═══════════════════════════════════════════════════════
+    const co17PayDue = addMonths(fyEndThisYear, 2);
+    deadlines.push({
+      type: "CO17_PAYMENT",
+      label: "CO-17 — Paiement du solde d'impôt provincial",
+      period: `${year}`,
+      dueDate: co17PayDue,
+      description:
+        "Solde d'impôt provincial des sociétés. Dû 2 mois après la fin de l'exercice (3 mois pour SPCC admissibles). Art. 1027 LI.",
+    });
+  }
 
   // ═══════════════════════════════════════════════════════
   // 5. TPS/TVQ — Déclarations trimestrielles
@@ -119,9 +124,29 @@ export function generateFiscalDeadlines(
   // ═══════════════════════════════════════════════════════
   // 6. Acomptes provisionnels — Impôt fédéral et provincial
   //    Art. 157(1)(a) LIR / Art. 1025 LI
-  //    Mensuels, le dernier jour de chaque mois
-  //    (obligatoires si impôt > 3 000 $ fédéral ou provincial)
+  //    Mensuels (sociétés) / Trimestriels (particuliers)
+  //    Applicable: T2 Société uniquement (mensuel corporatif)
   // ═══════════════════════════════════════════════════════
+  if (!isCorp) {
+    // T1 — acomptes trimestriels (15 mars, 15 juin, 15 sept, 15 déc)
+    const t1InstalmentDates = [
+      { label: "T1 (15 mars)", dueDate: new Date(year, 2, 15) },
+      { label: "T2 (15 juin)", dueDate: new Date(year, 5, 15) },
+      { label: "T3 (15 sept.)", dueDate: new Date(year, 8, 15) },
+      { label: "T4 (15 déc.)", dueDate: new Date(year, 11, 15) },
+    ];
+    for (const inst of t1InstalmentDates) {
+      deadlines.push({
+        type: "INSTALMENT",
+        label: `Acompte provisionnel T1 — ${inst.label}`,
+        period: `${year}-${inst.label.split(" ")[0]}`,
+        dueDate: inst.dueDate,
+        description:
+          "Acompte provisionnel trimestriel T1 (fédéral et provincial). Art. 156(1) LIR / Art. 1025 LI. Obligatoire si solde d'impôt > 3 000 $.",
+      });
+    }
+  } else {
+    // T2 Société — acomptes mensuels
   for (let m = 0; m < 12; m++) {
     const monthDate = new Date(year, m, 1);
     const lastDay = endOfMonth(monthDate);
@@ -134,6 +159,7 @@ export function generateFiscalDeadlines(
         "Acompte provisionnel mensuel (fédéral et provincial). Obligatoire si impôt de l'exercice précédent > 3 000 $. Art. 157(1)(a) LIR / Art. 1025 LI.",
     });
   }
+  } // end isCorp INSTALMENT block
 
   // ═══════════════════════════════════════════════════════
   // 7. DAS — Retenues à la source (fédéral + provincial)
@@ -233,17 +259,18 @@ export function generateFiscalDeadlines(
   // ═══════════════════════════════════════════════════════
   // 9. Déclaration annuelle REQ
   //    Loi sur la publicité légale des entreprises (L.R.Q., c. P-44.1)
-  //    Mise à jour annuelle au Registraire des entreprises
-  //    Date variable selon la date d'immatriculation
+  //    Applicable: T2 Société et T1 Autonome (pas T1 Particulier)
   // ═══════════════════════════════════════════════════════
-  deadlines.push({
-    type: "REQ_ANNUAL",
-    label: "REQ — Déclaration annuelle de mise à jour",
-    period: `${year}`,
-    dueDate: new Date(year, 5, 15), // June 15 as default
-    description:
-      "Déclaration annuelle de mise à jour au Registraire des entreprises du Québec. Date limite variable selon la date d'immatriculation. Loi sur la publicité légale (L.R.Q., c. P-44.1).",
-  });
+  if (companyType !== "T1_PARTICULIER") {
+    deadlines.push({
+      type: "REQ_ANNUAL",
+      label: "REQ — Déclaration annuelle de mise à jour",
+      period: `${year}`,
+      dueDate: new Date(year, 5, 15), // June 15 as default
+      description:
+        "Déclaration annuelle de mise à jour au Registraire des entreprises du Québec. Date limite variable selon la date d'immatriculation. Loi sur la publicité légale (L.R.Q., c. P-44.1).",
+    });
+  }
 
   return deadlines;
 }

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const deadlines = generateFiscalDeadlines(company.fiscalYearEnd, year);
+    const deadlines = generateFiscalDeadlines(company.fiscalYearEnd, year, company.type);
 
     let inserted = 0;
     for (const d of deadlines) {

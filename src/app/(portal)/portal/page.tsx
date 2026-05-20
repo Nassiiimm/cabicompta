@@ -165,7 +165,7 @@ export default async function PortalPage() {
         {data.documents.length > 0 ? (
           <PortalDocumentList documents={data.documents} />
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg">{t("noDeadlines")}</p>
+          <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg">{t("noDocs")}</p>
         )}
       </div>
     </div>
