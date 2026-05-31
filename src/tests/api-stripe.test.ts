@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import crypto from "crypto";
 
 vi.mock("@/lib/auth", () => ({
   requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "STAFF", email: "staff@test.com", name: "Staff" }),
@@ -115,10 +116,42 @@ describe("POST /api/invoices/[id]/payment-link", () => {
 });
 
 describe("POST /api/webhooks/stripe", () => {
+  const SECRET = "whsec_test";
+
+  // Construit une requête signée comme le ferait Stripe (HMAC-SHA256)
+  function signedReq(payload: string) {
+    const t = Math.floor(Date.now() / 1000);
+    const hash = crypto.createHmac("sha256", SECRET).update(`${t}.${payload}`).digest("hex");
+    return new Request("http://localhost/api/webhooks/stripe", {
+      method: "POST",
+      body: payload,
+      headers: { "stripe-signature": `t=${t},v1=${hash}` },
+    });
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     Object.keys(mockDb).forEach((k) => mockDb[k].mockReturnValue(mockDb));
-    delete process.env.STRIPE_WEBHOOK_SECRET;
+    process.env.STRIPE_WEBHOOK_SECRET = SECRET;
+  });
+
+  it("rejette une requête sans signature (400)", async () => {
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    const req = new Request("http://localhost/api/webhooks/stripe", { method: "POST", body: "{}" });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    expect(mockDb.update).not.toHaveBeenCalled();
+  });
+
+  it("rejette une signature invalide (400)", async () => {
+    const { POST } = await import("@/app/api/webhooks/stripe/route");
+    const req = new Request("http://localhost/api/webhooks/stripe", {
+      method: "POST",
+      body: "{}",
+      headers: { "stripe-signature": "t=9999999999,v1=deadbeef" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
   });
 
   it("handles checkout.session.completed and updates invoice to PAID", async () => {
@@ -136,17 +169,11 @@ describe("POST /api/webhooks/stripe", () => {
       },
     });
 
-    const req = new Request("http://localhost/api/webhooks/stripe", {
-      method: "POST",
-      body: payload,
-    });
-
-    const res = await POST(req);
+    const res = await POST(signedReq(payload));
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.received).toBe(true);
 
-    // Verify invoice was updated
     expect(mockDb.update).toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -163,22 +190,11 @@ describe("POST /api/webhooks/stripe", () => {
     const { POST } = await import("@/app/api/webhooks/stripe/route");
     const payload = JSON.stringify({
       type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_test_123",
-          metadata: { invoiceId: "inv-1" },
-        },
-      },
+      data: { object: { id: "cs_test_123", metadata: { invoiceId: "inv-1" } } },
     });
 
-    const req = new Request("http://localhost/api/webhooks/stripe", {
-      method: "POST",
-      body: payload,
-    });
-
-    const res = await POST(req);
+    const res = await POST(signedReq(payload));
     expect(res.status).toBe(200);
-    // Should NOT call update since already PAID
     expect(mockDb.update).not.toHaveBeenCalled();
   });
 
@@ -186,20 +202,10 @@ describe("POST /api/webhooks/stripe", () => {
     const { POST } = await import("@/app/api/webhooks/stripe/route");
     const payload = JSON.stringify({
       type: "checkout.session.completed",
-      data: {
-        object: {
-          id: "cs_test_other",
-          metadata: {},
-        },
-      },
+      data: { object: { id: "cs_test_other", metadata: {} } },
     });
 
-    const req = new Request("http://localhost/api/webhooks/stripe", {
-      method: "POST",
-      body: payload,
-    });
-
-    const res = await POST(req);
+    const res = await POST(signedReq(payload));
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.received).toBe(true);
@@ -221,12 +227,7 @@ describe("POST /api/webhooks/stripe", () => {
       },
     });
 
-    const req = new Request("http://localhost/api/webhooks/stripe", {
-      method: "POST",
-      body: payload,
-    });
-
-    await POST(req);
+    await POST(signedReq(payload));
     expect(logAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "STRIPE_PAYMENT",

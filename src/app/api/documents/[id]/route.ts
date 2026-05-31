@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { documents, companyMembers, companies, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { getSignedUrl, deleteFile } from "@/lib/supabase/storage";
 import { logAccess } from "@/lib/access-log";
 import { sendDocumentProcessedEmail } from "@/lib/email";
@@ -89,7 +90,7 @@ export async function PATCH(
   context: RouteContext
 ) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { id } = await context.params;
 
     const body = await request.json();
@@ -103,6 +104,11 @@ export async function PATCH(
 
     if (!existing) {
       return Response.json({ error: "Document introuvable" }, { status: 404 });
+    }
+
+    // Cloisonnement INTERN : uniquement les documents des clients assignés
+    if (!(await hasCompanyAccess(user, existing.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const updateData: Record<string, unknown> = {
@@ -192,21 +198,13 @@ export async function DELETE(
       return Response.json({ error: "Document introuvable" }, { status: 404 });
     }
 
-    // CLIENT : peut supprimer uniquement ses propres docs PENDING
-    if (user.role === "CLIENT") {
-      if (doc.status !== "PENDING") {
-        return Response.json({ error: "Seuls les documents en attente peuvent être supprimés" }, { status: 403 });
-      }
-      const membership = await db
-        .select({ companyId: companyMembers.companyId })
-        .from(companyMembers)
-        .where(and(eq(companyMembers.userId, user.id), eq(companyMembers.companyId, doc.companyId)))
-        .limit(1);
-      if (membership.length === 0) {
-        return Response.json({ error: "Accès refusé" }, { status: 403 });
-      }
-    } else {
-      await requireStaff();
+    // CLIENT : peut supprimer uniquement ses propres documents PENDING
+    if (user.role === "CLIENT" && doc.status !== "PENDING") {
+      return Response.json({ error: "Seuls les documents en attente peuvent être supprimés" }, { status: 403 });
+    }
+    // Cloisonnement : CLIENT → sa company, INTERN → company assignée
+    if (!(await hasCompanyAccess(user, doc.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     await db

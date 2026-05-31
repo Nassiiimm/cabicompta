@@ -1,7 +1,8 @@
 import { requireAuth } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
-import { invoices, invoiceItems, companies, companyMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { invoices, invoiceItems, companies } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { logAccess } from "@/lib/access-log";
 
 export async function GET(
@@ -46,18 +47,9 @@ export async function GET(
       return Response.json({ error: "Facture introuvable" }, { status: 404 });
     }
 
-    // CLIENT isolation
-    if (user.role === "CLIENT") {
-      const [membership] = await db
-        .select({ companyId: companyMembers.companyId })
-        .from(companyMembers)
-        .where(
-          and(eq(companyMembers.userId, user.id), eq(companyMembers.companyId, invoice.companyId))
-        )
-        .limit(1);
-      if (!membership) {
-        return Response.json({ error: "Accès refusé" }, { status: 403 });
-      }
+    // Cloisonnement : CLIENT → sa company, INTERN → company assignée
+    if (!(await hasCompanyAccess(user, invoice.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const items = await db

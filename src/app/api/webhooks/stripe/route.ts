@@ -3,6 +3,14 @@ import { invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
 
+// Comparaison à temps constant (évite les timing attacks sur la signature)
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 async function verifyStripeSignature(
   payload: string,
   signature: string,
@@ -39,7 +47,7 @@ async function verifyStripeSignature(
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    return expectedHash === v1Hash;
+    return timingSafeEqualHex(expectedHash, v1Hash);
   } catch {
     return false;
   }
@@ -51,12 +59,18 @@ export async function POST(request: Request) {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const signature = request.headers.get("stripe-signature");
 
-    // Verify signature if secret is configured
-    if (webhookSecret && signature) {
-      const valid = await verifyStripeSignature(payload, signature, webhookSecret);
-      if (!valid) {
-        return Response.json({ error: "Signature invalide" }, { status: 400 });
-      }
+    // Signature OBLIGATOIRE — sans elle, n'importe qui pourrait forger
+    // un "paiement" et marquer une facture comme payée.
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET non configuré — webhook rejeté");
+      return Response.json({ error: "Webhook non configuré" }, { status: 503 });
+    }
+    if (!signature) {
+      return Response.json({ error: "Signature manquante" }, { status: 400 });
+    }
+    const valid = await verifyStripeSignature(payload, signature, webhookSecret);
+    if (!valid) {
+      return Response.json({ error: "Signature invalide" }, { status: 400 });
     }
 
     const event = JSON.parse(payload);

@@ -1,4 +1,5 @@
 import { requireAuth } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { invoices, companies } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -8,7 +9,7 @@ export async function POST(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const { id } = await segmentData.params;
 
     // Fetch invoice with company info
@@ -20,6 +21,7 @@ export async function POST(
         status: invoices.status,
         companyName: companies.name,
         companyEmail: companies.email,
+        companyId: invoices.companyId,
       })
       .from(invoices)
       .leftJoin(companies, eq(invoices.companyId, companies.id))
@@ -28,6 +30,11 @@ export async function POST(
 
     if (!invoice) {
       return Response.json({ error: "Facture introuvable" }, { status: 404 });
+    }
+
+    // Cloisonnement : CLIENT → sa company, INTERN → company assignée
+    if (!(await hasCompanyAccess(user, invoice.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     if (invoice.status !== "SENT" && invoice.status !== "OVERDUE") {
