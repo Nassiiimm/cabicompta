@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(
   _request: Request,
@@ -31,29 +32,39 @@ export async function DELETE(
       );
     }
 
-    // Disable via Supabase Admin API (ban instead of delete)
+    // Supprimer de Supabase Auth
     if (user.authId) {
       const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
 
-      const { error: banError } =
-        await supabaseAdmin.auth.admin.updateUserById(user.authId, {
-          ban_duration: "876600h", // ~100 years
-        });
+      const { error: deleteAuthError } =
+        await supabaseAdmin.auth.admin.deleteUser(user.authId);
 
-      if (banError) {
+      if (deleteAuthError) {
         return Response.json(
-          { error: "Erreur lors de la désactivation du compte" },
+          { error: "Erreur lors de la suppression du compte auth" },
           { status: 500 }
         );
       }
     }
 
+    // Supprimer de la table users (FK avec SET NULL / CASCADE gère les dépendances)
+    await db.delete(users).where(eq(users.id, id));
+
+    logAudit({
+      userId: admin.id,
+      action: "DELETE",
+      tableName: "users",
+      recordId: id,
+      oldData: { name: user.name, id: user.id } as Record<string, unknown>,
+      newData: {},
+    });
+
     return Response.json({
       ok: true,
-      message: `Le compte de ${user.name} a été désactivé.`,
+      message: `Le compte de ${user.name} a été supprimé.`,
     });
   } catch (error) {
     if (error instanceof Error && error.message === "Unauthorized") {

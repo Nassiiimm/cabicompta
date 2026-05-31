@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Sidebar } from "@/components/cabinet/sidebar";
 import { MobileNav } from "@/components/cabinet/mobile-nav";
+import { GlobalSearch } from "@/components/global-search";
+import { ActivityTracker } from "@/components/activity-tracker";
 
 export default async function CabinetLayout({
   children,
@@ -18,6 +20,8 @@ export default async function CabinetLayout({
 
   return (
     <div className="flex min-h-screen">
+      <GlobalSearch />
+      <ActivityTracker />
       <div className="hidden md:flex">
         <Sidebar role={user.role} />
       </div>

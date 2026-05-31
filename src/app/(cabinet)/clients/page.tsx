@@ -4,27 +4,29 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
-import { asc, isNull, ilike, or, and, eq } from "drizzle-orm";
+import { asc, desc, isNull, ilike, or, and, eq } from "drizzle-orm";
 import { Plus, Building2 } from "lucide-react";
 import { ClientSearch } from "./client-search";
 import { ClientFilters } from "./client-filters";
+import { ClientSort } from "./client-sort";
+import { Suspense } from "react";
 import { ExportButton } from "@/components/cabinet/export-button";
 import { getTranslations } from "next-intl/server";
 
 const TYPE_LABELS: Record<string, string> = {
   T1_PARTICULIER: "T1 — Particulier",
-  T1_AUTONOME: "T1 — Autonome",
-  T2_SOCIETE: "T2 — Société",
+  T1_AUTONOME:    "T1 — Autonome",
+  T2_SOCIETE:     "T2 — Société",
 };
 
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; type?: string; sort?: string; dir?: string }>;
 }) {
   await requireStaff();
   const t = await getTranslations("clients");
-  const { q, status, type } = await searchParams;
+  const { q, status, type, sort, dir } = await searchParams;
 
   const statusLabels: Record<string, string> = {
     ACTIVE: t("active"),
@@ -50,8 +52,9 @@ export default async function ClientsPage({
     );
   }
 
-  if (status === "ACTIVE" || status === "INACTIVE") {
-    filters.push(eq(companies.status, status));
+  const VALID_STATUSES = ["ACTIVE", "INACTIVE", "ARCHIVED"] as const;
+  if (status && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
+    filters.push(eq(companies.status, status as typeof VALID_STATUSES[number]));
   }
 
   const VALID_TYPES = ["T1_PARTICULIER", "T1_AUTONOME", "T2_SOCIETE"] as const;
@@ -61,11 +64,22 @@ export default async function ClientsPage({
 
   const conditions = and(...filters);
 
+  const SORT_COLS = {
+    name: companies.name,
+    status: companies.status,
+    type: companies.type,
+    createdAt: companies.createdAt,
+  } as const;
+  type SortKey = keyof typeof SORT_COLS;
+  const sortKey: SortKey = (sort as SortKey) in SORT_COLS ? (sort as SortKey) : "name";
+  const sortCol = SORT_COLS[sortKey];
+  const orderFn = dir === "desc" ? desc : asc;
+
   const clientList = await db
     .select()
     .from(companies)
     .where(conditions)
-    .orderBy(asc(companies.name));
+    .orderBy(orderFn(sortCol));
 
   return (
     <div className="max-w-4xl space-y-4">
@@ -81,7 +95,14 @@ export default async function ClientsPage({
       </div>
 
       <ClientFilters currentStatus={status} currentType={type} />
-      <ClientSearch defaultValue={q} />
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <ClientSearch defaultValue={q} />
+        </div>
+      </div>
+      <Suspense fallback={null}>
+        <ClientSort currentSort={sort} currentDir={dir} />
+      </Suspense>
 
       {clientList.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">

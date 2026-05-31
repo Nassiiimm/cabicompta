@@ -9,9 +9,10 @@ import {
   fiscalDeadlines,
   workflowTasks,
   workflows,
+  documentRequests,
 } from "@/lib/db/schema";
 import { count, eq, sql, desc, and, lte, isNull, gte, lt, isNotNull } from "drizzle-orm";
-import { ArrowRight, CheckCircle2, AlertTriangle, FileText, CalendarClock, Receipt, GitBranch } from "lucide-react";
+import { ArrowRight, CheckCircle2, AlertTriangle, FileText, CalendarClock, Receipt, GitBranch, Zap } from "lucide-react";
 import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
 async function getStats(userId: string) {
@@ -20,92 +21,93 @@ async function getStats(userId: string) {
   const in7Days = new Date(todayDate);
   in7Days.setDate(in7Days.getDate() + 7);
 
-  const [clients] = await db.select({ v: count() }).from(companies).where(eq(companies.status, "ACTIVE"));
-  const [pendingDocsResult] = await db.select({ v: count() }).from(documents).where(eq(documents.status, "PENDING"));
-  const [overdueInvoicesResult] = await db.select({ v: count() }).from(invoices).where(eq(invoices.status, "OVERDUE"));
-  const [unpaidInvoicesResult] = await db.select({ v: count() }).from(invoices).where(sql`${invoices.status} IN ('SENT', 'OVERDUE')`);
-  const [allDeadlines] = await db.select({ v: count() }).from(fiscalDeadlines).where(eq(fiscalDeadlines.status, "UPCOMING"));
-
-  // Deadlines this week
-  const weekDeadlines = await db
-    .select({ v: count() })
-    .from(fiscalDeadlines)
-    .where(
-      and(
-        eq(fiscalDeadlines.status, "UPCOMING"),
-        lte(fiscalDeadlines.dueDate, in7Days.toISOString().split("T")[0])
-      )
-    );
-  const weekDeadlineCount = weekDeadlines[0]?.v ?? 0;
-
-  const [overdueTasksResult] = await db
-    .select({ v: sql<number>`count(*)::int` })
-    .from(workflowTasks)
-    .innerJoin(workflows, eq(workflowTasks.workflowId, workflows.id))
-    .where(
-      and(
-        eq(workflowTasks.assignedTo, userId),
-        isNotNull(workflowTasks.dueDate),
-        lt(workflowTasks.dueDate, todayStr),
-        sql`${workflowTasks.status} NOT IN ('DONE', 'SKIPPED')`,
-        sql`${workflows.status} != 'CANCELLED'`
-      )
-    );
-
-  const recentDocs = await db
-    .select({
-      id: documents.id,
-      fileName: documents.fileName,
-      status: documents.status,
-      createdAt: documents.createdAt,
-      companyName: companies.name,
-      companyId: documents.companyId,
-    })
-    .from(documents)
-    .leftJoin(companies, eq(documents.companyId, companies.id))
-    .orderBy(desc(documents.createdAt))
-    .limit(5);
-
-  const upcomingDeadlines = await db
-    .select({
-      id: fiscalDeadlines.id,
-      label: fiscalDeadlines.label,
-      dueDate: fiscalDeadlines.dueDate,
-      companyName: companies.name,
-    })
-    .from(fiscalDeadlines)
-    .innerJoin(companies, eq(fiscalDeadlines.companyId, companies.id))
-    .where(eq(fiscalDeadlines.status, "UPCOMING"))
-    .orderBy(fiscalDeadlines.dueDate)
-    .limit(5);
-
-  // Revenue chart data — last 6 months (1 query avec GROUP BY)
-  const MONTH_NAMES = ["jan", "fev", "mar", "avr", "mai", "jun", "jul", "aou", "sep", "oct", "nov", "dec"];
-
+  const in7DaysStr = in7Days.toISOString().split("T")[0];
   const sixMonthsAgo = new Date(todayDate.getFullYear(), todayDate.getMonth() - 5, 1);
 
-  const revenueRows = await db
-    .select({
-      year: sql<number>`extract(year from ${invoices.issuedAt})::int`,
-      month: sql<number>`extract(month from ${invoices.issuedAt})::int`,
-      facture: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} != 'DRAFT'), 0)`,
-      encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
-    })
-    .from(invoices)
-    .where(
-      and(
-        isNull(invoices.deletedAt),
-        gte(invoices.issuedAt, sixMonthsAgo)
+  // Toutes ces requêtes sont indépendantes → exécutées EN PARALLÈLE.
+  // (auparavant en série : ~10 allers-retours additionnés vers Supabase ca-central-1)
+  const [
+    [clients],
+    [pendingDocRequestsResult],
+    [pendingDocsResult],
+    [overdueInvoicesResult],
+    [unpaidInvoicesResult],
+    [allDeadlines],
+    [weekDeadlinesResult],
+    [overdueTasksResult],
+    recentDocs,
+    upcomingDeadlines,
+    revenueRows,
+  ] = await Promise.all([
+    db.select({ v: count() }).from(companies).where(eq(companies.status, "ACTIVE")),
+    db.select({ v: count() }).from(documentRequests).where(eq(documentRequests.status, "PENDING")),
+    db.select({ v: count() }).from(documents).where(eq(documents.status, "PENDING")),
+    db.select({ v: count() }).from(invoices).where(eq(invoices.status, "OVERDUE")),
+    db.select({ v: count() }).from(invoices).where(sql`${invoices.status} IN ('SENT', 'OVERDUE')`),
+    db.select({ v: count() }).from(fiscalDeadlines).where(eq(fiscalDeadlines.status, "UPCOMING")),
+    db
+      .select({ v: count() })
+      .from(fiscalDeadlines)
+      .where(and(eq(fiscalDeadlines.status, "UPCOMING"), lte(fiscalDeadlines.dueDate, in7DaysStr))),
+    db
+      .select({ v: sql<number>`count(*)::int` })
+      .from(workflowTasks)
+      .innerJoin(workflows, eq(workflowTasks.workflowId, workflows.id))
+      .where(
+        and(
+          eq(workflowTasks.assignedTo, userId),
+          isNotNull(workflowTasks.dueDate),
+          lt(workflowTasks.dueDate, todayStr),
+          sql`${workflowTasks.status} NOT IN ('DONE', 'SKIPPED')`,
+          sql`${workflows.status} != 'CANCELLED'`
+        )
+      ),
+    db
+      .select({
+        id: documents.id,
+        fileName: documents.fileName,
+        status: documents.status,
+        createdAt: documents.createdAt,
+        companyName: companies.name,
+        companyId: documents.companyId,
+      })
+      .from(documents)
+      .leftJoin(companies, eq(documents.companyId, companies.id))
+      .orderBy(desc(documents.createdAt))
+      .limit(5),
+    db
+      .select({
+        id: fiscalDeadlines.id,
+        label: fiscalDeadlines.label,
+        dueDate: fiscalDeadlines.dueDate,
+        companyName: companies.name,
+      })
+      .from(fiscalDeadlines)
+      .innerJoin(companies, eq(fiscalDeadlines.companyId, companies.id))
+      .where(eq(fiscalDeadlines.status, "UPCOMING"))
+      .orderBy(fiscalDeadlines.dueDate)
+      .limit(5),
+    db
+      .select({
+        year: sql<number>`extract(year from ${invoices.issuedAt})::int`,
+        month: sql<number>`extract(month from ${invoices.issuedAt})::int`,
+        facture: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} != 'DRAFT'), 0)`,
+        encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
+      })
+      .from(invoices)
+      .where(and(isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
+      .groupBy(
+        sql`extract(year from ${invoices.issuedAt})`,
+        sql`extract(month from ${invoices.issuedAt})`
       )
-    )
-    .groupBy(
-      sql`extract(year from ${invoices.issuedAt})`,
-      sql`extract(month from ${invoices.issuedAt})`
-    )
-    .orderBy(
-      sql`extract(year from ${invoices.issuedAt})`,
-      sql`extract(month from ${invoices.issuedAt})`
-    );
+      .orderBy(
+        sql`extract(year from ${invoices.issuedAt})`,
+        sql`extract(month from ${invoices.issuedAt})`
+      ),
+  ]);
+
+  const weekDeadlineCount = weekDeadlinesResult?.v ?? 0;
+  const MONTH_NAMES = ["jan", "fev", "mar", "avr", "mai", "jun", "jul", "aou", "sep", "oct", "nov", "dec"];
 
   const revenueMap = new Map(
     revenueRows.map((r) => [`${r.year}-${r.month}`, r])
@@ -131,6 +133,7 @@ async function getStats(userId: string) {
     upcomingDeadlines: allDeadlines?.v ?? 0,
     weekDeadlineCount,
     overdueMyTasks: overdueTasksResult?.v ?? 0,
+    pendingDocRequests: pendingDocRequestsResult?.v ?? 0,
     recentDocs,
     nextDeadlines: upcomingDeadlines,
     revenueData,
@@ -175,6 +178,14 @@ export default async function DashboardPage() {
       icon: GitBranch,
       color: "text-purple-600 dark:text-purple-400",
       bg: "bg-purple-50 dark:bg-purple-950",
+    },
+    {
+      count: data.pendingDocRequests,
+      label: `${data.pendingDocRequests} demande${data.pendingDocRequests > 1 ? "s" : ""} documentaire${data.pendingDocRequests > 1 ? "s" : ""} en attente`,
+      href: "/autopilot",
+      icon: Zap,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-950",
     },
   ].filter((item) => item.count > 0);
 

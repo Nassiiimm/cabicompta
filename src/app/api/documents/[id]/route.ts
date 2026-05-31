@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { documents, companyMembers, companies } from "@/lib/db/schema";
+import { documents, companyMembers, companies, users } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireAuth, requireStaff } from "@/lib/auth";
 import { getSignedUrl, deleteFile } from "@/lib/supabase/storage";
 import { logAccess } from "@/lib/access-log";
+import { sendDocumentProcessedEmail } from "@/lib/email";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -92,7 +93,7 @@ export async function PATCH(
     const { id } = await context.params;
 
     const body = await request.json();
-    const { category, status, notes } = body;
+    const { category, subcategory, status, notes } = body;
 
     const [existing] = await db
       .select()
@@ -116,6 +117,12 @@ export async function PATCH(
       updateData.category = category;
     }
 
+    if (subcategory !== undefined) {
+      updateData.subcategory = subcategory
+        ? String(subcategory).slice(0, 50).trim() || null
+        : null;
+    }
+
     const validStatuses = ["PENDING", "PROCESSED", "REJECTED"];
     if (status && validStatuses.includes(status)) {
       updateData.status = status;
@@ -130,6 +137,25 @@ export async function PATCH(
       .set(updateData)
       .where(eq(documents.id, id))
       .returning();
+
+    // Email au client quand un document passe à PROCESSED
+    if (status === "PROCESSED" && existing.status !== "PROCESSED") {
+      const members = await db
+        .select({ userId: companyMembers.userId })
+        .from(companyMembers)
+        .where(eq(companyMembers.companyId, existing.companyId));
+
+      for (const m of members) {
+        const [u] = await db
+          .select({ email: users.email, name: users.name, role: users.role })
+          .from(users)
+          .where(eq(users.id, m.userId))
+          .limit(1);
+        if (u && u.role === "CLIENT") {
+          sendDocumentProcessedEmail(u.email, u.name, existing.fileName);
+        }
+      }
+    }
 
     return Response.json({ document: updated });
   } catch (error) {
@@ -153,7 +179,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    const user = await requireStaff();
+    const user = await requireAuth();
     const { id } = await context.params;
 
     const [doc] = await db
@@ -164,6 +190,23 @@ export async function DELETE(
 
     if (!doc) {
       return Response.json({ error: "Document introuvable" }, { status: 404 });
+    }
+
+    // CLIENT : peut supprimer uniquement ses propres docs PENDING
+    if (user.role === "CLIENT") {
+      if (doc.status !== "PENDING") {
+        return Response.json({ error: "Seuls les documents en attente peuvent être supprimés" }, { status: 403 });
+      }
+      const membership = await db
+        .select({ companyId: companyMembers.companyId })
+        .from(companyMembers)
+        .where(and(eq(companyMembers.userId, user.id), eq(companyMembers.companyId, doc.companyId)))
+        .limit(1);
+      if (membership.length === 0) {
+        return Response.json({ error: "Accès refusé" }, { status: 403 });
+      }
+    } else {
+      await requireStaff();
     }
 
     await db

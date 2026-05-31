@@ -58,7 +58,7 @@ export default async function PortalDocumentsPage() {
           {t("title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {t("noDocumentsDesc")}
+          Tous vos documents transmis par votre comptable.
         </p>
       </div>
 

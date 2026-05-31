@@ -16,7 +16,6 @@ import {
   Pencil,
   CalendarClock,
   FileText,
-  Receipt,
   Clock,
   ShieldCheck,
   LayoutDashboard,
@@ -27,10 +26,13 @@ import {
   Eye,
   EyeOff,
   Lock,
+  Check,
+  X,
+  MessageSquare,
+  Zap,
 } from "lucide-react";
 import { DeleteClientButton } from "./delete-button";
 import { RequestDocsButton } from "./request-docs-button";
-import { GenerateDeadlinesButton } from "./generate-deadlines-button";
 import { InviteClientButton } from "./invite-client";
 import { AssignStaff } from "./assign-staff";
 import { TimeTracker } from "./time-tracker";
@@ -38,6 +40,13 @@ import { KycSection } from "./kyc-section";
 import { DeadlineAction } from "./deadline-action";
 import { DocumentComments } from "@/components/cabinet/document-comments";
 import { WorkflowTab } from "./workflow-tab";
+import { CATEGORY_LABELS, VALID_CATEGORIES, SUBCATEGORIES_BY_CATEGORY } from "@/lib/document-categories";
+
+const TYPE_LABELS: Record<string, string> = {
+  T1_PARTICULIER: "T1 — Particulier",
+  T1_AUTONOME: "T1 — Travailleur autonome",
+  T2_SOCIETE: "T2 — Société",
+};
 
 const TABS = [
   { key: "apercu", label: "Aperçu", icon: LayoutDashboard },
@@ -64,17 +73,9 @@ type DocumentItem = {
   fileName: string;
   status: string;
   category: string | null;
+  subcategory: string | null;
   createdAt: string;
   uploaderName: string | null;
-};
-
-type InvoiceItem = {
-  id: string;
-  invoiceNumber: string;
-  total: string;
-  status: string;
-  dueDate: string;
-  createdAt: string;
 };
 
 interface ClientTabsProps {
@@ -82,6 +83,7 @@ interface ClientTabsProps {
     id: string;
     name: string;
     status: string;
+    type: string | null;
     neq: string | null;
     arcNumber: string | null;
     rqNumber: string | null;
@@ -104,6 +106,20 @@ interface ClientTabsProps {
     bankAccountNumber: string | null;
     bankOnlineId: string | null;
     bankPassword: string | null;
+    clicsequrId: string | null;
+    clicsequrPassword: string | null;
+    arcId: string | null;
+    arcPassword: string | null;
+    cnesstId: string | null;
+    cnesstPassword: string | null;
+    reqId: string | null;
+    reqPassword: string | null;
+    serviceCanadaId: string | null;
+    serviceCanadaPassword: string | null;
+    gstFiling: string | null;
+    hasEmployees: boolean;
+    employeeCount: number | null;
+    hasInstallments: boolean;
   };
   deadlines: Deadline[];
   userRole: UserRole;
@@ -129,21 +145,6 @@ const DOC_STATUS_LABELS: Record<string, string> = {
   REJECTED: "Rejeté",
 };
 
-const INVOICE_STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Brouillon",
-  SENT: "Envoyée",
-  PAID: "Payée",
-  OVERDUE: "En retard",
-  CANCELLED: "Annulée",
-};
-
-const INVOICE_STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  DRAFT: "outline",
-  SENT: "default",
-  PAID: "secondary",
-  OVERDUE: "destructive",
-  CANCELLED: "outline",
-};
 
 export function ClientTabs({ client, deadlines, userRole }: ClientTabsProps) {
   const router = useRouter();
@@ -245,7 +246,6 @@ function ApercuTab({
   userRole: UserRole;
 }) {
   const [docCount, setDocCount] = useState<{ total: number; pending: number } | null>(null);
-  const [invoiceCount, setInvoiceCount] = useState<{ total: number; unpaid: number } | null>(null);
 
   useEffect(() => {
     fetch(`/api/documents?companyId=${client.id}&limit=1`)
@@ -255,18 +255,6 @@ function ApercuTab({
           setDocCount({
             total: data.total ?? data.documents?.length ?? 0,
             pending: data.documents?.filter((d: { status: string }) => d.status === "PENDING").length ?? 0,
-          });
-        }
-      })
-      .catch(() => {});
-    fetch(`/api/invoices?companyId=${client.id}&limit=200`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) {
-          const invs = data.invoices ?? [];
-          setInvoiceCount({
-            total: data.total ?? invs.length,
-            unpaid: invs.filter((i: { status: string }) => i.status === "SENT" || i.status === "OVERDUE").length,
           });
         }
       })
@@ -297,24 +285,6 @@ function ApercuTab({
         </div>
         <div className="rounded-lg border p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Receipt className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Factures</span>
-          </div>
-          {invoiceCount ? (
-            <p className="text-lg font-bold">
-              {invoiceCount.total}
-              {invoiceCount.unpaid > 0 && (
-                <span className="text-sm font-normal text-red-600 ml-2">
-                  ({invoiceCount.unpaid} impayée{invoiceCount.unpaid > 1 ? "s" : ""})
-                </span>
-              )}
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">Chargement...</p>
-          )}
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="flex items-center gap-2 mb-1">
             <CalendarClock className="size-4 text-muted-foreground" />
             <span className="text-sm font-medium">Prochaine échéance</span>
           </div>
@@ -336,6 +306,7 @@ function ApercuTab({
           </CardHeader>
           <CardContent className="space-y-3">
             <InfoRow label="Nom" value={client.name} />
+            <InfoRow label="Type" value={client.type ? (TYPE_LABELS[client.type] ?? client.type) : null} />
             <InfoRow label="NEQ" value={client.neq} />
             <InfoRow label="Numéro ARC" value={client.arcNumber} />
             <InfoRow label="Numéro RQ" value={client.rqNumber} />
@@ -363,6 +334,45 @@ function ApercuTab({
         <BankingCard client={client} />
       )}
 
+      {/* Portails gouvernementaux — ADMIN/STAFF uniquement */}
+      {(userRole === "ADMIN" || userRole === "STAFF") && (
+        <GouvPortalsCard client={client} />
+      )}
+
+      {/* Profil fiscal — Pilote automatique */}
+      {(userRole === "ADMIN" || userRole === "STAFF") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="size-4 text-muted-foreground" />
+              Profil fiscal — Pilote automatique
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow
+              label="Déclaration TPS/TVQ"
+              value={
+                client.gstFiling === "MONTHLY" ? "Mensuelle" :
+                client.gstFiling === "QUARTERLY" ? "Trimestrielle" :
+                client.gstFiling === "ANNUAL" ? "Annuelle" :
+                client.gstFiling === "NONE" ? "Non inscrit" : null
+              }
+            />
+            <InfoRow label="Employés" value={client.hasEmployees ? (client.employeeCount != null ? `Oui (${client.employeeCount})` : "Oui") : "Non"} />
+            <InfoRow label="Acomptes provisionnels" value={client.hasInstallments ? "Oui" : "Non"} />
+            <div className="pt-1">
+              <Link
+                href={`/autopilot`}
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              >
+                <Zap className="size-3" />
+                Gérer dans le Pilote automatique
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Notes */}
       {client.notes && (
         <Card>
@@ -381,17 +391,25 @@ function ApercuTab({
       <AssignStaff companyId={client.id} currentAssignedTo={client.assignedTo} />
 
       {/* Actions */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <InviteClientButton companyId={client.id} />
-        <GenerateDeadlinesButton companyId={client.id} />
-        <RequestDocsButton companyId={client.id} companyName={client.name} />
-        <Link
-          href={`/clients/${client.id}/edit`}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          <Pencil className="h-4 w-4 mr-2" />
-          Modifier
-        </Link>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <InviteClientButton companyId={client.id} />
+          <RequestDocsButton companyId={client.id} companyName={client.name} />
+          <Link
+            href={`/messages?company=${client.id}&name=${encodeURIComponent(client.name)}`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Message
+          </Link>
+          <Link
+            href={`/clients/${client.id}/edit`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <Pencil className="h-4 w-4 mr-2" />
+            Modifier
+          </Link>
+        </div>
         <DeleteClientButton clientId={client.id} clientName={client.name} />
       </div>
 
@@ -404,10 +422,13 @@ function ApercuTab({
 
 // ─── Documents Tab ────────────────────────────────────────────
 function DocumentsTab({ companyId }: { companyId: string }) {
+  const router = useRouter();
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ category: string; subcategory: string }>({ category: "", subcategory: "" });
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     fetch(`/api/documents?companyId=${companyId}`)
       .then((r) => (r.ok ? r.json() : { documents: [] }))
@@ -416,11 +437,37 @@ function DocumentsTab({ companyId }: { companyId: string }) {
       .finally(() => setLoading(false));
   }, [companyId]);
 
+  function startEdit(doc: DocumentItem) {
+    setEditingId(doc.id);
+    setEditForm({ category: doc.category ?? "OTHER", subcategory: doc.subcategory ?? "" });
+    setExpandedId(null);
+  }
+
+  async function saveEdit(id: string) {
+    setSaving(true);
+    try {
+      await fetch(`/api/documents/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: editForm.category, subcategory: editForm.subcategory || null }),
+      });
+      setEditingId(null);
+      // Refresh docs list
+      fetch(`/api/documents?companyId=${companyId}`)
+        .then((r) => (r.ok ? r.json() : { documents: [] }))
+        .then((data) => setDocs(data.documents ?? []))
+        .catch(() => {});
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return <p className="text-sm text-muted-foreground text-center py-8">Chargement des documents...</p>;
   }
 
   return (
+    <>
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">
@@ -444,29 +491,97 @@ function DocumentsTab({ companyId }: { companyId: string }) {
         <div className="rounded-lg border divide-y">
           {docs.map((doc) => (
             <div key={doc.id}>
-              <button
-                onClick={() => setExpandedId(expandedId === doc.id ? null : doc.id)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors text-left"
-              >
-                <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 px-4 py-3 hover:bg-muted/30 transition-colors">
+                <button
+                  onClick={() => setExpandedId(expandedId === doc.id ? null : doc.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
                   <p className="text-sm font-medium truncate">{doc.fileName}</p>
                   <p className="text-xs text-muted-foreground">
                     {doc.uploaderName ?? "—"} · {new Date(doc.createdAt).toLocaleDateString("fr-CA")}
                   </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-3">
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {doc.category && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {CATEGORY_LABELS[doc.category] ?? doc.category}
+                      {doc.subcategory ? ` · ${doc.subcategory}` : ""}
+                    </Badge>
+                  )}
                   <Badge
                     variant={doc.status === "PROCESSED" ? "secondary" : doc.status === "REJECTED" ? "destructive" : "outline"}
+                    className="text-[10px]"
                   >
                     {DOC_STATUS_LABELS[doc.status] ?? doc.status}
                   </Badge>
-                  {expandedId === doc.id ? (
-                    <ChevronDown className="size-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  )}
+                  <button
+                    onClick={() => startEdit(doc)}
+                    title="Modifier catégorie"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => window.open(`/api/documents/${doc.id}/view`, "_blank")}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Voir
+                  </button>
+                  <button onClick={() => setExpandedId(expandedId === doc.id ? null : doc.id)}>
+                    {expandedId === doc.id ? (
+                      <ChevronDown className="size-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    )}
+                  </button>
                 </div>
-              </button>
+              </div>
+
+              {/* Edit panel */}
+              {editingId === doc.id && (
+                <div className="px-4 pb-3 pt-2 border-t bg-muted/10 flex flex-wrap items-end gap-2">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Type</label>
+                    <select
+                      value={editForm.category}
+                      onChange={(e) => setEditForm({ category: e.target.value, subcategory: "" })}
+                      className="h-7 rounded border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring"
+                    >
+                      {VALID_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sous-catégorie</label>
+                    <select
+                      value={editForm.subcategory}
+                      onChange={(e) => setEditForm((f) => ({ ...f, subcategory: e.target.value }))}
+                      className="h-7 rounded border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring"
+                    >
+                      <option value="">— Aucune —</option>
+                      {(SUBCATEGORIES_BY_CATEGORY[editForm.category] ?? []).map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => saveEdit(doc.id)}
+                    disabled={saving}
+                    className="h-7 px-2 rounded border border-input bg-background text-xs hover:bg-muted transition-colors flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <Check className="size-3" />
+                    {saving ? "..." : "OK"}
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="h-7 px-2 rounded border border-input bg-background text-xs hover:bg-muted transition-colors"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              )}
+
               {expandedId === doc.id && (
                 <div className="px-4 pb-4 border-t bg-muted/10">
                   <div className="pt-3">
@@ -479,93 +594,7 @@ function DocumentsTab({ companyId }: { companyId: string }) {
         </div>
       )}
     </div>
-  );
-}
-
-// ─── Factures Tab ────────────────────────────────────────────
-function FacturesTab({ companyId }: { companyId: string }) {
-  const [invoicesList, setInvoicesList] = useState<InvoiceItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/invoices?companyId=${companyId}`)
-      .then((r) => (r.ok ? r.json() : { invoices: [] }))
-      .then((data) => setInvoicesList(data.invoices ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [companyId]);
-
-  if (loading) {
-    return <p className="text-sm text-muted-foreground text-center py-8">Chargement des factures...</p>;
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">
-          Factures ({invoicesList.length})
-        </h2>
-        <Link
-          href={`/invoices/new?companyId=${companyId}`}
-          className={buttonVariants({ variant: "outline", size: "sm" })}
-        >
-          <Receipt className="size-3.5 mr-1.5" />
-          Nouvelle facture
-        </Link>
-      </div>
-
-      {invoicesList.length === 0 ? (
-        <div className="rounded-lg border p-8 text-center">
-          <Receipt className="size-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Aucune facture pour ce client.</p>
-        </div>
-      ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left font-medium px-4 py-2">Numéro</th>
-                <th className="text-left font-medium px-4 py-2">Date</th>
-                <th className="text-right font-medium px-4 py-2">Montant</th>
-                <th className="text-left font-medium px-4 py-2">Statut</th>
-                <th className="text-left font-medium px-4 py-2">Échéance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoicesList.map((inv) => (
-                <tr key={inv.id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="px-4 py-2.5">
-                    <Link
-                      href={`/invoices/${inv.id}`}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {inv.invoiceNumber}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2.5 text-muted-foreground">
-                    {new Date(inv.createdAt).toLocaleDateString("fr-CA")}
-                  </td>
-                  <td className="px-4 py-2.5 text-right font-medium">
-                    {Number(inv.total).toLocaleString("fr-CA", {
-                      style: "currency",
-                      currency: "CAD",
-                    })}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <Badge variant={INVOICE_STATUS_VARIANTS[inv.status] ?? "outline"}>
-                      {INVOICE_STATUS_LABELS[inv.status] ?? inv.status}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-2.5 text-muted-foreground">
-                    {new Date(inv.dueDate).toLocaleDateString("fr-CA")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -588,14 +617,22 @@ function EcheancesTab({
           <CalendarClock className="h-5 w-5" />
           Échéances fiscales ({deadlines.length})
         </h2>
-        <GenerateDeadlinesButton companyId={companyId} />
+        <Link
+          href="/autopilot"
+          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+        >
+          <Zap className="size-3" />
+          Pilote automatique
+        </Link>
       </div>
 
       {deadlines.length === 0 ? (
         <div className="rounded-lg border p-8 text-center">
           <CalendarClock className="size-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">
-            Aucune échéance. Cliquez sur &quot;Générer les échéances&quot; pour créer le calendrier fiscal.
+            Aucune échéance. Utilisez le{" "}
+            <Link href="/autopilot" className="underline hover:text-foreground">Pilote automatique</Link>
+            {" "}pour générer le calendrier fiscal.
           </p>
         </div>
       ) : (
@@ -742,6 +779,102 @@ function BankingCard({ client }: { client: ClientTabsProps["client"] }) {
             </div>
           </div>
         </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="h-8 px-3 rounded-md border border-input bg-transparent text-sm hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {saving ? "Enregistrement..." : saved ? "Enregistré ✓" : "Enregistrer"}
+          </button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Gouvernement Portails Card ───────────────────────────────
+const GOUV_PORTALS = [
+  { key: "clicsequr", label: "Revenu QC – Clic Séqur Entreprise" },
+  { key: "arc",       label: "ARC (Agence du revenu du Canada)" },
+  { key: "cnesst",    label: "CNESST" },
+  { key: "req",       label: "REQ (Registraire des entreprises)" },
+  { key: "serviceCanada", label: "Service Canada" },
+] as const;
+
+type PortalKey = typeof GOUV_PORTALS[number]["key"];
+
+function GouvPortalsCard({ client }: { client: ClientTabsProps["client"] }) {
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [form, setForm] = useState({
+    clicsequrId: client.clicsequrId ?? "",
+    clicsequrPassword: client.clicsequrPassword ?? "",
+    arcId: client.arcId ?? "",
+    arcPassword: client.arcPassword ?? "",
+    cnesstId: client.cnesstId ?? "",
+    cnesstPassword: client.cnesstPassword ?? "",
+    reqId: client.reqId ?? "",
+    reqPassword: client.reqPassword ?? "",
+    serviceCanadaId: client.serviceCanadaId ?? "",
+    serviceCanadaPassword: client.serviceCanadaPassword ?? "",
+  });
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch(`/api/clients/${client.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function toggleShow(key: string) {
+    setShowPasswords((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Lock className="size-4 text-muted-foreground" />
+          Portails gouvernementaux
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {GOUV_PORTALS.map(({ key, label }) => (
+          <div key={key} className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <BankField
+                label="Identifiant"
+                value={form[`${key}Id` as keyof typeof form]}
+                onChange={(v) => setForm((f) => ({ ...f, [`${key}Id`]: v }))}
+              />
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Mot de passe</label>
+                <div className="flex items-center gap-1">
+                  <input
+                    type={showPasswords[key] ? "text" : "password"}
+                    value={form[`${key}Password` as keyof typeof form]}
+                    onChange={(e) => setForm((f) => ({ ...f, [`${key}Password`]: e.target.value }))}
+                    className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <button type="button" onClick={() => toggleShow(key)} className="shrink-0 text-muted-foreground hover:text-foreground">
+                    {showPasswords[key] ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
         <div className="flex items-center gap-2 pt-1">
           <button
             onClick={handleSave}

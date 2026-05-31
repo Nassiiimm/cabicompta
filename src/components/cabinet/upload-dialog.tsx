@@ -12,6 +12,7 @@ import {
   Sparkles,
   CheckCircle,
 } from "lucide-react";
+import { SUBCATEGORIES_BY_CATEGORY } from "@/lib/document-categories";
 
 type Company = {
   id: string;
@@ -19,38 +20,20 @@ type Company = {
 };
 
 const CATEGORIES = [
-  { value: "DAS", label: "01 — DAS (Déductions à la source)" },
-  { value: "TPS_TVQ", label: "02 — TPS/TVQ" },
-  { value: "FINANCIAL_STATEMENT", label: "03 — T2/CO-17" },
-  { value: "T1", label: "04 — T1" },
-  { value: "REQ_DOC", label: "05 — REQ" },
-  { value: "IMMOBILISATION", label: "06 — Immobilisation & investissements" },
-  { value: "BANK_STATEMENT", label: "Relevé bancaire" },
-  { value: "INVOICE", label: "Facture" },
-  { value: "TAX_NOTICE", label: "Avis de cotisation" },
-  { value: "CORPORATE", label: "Document corporatif" },
-  { value: "CONTRACT", label: "Contrat" },
-  { value: "RECEIPT", label: "Reçu" },
-  { value: "OTHER", label: "Autre" },
+  { value: "DAS",                label: "DAS — Déductions à la source" },
+  { value: "TPS_TVQ",            label: "TPS/TVQ" },
+  { value: "FINANCIAL_STATEMENT",label: "T2/CO-17 — État financier" },
+  { value: "T1",                 label: "T1 — Déclaration de revenus" },
+  { value: "REQ_DOC",            label: "REQ — Documents requis" },
+  { value: "IMMOBILISATION",     label: "Immobilisation & investissements" },
+  { value: "BANK_STATEMENT",     label: "Relevé bancaire" },
+  { value: "INVOICE",            label: "Facture" },
+  { value: "TAX_NOTICE",         label: "Avis de cotisation" },
+  { value: "CORPORATE",          label: "Document corporatif" },
+  { value: "CONTRACT",           label: "Contrat" },
+  { value: "RECEIPT",            label: "Reçu" },
+  { value: "OTHER",              label: "Autre" },
 ];
-
-const SUBCATEGORIES: Record<string, { value: string; label: string }[]> = {
-  DAS: [
-    { value: "A", label: "A — Fiches de paies" },
-    { value: "B", label: "B — Rapport DAS gouvernements" },
-    { value: "C", label: "C — Autres" },
-  ],
-  TPS_TVQ: [
-    { value: "A", label: "A — Factures TPS/TVQ par période" },
-    { value: "B", label: "B — Rapport TPS/TVQ gouvernements" },
-    { value: "C", label: "C — Autres TPS/TVQ" },
-  ],
-  FINANCIAL_STATEMENT: [
-    { value: "A", label: "A — États financiers" },
-    { value: "B", label: "B — Rapport T2/CO-17 gouvernements" },
-    { value: "C", label: "C — Autres T2/CO-17" },
-  ],
-};
 
 export function UploadDialog({
   open,
@@ -309,8 +292,8 @@ export function UploadDialog({
             </select>
           </div>
 
-          {/* Subcategory select — shown only for categories with subcategories */}
-          {SUBCATEGORIES[category] && (
+          {/* Subcategory select */}
+          {(SUBCATEGORIES_BY_CATEGORY[category] ?? []).length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="subcategory">Sous-catégorie</Label>
               <select
@@ -320,10 +303,8 @@ export function UploadDialog({
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="">— Sélectionner —</option>
-                {SUBCATEGORIES[category].map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
+                {SUBCATEGORIES_BY_CATEGORY[category].map((s) => (
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
             </div>

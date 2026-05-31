@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -19,7 +20,15 @@ export function PortalHeader() {
   return (
     <header className="sticky top-0 z-30 h-14 border-b bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl">
       <div className="max-w-2xl mx-auto px-4 sm:px-0 h-full flex items-center justify-between">
-        <span className="text-sm font-semibold tracking-tight">CabiCompta</span>
+        <Link href="/portal">
+          <Image
+            src="/logo-cfc-transparent.png"
+            alt="CFC"
+            width={90}
+            height={36}
+            className="object-contain invert dark:invert-0"
+          />
+        </Link>
         <div className="flex items-center gap-0.5">
           <ThemeToggle />
           <NotificationBell />

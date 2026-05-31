@@ -5,12 +5,24 @@ import { Upload, FileText, X, Loader2, Check, Camera, ScanLine } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { MobileScanner } from "./mobile-scanner";
 
+const PORTAL_CATEGORIES = [
+  { value: "DAS", label: "DAS" },
+  { value: "TPS_TVQ", label: "TPS/TVQ" },
+  { value: "BANK_STATEMENT", label: "Relevé bancaire" },
+  { value: "INVOICE", label: "Facture fournisseur" },
+  { value: "TAX_NOTICE", label: "Avis de cotisation" },
+  { value: "RECEIPT", label: "Reçu / dépense" },
+  { value: "CONTRACT", label: "Contrat" },
+  { value: "OTHER", label: "Autre" },
+];
+
 export function PortalUploadZone({ companyId }: { companyId: string }) {
   const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [uploaded, setUploaded] = useState(0);
+  const [category, setCategory] = useState("OTHER");
   const [showScanner, setShowScanner] = useState(false);
   const [hasCamera, setHasCamera] = useState(false);
 
@@ -57,6 +69,7 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
         fd.append("file", files[i]);
         fd.append("companyId", companyId);
         fd.append("fiscalYear", new Date().getFullYear().toString());
+        fd.append("category", category);
         const res = await fetch("/api/documents", { method: "POST", body: fd });
         if (!res.ok) throw new Error((await res.json()).error || "Erreur");
         setUploaded(i + 1);
@@ -88,8 +101,8 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
     <div className="space-y-2">
       {showScanner && (
         <MobileScanner
-          onCapture={(file) => {
-            setFiles((prev) => [...prev, file]);
+          onCapture={(files) => {
+            setFiles((prev) => [...prev, ...files]);
             setShowScanner(false);
           }}
           onClose={() => setShowScanner(false)}
@@ -133,6 +146,18 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
 
       {files.length > 0 && (
         <div className="rounded-lg border p-3 space-y-1.5">
+          <div className="mb-2">
+            <label className="text-xs text-muted-foreground mb-1 block">Catégorie</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full text-sm rounded-md border border-input bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              {PORTAL_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
           {files.map((f, i) => (
             <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded bg-muted/50">
               <div className="flex items-center gap-2 min-w-0">
@@ -145,9 +170,24 @@ export function PortalUploadZone({ companyId }: { companyId: string }) {
               </button>
             </div>
           ))}
+          {uploading && files.length > 1 && (
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Envoi en cours…</span>
+                <span>{uploaded}/{files.length}</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-foreground rounded-full transition-all duration-300"
+                  style={{ width: `${Math.round((uploaded / files.length) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
           {error && <p className="text-xs text-destructive px-1">{error}</p>}
           <Button className="w-full mt-1" onClick={handleUpload} disabled={uploading}>
-            {uploading ? <><Loader2 className="size-3.5 mr-1.5 animate-spin" />Envoi {uploaded}/{files.length}</>
+            {uploading
+              ? <><Loader2 className="size-3.5 mr-1.5 animate-spin" />{files.length === 1 ? "Envoi…" : `Envoi ${uploaded}/${files.length}`}</>
               : <>Envoyer {files.length} fichier{files.length > 1 ? "s" : ""}</>}
           </Button>
         </div>

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderOpen, Receipt, User } from "lucide-react";
+import { Home, FolderOpen, User, MessageSquare, Receipt } from "lucide-react";
 
 const NAV = [
   { href: "/portal", label: "Accueil", icon: Home },
   { href: "/portal/documents", label: "Documents", icon: FolderOpen },
   { href: "/portal/invoices", label: "Factures", icon: Receipt },
+  { href: "/portal/messages", label: "Messages", icon: MessageSquare },
   { href: "/portal/profile", label: "Profil", icon: User },
 ];
 

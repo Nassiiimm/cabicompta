@@ -18,6 +18,7 @@ const updateCompanySchema = z.object({
   phone: z.string().max(20).optional().nullable(),
   email: z.string().email("Courriel invalide").max(255).optional().nullable().or(z.literal("")),
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
+  type: z.enum(["T1_PARTICULIER", "T1_AUTONOME", "T2_SOCIETE"]).optional().nullable(),
   notes: z.string().optional().nullable(),
   // Informations bancaires — ADMIN/STAFF uniquement
   bankName: z.string().max(255).optional().nullable(),
@@ -26,6 +27,22 @@ const updateCompanySchema = z.object({
   bankAccountNumber: z.string().max(50).optional().nullable(),
   bankOnlineId: z.string().max(255).optional().nullable(),
   bankPassword: z.string().optional().nullable(),
+  // Portails gouvernementaux — ADMIN/STAFF uniquement
+  clicsequrId: z.string().max(255).optional().nullable(),
+  clicsequrPassword: z.string().optional().nullable(),
+  arcId: z.string().max(255).optional().nullable(),
+  arcPassword: z.string().optional().nullable(),
+  cnesstId: z.string().max(255).optional().nullable(),
+  cnesstPassword: z.string().optional().nullable(),
+  reqId: z.string().max(255).optional().nullable(),
+  reqPassword: z.string().optional().nullable(),
+  serviceCanadaId: z.string().max(255).optional().nullable(),
+  serviceCanadaPassword: z.string().optional().nullable(),
+  // Profil fiscal — pilote automatique
+  gstFiling: z.enum(["MONTHLY", "QUARTERLY", "ANNUAL", "NONE"]).optional().nullable(),
+  hasEmployees: z.boolean().optional(),
+  employeeCount: z.number().int().min(0).optional().nullable(),
+  hasInstallments: z.boolean().optional(),
 });
 
 export async function GET(
@@ -50,10 +67,13 @@ export async function GET(
       return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
-    // Masquer les informations bancaires pour les stagiaires
+    // Masquer les informations sensibles pour les stagiaires
     if (user.role === "INTERN") {
-      const { bankName, bankTransitNumber, bankInstitutionNumber, bankAccountNumber, bankOnlineId, bankPassword, ...safeCompany } = company;
+      const { bankName, bankTransitNumber, bankInstitutionNumber, bankAccountNumber, bankOnlineId, bankPassword,
+        clicsequrId, clicsequrPassword, arcId, arcPassword, cnesstId, cnesstPassword, reqId, reqPassword, serviceCanadaId, serviceCanadaPassword,
+        ...safeCompany } = company;
       void bankName; void bankTransitNumber; void bankInstitutionNumber; void bankAccountNumber; void bankOnlineId; void bankPassword;
+      void clicsequrId; void clicsequrPassword; void arcId; void arcPassword; void cnesstId; void cnesstPassword; void reqId; void reqPassword; void serviceCanadaId; void serviceCanadaPassword;
       return Response.json(safeCompany);
     }
 
@@ -98,14 +118,11 @@ export async function PATCH(
     const body = await request.json();
     const parsed = updateCompanySchema.parse(body);
 
-    // Retirer les champs bancaires pour les stagiaires
+    // Retirer les champs sensibles pour les stagiaires
     if (user.role === "INTERN") {
-      delete (parsed as Record<string, unknown>).bankName;
-      delete (parsed as Record<string, unknown>).bankTransitNumber;
-      delete (parsed as Record<string, unknown>).bankInstitutionNumber;
-      delete (parsed as Record<string, unknown>).bankAccountNumber;
-      delete (parsed as Record<string, unknown>).bankOnlineId;
-      delete (parsed as Record<string, unknown>).bankPassword;
+      const sensitiveFields = ["bankName","bankTransitNumber","bankInstitutionNumber","bankAccountNumber","bankOnlineId","bankPassword",
+        "clicsequrId","clicsequrPassword","arcId","arcPassword","cnesstId","cnesstPassword","reqId","reqPassword","serviceCanadaId","serviceCanadaPassword"];
+      for (const f of sensitiveFields) delete (parsed as Record<string, unknown>)[f];
     }
 
     const data = Object.fromEntries(

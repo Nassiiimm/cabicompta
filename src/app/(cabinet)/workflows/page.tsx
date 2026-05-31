@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { workflows, companies, users, workflowTasks } from "@/lib/db/schema";
 import { eq, desc, count, and, sql } from "drizzle-orm";
-import { GitBranch } from "lucide-react";
+import { GitBranch, Zap } from "lucide-react";
 import { WorkflowsView } from "./workflows-view";
 import { getTranslations } from "next-intl/server";
 
@@ -72,7 +73,13 @@ export default async function WorkflowsPage() {
           <GitBranch className="size-5" />
           {t("title")}
         </h1>
-        <span className="text-sm text-muted-foreground">{t("total", { count: rows.length })}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">{t("total", { count: rows.length })}</span>
+          <Link href="/autopilot" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+            <Zap className="size-3" />
+            Pilote automatique
+          </Link>
+        </div>
       </div>
       <WorkflowsView workflows={enriched} statusLabels={STATUS_LABELS} statusVariants={STATUS_VARIANTS} currentUserId={user.id} />
     </div>

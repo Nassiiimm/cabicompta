@@ -116,7 +116,7 @@ export async function GET(
 <body>
   <div class="header">
     <div>
-      <div class="logo">CabiCompta</div>
+      <div class="logo">CFC</div>
       <div class="meta">Cabinet comptable et fiscal</div>
     </div>
     <div>
@@ -193,7 +193,7 @@ export async function GET(
   ${invoice.notes ? `<div class="notes"><strong>Notes :</strong> ${invoice.notes}</div>` : ""}
 
   <div class="footer">
-    CabiCompta — Document généré le ${formatDate(new Date())}
+    CFC — Document généré le ${formatDate(new Date())}
   </div>
 </body>
 </html>`;

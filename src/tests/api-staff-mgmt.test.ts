@@ -13,10 +13,13 @@ vi.mock("@supabase/supabase-js", () => ({
           error: null,
         }),
         updateUserById: vi.fn().mockResolvedValue({ error: null }),
+        deleteUser: vi.fn().mockResolvedValue({ error: null }),
       },
     },
   }),
 }));
+
+vi.mock("@/lib/audit", () => ({ logAudit: vi.fn() }));
 
 const mockDb: Record<string, any> = {};
 ["select", "from", "where", "orderBy", "limit", "insert", "values", "returning", "update", "set", "delete"].forEach(

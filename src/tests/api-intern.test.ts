@@ -26,8 +26,8 @@ vi.mock("@/lib/db/schema", () => ({
   users:           { id: "id", role: "role" },
 }));
 
-const mockAdmin  = { id: "admin-1",  role: "ADMIN",  email: "admin@test.com",  name: "Admin"  };
-const mockIntern = { id: "intern-1", role: "INTERN", email: "intern@test.com", name: "Intern" };
+const mockAdmin  = { id: "admin-1",  role: "ADMIN" as const,  email: "admin@test.com",  name: "Admin",  authId: "a", phone: null, avatarUrl: null };
+const mockIntern = { id: "intern-1", role: "INTERN" as const, email: "intern@test.com", name: "Intern", authId: "b", phone: null, avatarUrl: null };
 
 // ── /api/clients — INTERN voit seulement ses clients assignés ──────────────
 

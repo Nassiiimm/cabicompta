@@ -31,7 +31,7 @@ export default async function PortalProfilePage() {
             <span className="font-medium">{user.email}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Role</span>
+            <span className="text-muted-foreground">Rôle</span>
             <Badge variant="secondary">Client</Badge>
           </div>
         </CardContent>

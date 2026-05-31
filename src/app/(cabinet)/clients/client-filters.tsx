@@ -6,6 +6,7 @@ const STATUS_FILTERS = [
   { label: "Tous", value: "" },
   { label: "Actifs", value: "ACTIVE" },
   { label: "Inactifs", value: "INACTIVE" },
+  { label: "Archivés", value: "ARCHIVED" },
 ] as const;
 
 const TYPE_FILTERS = [

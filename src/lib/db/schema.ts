@@ -10,6 +10,7 @@ import {
   boolean,
   jsonb,
   date,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 // Enums
@@ -157,6 +158,22 @@ export const companies = pgTable("companies", {
   bankAccountNumber: varchar("bank_account_number", { length: 50 }),
   bankOnlineId: varchar("bank_online_id", { length: 255 }),
   bankPassword: text("bank_password"),
+  // Portails gouvernementaux — accès restreint ADMIN/STAFF uniquement
+  clicsequrId: varchar("clicsequr_id", { length: 255 }),
+  clicsequrPassword: text("clicsequr_password"),
+  arcId: varchar("arc_id", { length: 255 }),
+  arcPassword: text("arc_password"),
+  cnesstId: varchar("cnesst_id", { length: 255 }),
+  cnesstPassword: text("cnesst_password"),
+  reqId: varchar("req_id", { length: 255 }),
+  reqPassword: text("req_password"),
+  serviceCanadaId: varchar("service_canada_id", { length: 255 }),
+  serviceCanadaPassword: text("service_canada_password"),
+  // Profil fiscal — pilote automatique
+  gstFiling: varchar("gst_filing", { length: 20 }).default("QUARTERLY"), // MONTHLY | QUARTERLY | ANNUAL | NONE
+  hasEmployees: boolean("has_employees").notNull().default(false),
+  employeeCount: integer("employee_count"),
+  hasInstallments: boolean("has_installments").notNull().default(false),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -422,6 +439,67 @@ export const workflowTasks = pgTable("workflow_tasks", {
 });
 
 // ═══════════════════════════════════════════════════════════
+// Messagerie portail client — fil de discussion client ↔ cabinet
+// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// Demandes documentaires — pilote automatique fiscal
+// Documents requis par filing, visibles par le client
+// ═══════════════════════════════════════════════════════════
+export const documentRequests = pgTable("document_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workflowId: uuid("workflow_id")
+    .notNull()
+    .references(() => workflows.id, { onDelete: "cascade" }),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "restrict" }),
+  label: varchar("label", { length: 255 }).notNull(),
+  description: text("description"),
+  required: boolean("required").notNull().default(true),
+  status: varchar("status", { length: 20 }).notNull().default("PENDING"), // PENDING | RECEIVED
+  documentId: uuid("document_id").references(() => documents.id, { onDelete: "set null" }),
+  dueDate: date("due_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const portalMessages = pgTable("portal_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyId: uuid("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  fromRole: text("from_role").notNull(),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ═══════════════════════════════════════════════════════════
+// Présence — temps actif passé sur l'app par employé (automatique)
+// Distinct de time_entries : présence ≠ heures facturables par dossier.
+// Une ligne par (employé, jour), alimentée par les heartbeats du client.
+// ═══════════════════════════════════════════════════════════
+export const activitySessions = pgTable(
+  "activity_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    date: date("date").notNull(),
+    activeSeconds: integer("active_seconds").notNull().default(0),
+    lastHeartbeatAt: timestamp("last_heartbeat_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => ({
+    userDateIdx: uniqueIndex("activity_user_date_idx").on(t.userId, t.date),
+  })
+);
+
+// ═══════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════
 export type User = typeof users.$inferSelect;
@@ -441,3 +519,6 @@ export type WorkflowTemplate = typeof workflowTemplates.$inferSelect;
 export type WorkflowTemplateTask = typeof workflowTemplateTasks.$inferSelect;
 export type Workflow = typeof workflows.$inferSelect;
 export type WorkflowTask = typeof workflowTasks.$inferSelect;
+export type DocumentRequest = typeof documentRequests.$inferSelect;
+export type PortalMessage = typeof portalMessages.$inferSelect;
+export type ActivitySession = typeof activitySessions.$inferSelect;

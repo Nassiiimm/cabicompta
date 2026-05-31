@@ -1,5 +1,5 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM = "CabiCompta <noreply@cabicompta.ca>";
+const FROM = "CFC <noreply@cfc-compta.ca>";
 
 type EmailPayload = {
   to: string;
@@ -39,12 +39,12 @@ async function sendEmail(payload: EmailPayload): Promise<boolean> {
 export async function sendWelcomeEmail(to: string, name: string, tempPassword: string) {
   return sendEmail({
     to,
-    subject: "Bienvenue sur CabiCompta — Votre accès client",
+    subject: "Bienvenue sur CFC — Votre accès client",
     html: `
       <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
         <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${name},</h2>
         <p style="color: #525252; line-height: 1.6;">
-          Votre comptable vous a créé un accès sur <strong>CabiCompta</strong>.
+          Votre comptable vous a créé un accès sur <strong>CFC</strong>.
           Vous pouvez maintenant déposer vos documents et suivre votre dossier en ligne.
         </p>
         <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 24px 0;">
@@ -55,7 +55,7 @@ export async function sendWelcomeEmail(to: string, name: string, tempPassword: s
           Connectez-vous et changez votre mot de passe dès que possible.
         </p>
         <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
-          — L'équipe CabiCompta
+          — L'équipe CFC
         </p>
       </div>
     `,
@@ -65,7 +65,7 @@ export async function sendWelcomeEmail(to: string, name: string, tempPassword: s
 export async function sendDocumentRequestEmail(to: string, name: string, companyName: string) {
   return sendEmail({
     to,
-    subject: `CabiCompta — Documents requis pour ${companyName}`,
+    subject: `CFC — Documents requis pour ${companyName}`,
     html: `
       <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
         <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${name},</h2>
@@ -76,7 +76,7 @@ export async function sendDocumentRequestEmail(to: string, name: string, company
           Connectez-vous à votre portail pour déposer les documents manquants.
         </p>
         <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
-          — L'équipe CabiCompta
+          — L'équipe CFC
         </p>
       </div>
     `,
@@ -98,7 +98,7 @@ export async function sendDeadlineReminderEmail(to: string, name: string, deadli
           Assurez-vous que tous les documents nécessaires sont déposés sur votre portail.
         </p>
         <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
-          — L'équipe CabiCompta
+          — L'équipe CFC
         </p>
       </div>
     `,
@@ -122,7 +122,28 @@ export async function sendInvoiceOverdueEmail(to: string, name: string, invoiceN
           si vous avez des questions.
         </p>
         <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
-          — L'équipe CabiCompta
+          — L'équipe CFC
+        </p>
+      </div>
+    `,
+  });
+}
+
+export async function sendDocumentProcessedEmail(to: string, name: string, fileName: string) {
+  return sendEmail({
+    to,
+    subject: "CFC — Document traité",
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
+        <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${name},</h2>
+        <p style="color: #525252; line-height: 1.6;">
+          Votre document <strong>${fileName}</strong> a été traité par votre comptable.
+        </p>
+        <p style="color: #525252; line-height: 1.6;">
+          Connectez-vous à votre portail pour le consulter.
+        </p>
+        <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
+          — L'équipe CFC
         </p>
       </div>
     `,
@@ -132,7 +153,7 @@ export async function sendInvoiceOverdueEmail(to: string, name: string, invoiceN
 export async function sendInvoiceEmail(to: string, name: string, invoiceNumber: string, total: string) {
   return sendEmail({
     to,
-    subject: `CabiCompta — Facture ${invoiceNumber}`,
+    subject: `CFC — Facture ${invoiceNumber}`,
     html: `
       <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 0;">
         <h2 style="font-size: 18px; margin-bottom: 16px;">Bonjour ${name},</h2>
@@ -147,7 +168,7 @@ export async function sendInvoiceEmail(to: string, name: string, invoiceNumber: 
           Consultez votre portail pour plus de détails.
         </p>
         <p style="color: #a3a3a3; font-size: 12px; margin-top: 32px;">
-          — L'équipe CabiCompta
+          — L'équipe CFC
         </p>
       </div>
     `,

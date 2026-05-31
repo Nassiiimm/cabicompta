@@ -2,7 +2,7 @@ import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { documents, companies, users } from "@/lib/db/schema";
 import { desc, eq, ilike, and, isNull } from "drizzle-orm";
-import { FileText, Upload } from "lucide-react";
+import { FileText } from "lucide-react";
 import { DocumentsActions } from "./documents-actions";
 import { DocumentSearch } from "./document-search";
 import { DocumentFilters } from "./document-filters";
@@ -38,7 +38,7 @@ export default async function DocumentsPage({
     filters.push(eq(documents.category, category as typeof VALID_CATEGORIES[number]));
   }
 
-  if (subcategory && ["A", "B", "C"].includes(subcategory)) {
+  if (subcategory && subcategory.length <= 50) {
     filters.push(eq(documents.subcategory, subcategory));
   }
 
@@ -50,6 +50,7 @@ export default async function DocumentsPage({
       fileName: documents.fileName,
       fileSize: documents.fileSize,
       category: documents.category,
+      subcategory: documents.subcategory,
       fiscalYear: documents.fiscalYear,
       status: documents.status,
       createdAt: documents.createdAt,
@@ -73,34 +74,19 @@ export default async function DocumentsPage({
       <DocumentFilters currentStatus={status} currentCategory={category} currentSubcategory={subcategory} />
       <DocumentSearch defaultValue={q} />
 
-      {docs.length === 0 ? (
-        (q || status || companyId || category || subcategory) ? (
-          <div className="text-center py-12 border rounded-lg">
-            <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              {q ? t("noResultSearch", { query: q }) : t("noResultFilter")}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 border rounded-lg text-center">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Upload className="size-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-base font-medium mb-1">{t("noDocuments")}</h3>
-            <p className="text-sm text-muted-foreground mb-5 max-w-xs">
-              {t("noDocumentsDesc")}
-            </p>
-            <DocumentsActions />
-          </div>
-        )
-      ) : (
-        <DocumentListActions
-          documents={docs.map((doc) => ({
-            ...doc,
-            createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
-          }))}
-        />
-      )}
+      <DocumentListActions
+        documents={docs.map((doc) => ({
+          ...doc,
+          createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
+        }))}
+        emptyMessage={
+          docs.length === 0
+            ? (q || status || companyId || category || subcategory)
+              ? (q ? t("noResultSearch", { query: q }) : t("noResultFilter"))
+              : t("noDocuments")
+            : undefined
+        }
+      />
     </div>
   );
 }

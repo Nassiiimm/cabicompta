@@ -60,7 +60,13 @@
     "audit": "Audit log",
     "access": "Access log",
     "team": "Team",
-    "templates": "Workflow templates"
+    "templates": "Workflow templates",
+    "messages": "Messages",
+    "deadlines": "Deadlines",
+    "autopilot": "Autopilot",
+    "sectionProduction": "Production",
+    "sectionRelations": "Client relations",
+    "sectionAdmin": "Administration"
   },
   "home": {
     "tagline": "Accounting firm — Quebec",
@@ -96,7 +102,7 @@
     },
     "approach": {
       "title": "A trusted relationship, not just a file",
-      "p1": "At CabiCompta, every client has a dedicated contact who knows their file. We don't manage numbers — we support entrepreneurs.",
+      "p1": "At CFC, every client has a dedicated contact who knows their file. We don't manage numbers — we support entrepreneurs.",
       "p2": "Through our secure portal, you submit documents online, track deadlines in real time and access your financial statements at any time.",
       "points": {
         "dedicated": "Dedicated contact for your file",
@@ -123,7 +129,7 @@
   },
   "auth": {
     "login": {
-      "title": "CabiCompta",
+      "title": "CFC",
       "emailLabel": "Email",
       "emailPlaceholder": "name@firm.ca",
       "passwordLabel": "Password",
@@ -176,9 +182,18 @@
     "noDocs": "No documents",
     "noDeadlines": "No deadlines",
     "months": {
-      "jan": "Jan", "fev": "Feb", "mar": "Mar", "avr": "Apr",
-      "mai": "May", "jun": "Jun", "jul": "Jul", "aou": "Aug",
-      "sep": "Sep", "oct": "Oct", "nov": "Nov", "dec": "Dec"
+      "jan": "Jan",
+      "fev": "Feb",
+      "mar": "Mar",
+      "avr": "Apr",
+      "mai": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aou": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
     },
     "chart": {
       "invoiced": "Invoiced",
@@ -372,7 +387,7 @@
   },
   "portal": {
     "welcome": "Hello, {name}",
-    "subtitle": "Your CabiCompta client portal",
+    "subtitle": "Your CFC client portal",
     "nav": {
       "home": "Home",
       "documents": "Documents",
@@ -442,6 +457,9 @@
       "email": "Email",
       "role": "Role",
       "createdAt": "Created",
+      "hoursThisMonth": "Hours (this month)",
+      "billable": "Billable",
+      "presenceThisMonth": "Presence (this month)",
       "roles": {
         "ADMIN": "Administrator",
         "STAFF": "Accountant",

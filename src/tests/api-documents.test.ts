@@ -14,6 +14,12 @@ vi.mock("@/lib/access-log", () => ({
   logAccess: vi.fn(),
 }));
 
+vi.mock("@/lib/email", () => ({
+  sendDocumentProcessedEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/audit", () => ({ logAudit: vi.fn() }));
+
 const mockDoc = {
   id: "doc-1",
   companyId: "comp-1",
@@ -103,6 +109,7 @@ describe("GET /api/documents/[id]", () => {
 describe("PATCH /api/documents/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.keys(mockDb).forEach((k) => mockDb[k].mockReturnValue(mockDb));
     mockDb.limit.mockResolvedValue([mockDoc]);
     mockDb.returning.mockResolvedValue([{ ...mockDoc, status: "PROCESSED" }]);
   });
@@ -119,6 +126,11 @@ describe("PATCH /api/documents/[id]", () => {
   });
 
   it("updates document status to PROCESSED", async () => {
+    // where: chain for doc-select, chain for update, then terminal for members query
+    mockDb.where
+      .mockReturnValueOnce(mockDb)   // select existing doc → .limit()
+      .mockReturnValueOnce(mockDb)   // update → .returning()
+      .mockResolvedValueOnce([]);    // companyMembers terminal query
     const { PATCH } = await import("@/app/api/documents/[id]/route");
     const req = new Request("http://localhost", {
       method: "PATCH",

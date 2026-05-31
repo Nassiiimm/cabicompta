@@ -4,15 +4,16 @@ import { db } from "@/lib/db";
 import {
   documents,
   companyMembers,
-  invoices,
   companies,
   fiscalDeadlines,
+  documentRequests,
 } from "@/lib/db/schema";
 import { eq, and, desc, sql, count } from "drizzle-orm";
 import { PortalUploadZone } from "@/components/portal/portal-upload-zone";
 import { PortalDocumentList } from "@/components/portal/portal-document-list";
-import { PortalInvoiceList } from "@/components/portal/portal-invoice-list";
-import { ArrowRight } from "lucide-react";
+import { PortalGreeting } from "@/components/portal/portal-greeting";
+import { PortalDocumentRequests } from "@/components/portal/portal-document-requests";
+import { ArrowRight, Upload, MessageSquare, FileCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 async function getPortalData(userId: string) {
@@ -38,13 +39,6 @@ async function getPortalData(userId: string) {
     .orderBy(desc(documents.createdAt))
     .limit(10);
 
-  const invoiceList = await db
-    .select({ id: invoices.id, invoiceNumber: invoices.invoiceNumber, total: invoices.total, status: invoices.status, dueDate: invoices.dueDate, issuedAt: invoices.issuedAt })
-    .from(invoices)
-    .where(eq(invoices.companyId, companyId))
-    .orderBy(desc(invoices.createdAt))
-    .limit(10);
-
   const deadlines = await db
     .select({ id: fiscalDeadlines.id, label: fiscalDeadlines.label, dueDate: fiscalDeadlines.dueDate })
     .from(fiscalDeadlines)
@@ -52,13 +46,28 @@ async function getPortalData(userId: string) {
     .orderBy(fiscalDeadlines.dueDate)
     .limit(3);
 
+  const docRequestRows = await db
+    .select({
+      id: documentRequests.id,
+      label: documentRequests.label,
+      description: documentRequests.description,
+      required: documentRequests.required,
+      status: documentRequests.status,
+      dueDate: documentRequests.dueDate,
+    })
+    .from(documentRequests)
+    .where(eq(documentRequests.companyId, companyId))
+    .orderBy(documentRequests.required, documentRequests.createdAt);
+
   const total = docCount?.total ?? 0;
   const pending = Number(docCount?.pending ?? 0);
   const processed = total - pending;
   const completionRate = total > 0 ? Math.round((processed / total) * 100) : 0;
-  const unpaidInvoices = invoiceList.filter((i) => i.status === "SENT" || i.status === "OVERDUE");
-
-  return { companyId, companyName, totalDocs: total, pendingDocs: pending, completionRate, documents: docList, invoices: invoiceList, unpaidInvoices, deadlines };
+  const docRequests = docRequestRows.map((r) => ({
+    ...r,
+    dueDate: r.dueDate ? String(r.dueDate).slice(0, 10) : null,
+  }));
+  return { companyId, companyName, totalDocs: total, pendingDocs: pending, completionRate, documents: docList, deadlines, docRequests };
 }
 
 export default async function PortalPage() {
@@ -73,9 +82,17 @@ export default async function PortalPage() {
 
   if (!data) {
     return (
-      <div className="text-center py-20">
+      <div className="rounded-xl border-2 border-dashed p-8 text-center space-y-3 mt-8">
+        <p className="text-sm font-medium">Compte non associé</p>
         <p className="text-sm text-muted-foreground">
           Votre compte n&apos;est pas encore associé à une entreprise.
+          Votre comptable doit vous envoyer une invitation.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Une question ?{" "}
+          <a href="mailto:info@cfc-expertise.ca" className="underline hover:text-foreground transition-colors">
+            Contactez-nous
+          </a>
         </p>
       </div>
     );
@@ -84,29 +101,10 @@ export default async function PortalPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-lg font-semibold">
-          {user.name ? `${user.name.split(" ")[0]}` : ""}
-        </h1>
-        <p className="text-sm text-muted-foreground">{data.companyName}</p>
-      </div>
-
-      {/* Alerts */}
-      {data.unpaidInvoices.length > 0 && (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/20 p-4">
-          <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-2">
-            {data.unpaidInvoices.length} facture{data.unpaidInvoices.length > 1 ? "s" : ""} en attente de paiement
-          </p>
-          {data.unpaidInvoices.map((inv) => (
-            <div key={inv.id} className="flex items-center justify-between text-sm py-1">
-              <span className="text-amber-800 dark:text-amber-300">{inv.invoiceNumber}</span>
-              <span className="font-semibold text-amber-900 dark:text-amber-200">
-                {Number(inv.total).toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <PortalGreeting
+        firstName={user.name ? user.name.split(" ")[0] : ""}
+        companyName={data.companyName}
+      />
 
       {/* Deadlines + progress */}
       {(data.deadlines.length > 0 || data.totalDocs > 0) && (
@@ -114,14 +112,18 @@ export default async function PortalPage() {
           {data.deadlines.length > 0 && (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">{t("deadlinesTitle")}</p>
-              {data.deadlines.map((d) => (
-                <div key={d.id} className="flex items-center justify-between text-sm py-1">
-                  <span>{d.label}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {new Date(d.dueDate).toLocaleDateString("fr-CA", { day: "numeric", month: "short" })}
-                  </span>
-                </div>
-              ))}
+              {data.deadlines.map((d) => {
+                const daysLeft = Math.ceil((new Date(d.dueDate).getTime() - Date.now()) / 86400000);
+                const urgent = daysLeft <= 7;
+                return (
+                  <div key={d.id} className={`flex items-center justify-between text-sm py-1.5 px-2 rounded-md -mx-2 ${urgent ? "bg-red-50 dark:bg-red-950/20" : ""}`}>
+                    <span className={urgent ? "font-medium text-red-700 dark:text-red-400" : ""}>{d.label}</span>
+                    <span className={`text-xs font-medium ${urgent ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`}>
+                      {daysLeft <= 0 ? "Aujourd'hui !" : daysLeft === 1 ? "Demain !" : `${daysLeft}j`}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           )}
           {data.totalDocs > 0 && (
@@ -138,19 +140,19 @@ export default async function PortalPage() {
         </div>
       )}
 
-      {/* Upload */}
+      {/* Demandes documentaires du comptable */}
+      {data.docRequests.length > 0 && (
+        <PortalDocumentRequests
+          companyId={data.companyId}
+          requests={data.docRequests}
+        />
+      )}
+
+      {/* Upload libre */}
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2">{t("uploadTitle")}</p>
         <PortalUploadZone companyId={data.companyId} />
       </div>
-
-      {/* Invoices */}
-      {data.invoices.length > 0 && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Factures</p>
-          <PortalInvoiceList invoices={data.invoices} />
-        </div>
-      )}
 
       {/* Documents */}
       <div>
@@ -165,7 +167,38 @@ export default async function PortalPage() {
         {data.documents.length > 0 ? (
           <PortalDocumentList documents={data.documents} />
         ) : (
-          <p className="text-sm text-muted-foreground text-center py-8 border rounded-lg">{t("noDocs")}</p>
+          <div className="rounded-xl border-2 border-dashed p-6 space-y-4">
+            <p className="text-sm font-medium text-center text-muted-foreground mb-2">Par où commencer ?</p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="size-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <Upload className="size-3.5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">1. Déposez vos documents</p>
+                  <p className="text-xs text-muted-foreground">Relevés bancaires, reçus, factures… utilisez la zone ci-dessous.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="size-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <MessageSquare className="size-3.5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">2. Posez vos questions</p>
+                  <p className="text-xs text-muted-foreground">Écrivez à votre comptable via l'onglet Messages.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="size-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                  <FileCheck className="size-3.5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">3. Suivez votre dossier</p>
+                  <p className="text-xs text-muted-foreground">Vos documents apparaîtront ici une fois traités.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

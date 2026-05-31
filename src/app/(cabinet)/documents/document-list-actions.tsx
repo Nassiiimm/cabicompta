@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, CheckSquare, ChevronDown, ChevronRight } from "lucide-react";
+import { FileText, CheckSquare, XSquare, ChevronDown, ChevronRight, Pencil, X, Check } from "lucide-react";
 import { DocumentComments } from "@/components/cabinet/document-comments";
+import { CATEGORY_LABELS, VALID_CATEGORIES, SUBCATEGORIES_BY_CATEGORY } from "@/lib/document-categories";
 
 type Doc = {
   id: string;
   fileName: string;
   fileSize: number | null;
   category: string | null;
+  subcategory: string | null;
   fiscalYear: number | null;
   status: string;
   createdAt: string | null;
@@ -23,18 +25,6 @@ type Doc = {
 type Company = {
   id: string;
   name: string;
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  BANK_STATEMENT: "Releve bancaire",
-  INVOICE: "Facture",
-  TAX_NOTICE: "Avis de cotisation",
-  FINANCIAL_STATEMENT: "Etat financier",
-  TPS_TVQ: "TPS/TVQ",
-  CORPORATE: "Corporatif",
-  CONTRACT: "Contrat",
-  RECEIPT: "Recu",
-  OTHER: "Autre",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -49,12 +39,15 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   REJECTED: "destructive",
 };
 
-export function DocumentListActions({ documents }: { documents: Doc[] }) {
+export function DocumentListActions({ documents, emptyMessage }: { documents: Doc[]; emptyMessage?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ category: string; subcategory: string }>({ category: "", subcategory: "" });
+  const [saving, setSaving] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const currentCompanyId = searchParams.get("companyId") ?? "";
 
@@ -87,7 +80,7 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
     }
   }
 
-  async function handleMarkProcessed() {
+  async function handleBulkStatus(status: "PROCESSED" | "REJECTED") {
     setProcessing(true);
     try {
       await Promise.all(
@@ -95,7 +88,7 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
           fetch(`/api/documents/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "PROCESSED" }),
+            body: JSON.stringify({ status }),
           })
         )
       );
@@ -105,6 +98,27 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
       // silent
     } finally {
       setProcessing(false);
+    }
+  }
+
+  function startEdit(doc: Doc) {
+    setEditingId(doc.id);
+    setEditForm({ category: doc.category ?? "OTHER", subcategory: doc.subcategory ?? "" });
+    setExpandedId(null);
+  }
+
+  async function saveEdit(id: string) {
+    setSaving(true);
+    try {
+      await fetch(`/api/documents/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: editForm.category, subcategory: editForm.subcategory || null }),
+      });
+      setEditingId(null);
+      router.refresh();
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -120,6 +134,7 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
   }
 
   return (
+    <>
     <div className="space-y-3">
       {/* Company filter + bulk actions */}
       <div className="flex items-center justify-between gap-2">
@@ -146,21 +161,30 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
             </button>
           )}
           {selected.size > 0 && (
-            <Button
-              size="sm"
-              onClick={handleMarkProcessed}
-              disabled={processing}
-            >
-              <CheckSquare className="size-3 mr-1" />
-              {processing
-                ? "Traitement..."
-                : `Marquer traites (${selected.size})`}
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" onClick={() => handleBulkStatus("PROCESSED")} disabled={processing}>
+                <CheckSquare className="size-3 mr-1" />
+                {processing ? "…" : `Traités (${selected.size})`}
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => handleBulkStatus("REJECTED")} disabled={processing}>
+                <XSquare className="size-3 mr-1" />
+                Rejetés
+              </Button>
+            </div>
           )}
         </div>
       </div>
 
+      {/* Empty state */}
+      {documents.length === 0 && emptyMessage && (
+        <div className="text-center py-12 border rounded-lg">
+          <FileText className="size-6 mx-auto mb-2 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
+      )}
+
       {/* Document list */}
+      {documents.length > 0 && (
       <div className="rounded-lg border divide-y">
         {documents.map((doc) => (
           <div key={doc.id}>
@@ -205,10 +229,11 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
                 </div>
               </div>
 
-              {/* Badges + link */}
+              {/* Badges + actions */}
               <div className="flex items-center gap-2 shrink-0 ml-3">
                 <Badge variant="secondary" className="text-[10px]">
                   {CATEGORY_LABELS[doc.category ?? "OTHER"] ?? doc.category}
+                  {doc.subcategory ? ` · ${doc.subcategory}` : ""}
                 </Badge>
                 <Badge
                   variant={STATUS_VARIANT[doc.status] ?? "outline"}
@@ -216,16 +241,66 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
                 >
                   {STATUS_LABELS[doc.status] ?? doc.status}
                 </Badge>
-                <a
-                  href={`/api/documents/${doc.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => startEdit(doc)}
+                  title="Modifier catégorie"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Pencil className="size-3" />
+                </button>
+                <button
+                  onClick={() => window.open(`/api/documents/${doc.id}/view`, "_blank")}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Voir
-                </a>
+                </button>
               </div>
             </div>
+
+            {/* Edit panel */}
+            {editingId === doc.id && (
+              <div className="px-4 pb-3 pt-2 ml-10 border-t bg-muted/10 flex flex-wrap items-end gap-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Type</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ category: e.target.value, subcategory: "" })}
+                    className="h-7 rounded border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring"
+                  >
+                    {VALID_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sous-catégorie</label>
+                  <select
+                    value={editForm.subcategory}
+                    onChange={(e) => setEditForm((f) => ({ ...f, subcategory: e.target.value }))}
+                    className="h-7 rounded border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring"
+                  >
+                    <option value="">— Aucune —</option>
+                    {(SUBCATEGORIES_BY_CATEGORY[editForm.category] ?? []).map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={() => saveEdit(doc.id)}
+                  disabled={saving}
+                  className="h-7 px-2 rounded border border-input bg-background text-xs hover:bg-muted transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Check className="size-3" />
+                  {saving ? "..." : "OK"}
+                </button>
+                <button
+                  onClick={() => setEditingId(null)}
+                  className="h-7 px-2 rounded border border-input bg-background text-xs hover:bg-muted transition-colors"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            )}
 
             {/* Expanded: comments */}
             {expandedId === doc.id && (
@@ -236,6 +311,8 @@ export function DocumentListActions({ documents }: { documents: Doc[] }) {
           </div>
         ))}
       </div>
+      )}
     </div>
+    </>
   );
 }

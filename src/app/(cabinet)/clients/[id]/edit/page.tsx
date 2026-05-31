@@ -14,11 +14,13 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Zap } from "lucide-react";
 
 type CompanyData = {
   id: string;
   name: string;
+  type: string | null;
+  status: string;
   neq: string | null;
   arcNumber: string | null;
   rqNumber: string | null;
@@ -29,8 +31,11 @@ type CompanyData = {
   postalCode: string | null;
   phone: string | null;
   email: string | null;
-  status: string;
   notes: string | null;
+  gstFiling: string | null;
+  hasEmployees: boolean;
+  employeeCount: number | null;
+  hasInstallments: boolean;
 };
 
 export default function EditClientPage() {
@@ -67,10 +72,16 @@ export default function EditClientPage() {
     const formData = new FormData(e.currentTarget);
     const data = {
       name: formData.get("name") as string,
+      type: formData.get("type") as string || null,
+      status: formData.get("status") as string,
       neq: formData.get("neq") as string,
       arcNumber: formData.get("arcNumber") as string,
       rqNumber: formData.get("rqNumber") as string,
       fiscalYearEnd: formData.get("fiscalYearEnd") as string,
+      gstFiling: formData.get("gstFiling") as string || "QUARTERLY",
+      hasEmployees: formData.get("hasEmployees") === "true",
+      employeeCount: formData.get("employeeCount") ? Number(formData.get("employeeCount")) : null,
+      hasInstallments: formData.get("hasInstallments") === "true",
       address: formData.get("address") as string,
       city: formData.get("city") as string,
       province: formData.get("province") as string,
@@ -165,6 +176,33 @@ export default function EditClientPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="type">Type de client</Label>
+              <select
+                id="type"
+                name="type"
+                defaultValue={client.type ?? ""}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="">— Non défini —</option>
+                <option value="T1_PARTICULIER">T1 — Particulier</option>
+                <option value="T1_AUTONOME">T1 — Travailleur autonome</option>
+                <option value="T2_SOCIETE">T2 — Société</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Statut</Label>
+              <select
+                id="status"
+                name="status"
+                defaultValue={client.status}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="ACTIVE">Actif</option>
+                <option value="INACTIVE">Inactif</option>
+                <option value="ARCHIVED">Archivé</option>
+              </select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="neq">NEQ</Label>
               <Input
                 id="neq"
@@ -255,6 +293,69 @@ export default function EditClientPage() {
                 type="email"
                 defaultValue={client.email || ""}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="size-4 text-emerald-500" />
+              Profil fiscal — Pilote automatique
+            </CardTitle>
+            <CardDescription>
+              Ces paramètres permettent au pilote automatique de générer les bonnes obligations fiscales pour ce client.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="gstFiling">Fréquence TPS/TVQ</Label>
+              <select
+                id="gstFiling"
+                name="gstFiling"
+                defaultValue={client.gstFiling ?? "QUARTERLY"}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="MONTHLY">Mensuelle</option>
+                <option value="QUARTERLY">Trimestrielle</option>
+                <option value="ANNUAL">Annuelle</option>
+                <option value="NONE">Non inscrit à la TPS</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hasEmployees">Employés</Label>
+              <select
+                id="hasEmployees"
+                name="hasEmployees"
+                defaultValue={client.hasEmployees ? "true" : "false"}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="false">Non</option>
+                <option value="true">Oui</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="employeeCount">Nombre d&apos;employés</Label>
+              <Input
+                id="employeeCount"
+                name="employeeCount"
+                type="number"
+                min="0"
+                defaultValue={client.employeeCount ?? ""}
+                placeholder="0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="hasInstallments">Acomptes provisionnels</Label>
+              <select
+                id="hasInstallments"
+                name="hasInstallments"
+                defaultValue={client.hasInstallments ? "true" : "false"}
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="false">Non requis</option>
+                <option value="true">Oui — générer les acomptes</option>
+              </select>
             </div>
           </CardContent>
         </Card>

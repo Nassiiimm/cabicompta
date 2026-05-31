@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
         fileSize: documents.fileSize,
         mimeType: documents.mimeType,
         category: documents.category,
+        subcategory: documents.subcategory,
         fiscalYear: documents.fiscalYear,
         status: documents.status,
         notes: documents.notes,
@@ -230,9 +231,10 @@ export async function POST(request: NextRequest) {
     ];
     const docCategory =
       category && validCategories.includes(category) ? category : "OTHER";
-    const validSubcategories = ["A", "B", "C"];
     const docSubcategory =
-      subcategory && validSubcategories.includes(subcategory) ? subcategory : null;
+      subcategory && typeof subcategory === "string" && subcategory.length <= 50
+        ? subcategory.trim() || null
+        : null;
 
     const [doc] = await db
       .insert(documents)

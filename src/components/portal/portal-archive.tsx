@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { FileText, Download, Search, FolderOpen, ArrowLeft } from "lucide-react";
+import { FileText, Eye, Trash2, Search, FolderOpen, ArrowLeft, Clock, CheckCircle2, XCircle } from "lucide-react";
+
+const STATUS_ICON: Record<string, React.ReactNode> = {
+  PENDING:   <Clock className="size-3 text-amber-500 shrink-0" />,
+  PROCESSED: <CheckCircle2 className="size-3 text-green-500 shrink-0" />,
+  REJECTED:  <XCircle className="size-3 text-red-500 shrink-0" />,
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  PENDING: "En attente",
+  PROCESSED: "Traité",
+  REJECTED: "Rejeté",
+};
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -17,33 +29,44 @@ type Doc = {
 };
 
 const CATS: Record<string, string> = {
-  BANK_STATEMENT: "Relevé bancaire", INVOICE: "Facture", TAX_NOTICE: "Avis de cotisation",
-  FINANCIAL_STATEMENT: "État financier", TPS_TVQ: "TPS/TVQ", CORPORATE: "Corporatif",
-  CONTRACT: "Contrat", RECEIPT: "Reçu", OTHER: "Autre",
+  DAS: "DAS",
+  TPS_TVQ: "TPS/TVQ",
+  FINANCIAL_STATEMENT: "État financier",
+  T1: "Impôt T1",
+  REQ_DOC: "Document REQ",
+  IMMOBILISATION: "Immobilisation",
+  BANK_STATEMENT: "Relevé bancaire",
+  INVOICE: "Facture",
+  TAX_NOTICE: "Avis de cotisation",
+  CORPORATE: "Corporatif",
+  CONTRACT: "Contrat",
+  RECEIPT: "Reçu",
+  OTHER: "Autre",
 };
 
-async function handleDownload(docId: string) {
-  try {
-    const res = await fetch(`/api/documents/${docId}`);
-    if (res.ok) { const d = await res.json(); if (d.downloadUrl) window.open(d.downloadUrl, "_blank"); }
-  } catch {}
-}
-
-export function PortalArchive({ documents, years }: { documents: Doc[]; years: number[] }) {
+export function PortalArchive({ documents: initialDocs, years }: { documents: Doc[]; years: number[] }) {
+  const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [year, setYear] = useState<number | null>(null);
   const [cat, setCat] = useState<string | null>(null);
+  async function handleDelete(docId: string) {
+    if (!confirm("Supprimer ce document ?")) return;
+    try {
+      const res = await fetch(`/api/documents/${docId}`, { method: "DELETE" });
+      if (res.ok) setDocs((prev) => prev.filter((d) => d.id !== docId));
+    } catch {}
+  }
 
-  const cats = useMemo(() => [...new Set(documents.map((d) => d.category).filter(Boolean))] as string[], [documents]);
+  const cats = useMemo(() => [...new Set(docs.map((d) => d.category).filter(Boolean))] as string[], [docs]);
 
   const filtered = useMemo(() => {
-    return documents.filter((d) => {
+    return docs.filter((d) => {
       if (search && !d.fileName.toLowerCase().includes(search.toLowerCase())) return false;
       if (year && d.fiscalYear !== year) return false;
       if (cat && d.category !== cat) return false;
       return true;
     });
-  }, [documents, search, year, cat]);
+  }, [docs, search, year, cat]);
 
   const active = search || year || cat;
 
@@ -64,7 +87,7 @@ export function PortalArchive({ documents, years }: { documents: Doc[]; years: n
           onClick={() => { setYear(null); setCat(null); }}
           className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${!active ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
         >
-          Tout ({documents.length})
+          Tout ({docs.length})
         </button>
         {years.map((y) => (
           <button key={y} onClick={() => setYear(year === y ? null : y)}
@@ -91,8 +114,9 @@ export function PortalArchive({ documents, years }: { documents: Doc[]; years: n
                 <FileText className="size-3.5 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm truncate">{doc.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doc.status === "PROCESSED" ? "Traité" : doc.status === "REJECTED" ? "Rejeté" : "En attente"}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap">
+                    {STATUS_ICON[doc.status]}
+                    {STATUS_LABEL[doc.status] ?? doc.status}
                     {doc.category ? ` · ${CATS[doc.category] ?? doc.category}` : ""}
                     {doc.fiscalYear ? ` · ${doc.fiscalYear}` : ""}
                     {" · "}
@@ -100,9 +124,16 @@ export function PortalArchive({ documents, years }: { documents: Doc[]; years: n
                   </p>
                 </div>
               </div>
-              <button onClick={() => handleDownload(doc.id)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
-                <Download className="size-3.5" />
-              </button>
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button onClick={() => window.open(`/api/documents/${doc.id}/view`, "_blank")} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors">
+                  <Eye className="size-3.5" />
+                </button>
+                {doc.status === "PENDING" && (
+                  <button onClick={() => handleDelete(doc.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -110,7 +141,7 @@ export function PortalArchive({ documents, years }: { documents: Doc[]; years: n
 
       <p className="text-xs text-muted-foreground text-center">
         {filtered.length} document{filtered.length > 1 ? "s" : ""}
-        {active ? ` sur ${documents.length}` : ""}
+        {active ? ` sur ${docs.length}` : ""}
       </p>
     </div>
   );

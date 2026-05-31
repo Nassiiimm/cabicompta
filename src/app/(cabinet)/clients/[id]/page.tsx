@@ -59,6 +59,7 @@ export default async function ClientDetailPage({
     id: client.id,
     name: client.name,
     status: client.status,
+    type: client.type,
     neq: client.neq,
     arcNumber: client.arcNumber,
     rqNumber: client.rqNumber,
@@ -82,6 +83,21 @@ export default async function ClientDetailPage({
     bankAccountNumber: canSeeBanking ? client.bankAccountNumber : null,
     bankOnlineId: canSeeBanking ? client.bankOnlineId : null,
     bankPassword: canSeeBanking ? client.bankPassword : null,
+    // Portails gouvernementaux — transmis seulement si ADMIN ou STAFF
+    clicsequrId: canSeeBanking ? client.clicsequrId : null,
+    clicsequrPassword: canSeeBanking ? client.clicsequrPassword : null,
+    arcId: canSeeBanking ? client.arcId : null,
+    arcPassword: canSeeBanking ? client.arcPassword : null,
+    cnesstId: canSeeBanking ? client.cnesstId : null,
+    cnesstPassword: canSeeBanking ? client.cnesstPassword : null,
+    reqId: canSeeBanking ? client.reqId : null,
+    reqPassword: canSeeBanking ? client.reqPassword : null,
+    serviceCanadaId: canSeeBanking ? client.serviceCanadaId : null,
+    serviceCanadaPassword: canSeeBanking ? client.serviceCanadaPassword : null,
+    gstFiling: client.gstFiling ?? null,
+    hasEmployees: client.hasEmployees,
+    employeeCount: client.employeeCount ?? null,
+    hasInstallments: client.hasInstallments,
   };
 
   const serializedDeadlines = deadlines.map((d) => ({
@@ -104,7 +120,7 @@ export default async function ClientDetailPage({
         </Link>
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className="text-lg font-semibold">
               {client.name}
             </h1>
             <Badge variant={statusVariants[client.status] || "secondary"}>

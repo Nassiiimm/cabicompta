@@ -52,6 +52,7 @@
     "clients": "Clients",
     "documents": "Documents",
     "invoices": "Factures",
+    "autopilot": "Pilote auto",
     "workflows": "Workflows",
     "profile": "Profil",
     "logout": "Déconnexion",
@@ -60,7 +61,12 @@
     "audit": "Journal d'audit",
     "access": "Journal d'accès",
     "team": "Équipe",
-    "templates": "Modèles de workflow"
+    "templates": "Modèles de workflow",
+    "messages": "Messages",
+    "deadlines": "Échéances",
+    "sectionProduction": "Production",
+    "sectionRelations": "Relation client",
+    "sectionAdmin": "Administration"
   },
   "home": {
     "tagline": "Cabinet comptable — Québec",
@@ -96,7 +102,7 @@
     },
     "approach": {
       "title": "Une relation de confiance, pas juste un dossier",
-      "p1": "Chez CabiCompta, chaque client a un interlocuteur dédié qui connaît son dossier. Nous ne gérons pas des numéros — nous accompagnons des entrepreneurs.",
+      "p1": "Chez CFC, chaque client a un interlocuteur dédié qui connaît son dossier. Nous ne gérons pas des numéros — nous accompagnons des entrepreneurs.",
       "p2": "Grâce à notre portail sécurisé, vous déposez vos documents en ligne, suivez vos échéances en temps réel et consultez vos états financiers à tout moment.",
       "points": {
         "dedicated": "Interlocuteur dédié à votre dossier",
@@ -123,7 +129,7 @@
   },
   "auth": {
     "login": {
-      "title": "CabiCompta",
+      "title": "CFC",
       "emailLabel": "Courriel",
       "emailPlaceholder": "nom@cabinet.ca",
       "passwordLabel": "Mot de passe",
@@ -372,7 +378,7 @@
   },
   "portal": {
     "welcome": "Bonjour, {name}",
-    "subtitle": "Votre espace client CabiCompta",
+    "subtitle": "Votre espace client CFC",
     "nav": {
       "home": "Accueil",
       "documents": "Documents",
@@ -442,6 +448,9 @@
       "email": "Courriel",
       "role": "Rôle",
       "createdAt": "Date de création",
+      "hoursThisMonth": "Heures (ce mois)",
+      "billable": "Facturables",
+      "presenceThisMonth": "Présence (ce mois)",
       "roles": {
         "ADMIN": "Administrateur",
         "STAFF": "Comptable",
