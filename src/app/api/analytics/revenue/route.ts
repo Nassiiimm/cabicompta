@@ -10,7 +10,10 @@ const MONTH_NAMES = [
 
 export async function GET() {
   try {
-    await requireStaff();
+    const user = await requireStaff();
+    if (user.role === "INTERN") {
+      return Response.json({ error: "Accès réservé" }, { status: 403 });
+    }
 
     const now = new Date();
     const months: { month: string; facture: number; encaisse: number }[] = [];

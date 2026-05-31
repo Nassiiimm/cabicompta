@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { invoices, invoiceItems, companies, companyMembers, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -21,7 +22,7 @@ export async function GET(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { id } = await segmentData.params;
 
     const [invoice] = await db
@@ -54,6 +55,10 @@ export async function GET(
 
     if (!invoice) {
       return Response.json({ error: "Facture introuvable" }, { status: 404 });
+    }
+
+    if (!(await hasCompanyAccess(user, invoice.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const items = await db
@@ -98,13 +103,17 @@ export async function PATCH(
 
     // Check current invoice
     const [existing] = await db
-      .select({ id: invoices.id, status: invoices.status })
+      .select({ id: invoices.id, status: invoices.status, companyId: invoices.companyId })
       .from(invoices)
       .where(eq(invoices.id, id))
       .limit(1);
 
     if (!existing) {
       return Response.json({ error: "Facture introuvable" }, { status: 404 });
+    }
+
+    if (!(await hasCompanyAccess(user, existing.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     // Validate transition
@@ -200,13 +209,17 @@ export async function DELETE(
     const { id } = await segmentData.params;
 
     const [existing] = await db
-      .select({ id: invoices.id, status: invoices.status, invoiceNumber: invoices.invoiceNumber })
+      .select({ id: invoices.id, status: invoices.status, invoiceNumber: invoices.invoiceNumber, companyId: invoices.companyId })
       .from(invoices)
       .where(eq(invoices.id, id))
       .limit(1);
 
     if (!existing) {
       return Response.json({ error: "Facture introuvable" }, { status: 404 });
+    }
+
+    if (!(await hasCompanyAccess(user, existing.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     if (existing.status !== "DRAFT") {

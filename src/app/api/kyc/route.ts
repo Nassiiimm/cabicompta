@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { kycDocuments } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -14,7 +15,7 @@ const createKycSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId");
@@ -24,6 +25,10 @@ export async function GET(request: Request) {
         { error: "companyId requis" },
         { status: 400 }
       );
+    }
+
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const docs = await db
@@ -48,10 +53,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const body = await request.json();
     const parsed = createKycSchema.parse(body);
+
+    if (!(await hasCompanyAccess(user, parsed.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const [doc] = await db
       .insert(kycDocuments)

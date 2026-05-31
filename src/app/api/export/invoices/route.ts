@@ -6,7 +6,10 @@ import { generateCsv, csvResponse } from "@/lib/csv";
 
 export async function GET() {
   try {
-    await requireStaff();
+    const user = await requireStaff();
+    if (user.role === "INTERN") {
+      return Response.json({ error: "Accès réservé" }, { status: 403 });
+    }
 
     const rows = await db
       .select({
