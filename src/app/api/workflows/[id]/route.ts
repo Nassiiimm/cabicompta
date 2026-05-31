@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { workflows, workflowTasks, users } from "@/lib/db/schema";
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { eq, asc } from "drizzle-orm";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
@@ -19,7 +20,7 @@ export async function GET(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { id } = await segmentData.params;
 
     const [workflow] = await db
@@ -42,6 +43,10 @@ export async function GET(
       .limit(1);
 
     if (!workflow) return Response.json({ error: "Introuvable" }, { status: 404 });
+
+    if (!(await hasCompanyAccess(user, workflow.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const tasks = await db
       .select({
@@ -84,6 +89,10 @@ export async function PUT(
     const [old] = await db.select().from(workflows).where(eq(workflows.id, id)).limit(1);
     if (!old) return Response.json({ error: "Introuvable" }, { status: 404 });
 
+    if (!(await hasCompanyAccess(user, old.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
+
     const [updated] = await db
       .update(workflows)
       .set({ ...data, updatedAt: new Date() })
@@ -118,6 +127,16 @@ export async function DELETE(
   try {
     const user = await requireStaff();
     const { id } = await segmentData.params;
+
+    const [existing] = await db
+      .select({ companyId: workflows.companyId })
+      .from(workflows)
+      .where(eq(workflows.id, id))
+      .limit(1);
+    if (!existing) return Response.json({ error: "Introuvable" }, { status: 404 });
+    if (!(await hasCompanyAccess(user, existing.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const [deleted] = await db
       .delete(workflows)

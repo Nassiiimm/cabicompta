@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -30,6 +31,10 @@ export async function PATCH(
         { error: "Client introuvable" },
         { status: 404 }
       );
+    }
+
+    if (!(await hasCompanyAccess(user, id))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const body = await request.json();

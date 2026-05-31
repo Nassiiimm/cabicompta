@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { fiscalDeadlines } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -26,6 +27,10 @@ export async function PATCH(
 
     if (!existing) {
       return Response.json({ error: "Échéance introuvable" }, { status: 404 });
+    }
+
+    if (!(await hasCompanyAccess(user, existing.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     const updateData: Record<string, unknown> = { status };

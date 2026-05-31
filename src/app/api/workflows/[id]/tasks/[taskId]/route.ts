@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { workflowTasks, workflows } from "@/lib/db/schema";
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
@@ -31,6 +32,15 @@ export async function PUT(
       .limit(1);
 
     if (!task) return Response.json({ error: "Introuvable" }, { status: 404 });
+
+    const [wf] = await db
+      .select({ companyId: workflows.companyId })
+      .from(workflows)
+      .where(eq(workflows.id, id))
+      .limit(1);
+    if (!wf || !(await hasCompanyAccess(user, wf.companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     // Vérifier que le bloqueur est résolu avant de progresser
     if (

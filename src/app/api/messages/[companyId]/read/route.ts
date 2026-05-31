@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { portalMessages } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
@@ -13,8 +14,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const csrf = csrfGuard(request);
     if (csrf) return csrf;
 
-    await requireStaff();
+    const user = await requireStaff();
     const { companyId } = await context.params;
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     await db
       .update(portalMessages)

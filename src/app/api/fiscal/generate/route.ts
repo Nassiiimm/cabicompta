@@ -2,11 +2,12 @@ import { db } from "@/lib/db";
 import { companies, fiscalDeadlines } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { generateFiscalDeadlines } from "@/lib/fiscal-calendar";
 
 export async function POST(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const { companyId, year } = await request.json();
     if (!companyId || !year) {
@@ -24,6 +25,10 @@ export async function POST(request: Request) {
 
     if (!company) {
       return Response.json({ error: "Company not found" }, { status: 404 });
+    }
+
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     if (!company.fiscalYearEnd) {

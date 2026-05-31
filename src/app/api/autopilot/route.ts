@@ -13,6 +13,9 @@ import { eq, and, isNull, count, sql } from "drizzle-orm";
 export async function POST(request: Request) {
   try {
     const user = await requireStaff();
+    if (user.role === "INTERN") {
+      return Response.json({ error: "Accès réservé" }, { status: 403 });
+    }
     const body = await request.json().catch(() => ({}));
     const { year = new Date().getFullYear(), companyIds, assignedTo } = body;
 
@@ -55,7 +58,10 @@ export async function POST(request: Request) {
 /** Dashboard — statut global par client pour l'année */
 export async function GET(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
+    if (user.role === "INTERN") {
+      return Response.json({ error: "Accès réservé" }, { status: 403 });
+    }
     const { searchParams } = new URL(request.url);
     const year = Number(searchParams.get("year") ?? new Date().getFullYear());
 

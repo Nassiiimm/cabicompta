@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { portalMessages, users } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -10,8 +11,11 @@ type RouteContext = { params: Promise<{ companyId: string }> };
 // GET /api/messages/[companyId] — thread complet
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { companyId } = await context.params;
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const messages = await db
       .select({
@@ -42,6 +46,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const user = await requireStaff();
     const { companyId } = await context.params;
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
     const { message } = await request.json();
 
     if (!message || typeof message !== "string" || message.trim().length === 0) {

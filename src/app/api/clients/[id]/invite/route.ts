@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { users, companies, companyMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -18,8 +19,11 @@ export async function POST(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
     const { id: companyId } = await segmentData.params;
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
     const body = await request.json();
     const data = schema.parse(body);
 

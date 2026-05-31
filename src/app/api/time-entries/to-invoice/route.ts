@@ -1,4 +1,5 @@
 import { requireStaff } from "@/lib/auth";
+import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
 import { timeEntries } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
@@ -12,10 +13,14 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     const body = await request.json();
     const { companyId, entryIds, hourlyRate } = schema.parse(body);
+
+    if (!(await hasCompanyAccess(user, companyId))) {
+      return Response.json({ error: "Accès refusé" }, { status: 403 });
+    }
 
     const entries = await db
       .select({
