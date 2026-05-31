@@ -60,6 +60,7 @@
     "audit": "Audit log",
     "access": "Access log",
     "team": "Team",
+    "import": "Import",
     "templates": "Workflow templates",
     "messages": "Messages",
     "deadlines": "Deadlines",

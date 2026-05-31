@@ -61,6 +61,7 @@
     "audit": "Journal d'audit",
     "access": "Journal d'accès",
     "team": "Équipe",
+    "import": "Importer",
     "templates": "Modèles de workflow",
     "messages": "Messages",
     "deadlines": "Échéances",

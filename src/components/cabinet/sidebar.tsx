@@ -19,6 +19,7 @@ import {
   MessageSquare,
   CalendarClock,
   Zap,
+  Upload,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,7 @@ export function Sidebar({ role }: { role: string }) {
         { label: t("audit"), href: "/admin/audit", icon: Shield, roles: ADMIN_ONLY },
         { label: t("access"), href: "/admin/access", icon: Eye, roles: ADMIN_ONLY },
         { label: t("team"), href: "/admin/staff", icon: UserCog, roles: ADMIN_ONLY },
+        { label: t("import"), href: "/admin/import", icon: Upload, roles: ADMIN_ONLY },
       ],
     },
   ];
