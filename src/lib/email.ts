@@ -1,5 +1,9 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM = "CFC <noreply@cfc-compta.ca>";
+// Expéditeur configurable. Par défaut le domaine partagé de Resend
+// (`onboarding@resend.dev`) qui fonctionne sans domaine vérifié MAIS ne livre
+// qu'à l'adresse du compte Resend — utile pour TESTER. En production, définir
+// EMAIL_FROM avec un domaine vérifié dans Resend (ex. "Cabinet <no-reply@mon-domaine.ca>").
+const FROM = process.env.EMAIL_FROM || "CFC <onboarding@resend.dev>";
 
 type EmailPayload = {
   to: string;
@@ -27,9 +31,15 @@ async function sendEmail(payload: EmailPayload): Promise<boolean> {
         html: payload.html,
       }),
     });
+    if (!res.ok) {
+      // Ne pas échouer en silence : surfacer le motif (domaine non vérifié,
+      // destinataire non autorisé, clé invalide…) dans les logs.
+      const detail = await res.text().catch(() => "");
+      console.error(`[EMAIL] Échec Resend (${res.status}) : ${payload.subject} → ${payload.to} — ${detail}`);
+    }
     return res.ok;
-  } catch {
-    console.error("[EMAIL] Erreur envoi :", payload.subject);
+  } catch (err) {
+    console.error("[EMAIL] Erreur envoi :", payload.subject, err);
     return false;
   }
 }
