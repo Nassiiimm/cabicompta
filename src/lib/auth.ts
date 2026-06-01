@@ -33,6 +33,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
     role: user.role as AppUser["role"],
     avatarUrl: user.avatarUrl,
     presenceNoticeAckedAt: user.presenceNoticeAckedAt,
+    aiConsentAckedAt: user.aiConsentAckedAt,
   };
 }
 

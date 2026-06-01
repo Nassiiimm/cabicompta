@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null }),
+  requireAuth: vi.fn().mockResolvedValue({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null }),
 }));
 
 const mockDb: Record<string, any> = {};

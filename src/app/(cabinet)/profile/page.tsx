@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChangePasswordForm } from "./change-password";
+import { MfaSetup } from "@/components/mfa-setup";
 import { getTranslations } from "next-intl/server";
 
 export default async function ProfilePage() {
@@ -52,6 +53,15 @@ export default async function ProfilePage() {
         </CardHeader>
         <CardContent>
           <ChangePasswordForm />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentification à deux facteurs (2FA)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <MfaSetup />
         </CardContent>
       </Card>
     </div>

@@ -124,6 +124,9 @@ export const users = pgTable("users", {
   // Loi 25 : horodatage de l'acquittement de la notice de surveillance de
   // présence par l'employé (null = pas encore informé/acquitté). Auditable.
   presenceNoticeAckedAt: timestamp("presence_notice_acked_at"),
+  // Mandat CFC + Loi 25 : consentement du client à l'analyse IA de ses
+  // documents (null = pas encore consenti). Auditable.
+  aiConsentAckedAt: timestamp("ai_consent_acked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

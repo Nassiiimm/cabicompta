@@ -131,7 +131,7 @@ describe("GET /api/invoices/[id]/pdf", () => {
 
   it("CLIENT cannot access other company invoices (403)", async () => {
     const { requireAuth } = await import("@/lib/auth");
-    vi.mocked(requireAuth).mockResolvedValueOnce({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null });
+    vi.mocked(requireAuth).mockResolvedValueOnce({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null });
 
     // Invoice lookup chain: where() chainable, limit() resolves
     mockDb.where.mockReturnValueOnce(mockDb);
@@ -147,7 +147,7 @@ describe("GET /api/invoices/[id]/pdf", () => {
 
   it("CLIENT with membership can access their invoice PDF", async () => {
     const { requireAuth } = await import("@/lib/auth");
-    vi.mocked(requireAuth).mockResolvedValueOnce({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null });
+    vi.mocked(requireAuth).mockResolvedValueOnce({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null });
 
     // Invoice lookup: where() chainable → limit() resolves to invoice
     // Membership check: where() chainable → limit() resolves to membership

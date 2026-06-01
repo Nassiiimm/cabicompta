@@ -15,6 +15,7 @@ export type AppUser = {
   role: UserRole;
   avatarUrl: string | null;
   presenceNoticeAckedAt: Date | null;
+  aiConsentAckedAt: Date | null;
 };
 
 export type ExtractedInvoiceData = {
