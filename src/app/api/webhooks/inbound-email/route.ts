@@ -7,15 +7,14 @@ import { logAudit } from "@/lib/audit";
 
 export async function POST(request: Request) {
   try {
-    // Verify inbound email secret
+    // Verify inbound email secret — fail-closed : sans secret configuré, la
+    // route est refusée (sinon elle traiterait n'importe quel payload public).
     const secret = process.env.INBOUND_EMAIL_SECRET;
-    if (secret) {
-      const headerSecret =
-        request.headers.get("x-inbound-secret") ??
-        request.headers.get("authorization")?.replace("Bearer ", "");
-      if (headerSecret !== secret) {
-        return Response.json({ error: "Non autorisé" }, { status: 401 });
-      }
+    const headerSecret =
+      request.headers.get("x-inbound-secret") ??
+      request.headers.get("authorization")?.replace("Bearer ", "");
+    if (!secret || headerSecret !== secret) {
+      return Response.json({ error: "Non autorisé" }, { status: 401 });
     }
 
     const body = await request.json();

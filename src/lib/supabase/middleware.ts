@@ -37,6 +37,21 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Routes qui gèrent leur PROPRE authentification (crons via CRON_SECRET,
+  // webhooks via signature). Elles sont appelées sans cookie de session :
+  // sans cette exception, le proxy les redirigerait vers /login (307) et les
+  // crons Vercel + webhooks ne s'exécuteraient jamais. On laisse le handler
+  // appliquer son contrôle d'accès.
+  const selfAuthRoutes = [
+    "/api/fiscal/check-deadlines",
+    "/api/fiscal/check-invoices",
+    "/api/fiscal/auto-reminders",
+    "/api/workflows/check-overdue",
+  ];
+  if (selfAuthRoutes.includes(path) || path.startsWith("/api/webhooks/")) {
+    return supabaseResponse;
+  }
+
   // Not authenticated → redirect to login
   if (!user) {
     const url = request.nextUrl.clone();
