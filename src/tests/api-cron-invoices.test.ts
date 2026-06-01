@@ -48,8 +48,11 @@ describe("GET /api/fiscal/check-invoices (cron)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     Object.keys(mockDb).forEach((k) => mockDb[k].mockReturnValue(mockDb));
-    delete process.env.CRON_SECRET;
+    process.env.CRON_SECRET = "test-secret";
   });
+
+  const cronReq = (url: string) =>
+    new Request(url, { headers: { authorization: "Bearer test-secret" } });
 
   it("finds SENT invoices past due date and marks OVERDUE", async () => {
     const pastDate = new Date();
@@ -81,7 +84,7 @@ describe("GET /api/fiscal/check-invoices (cron)", () => {
     mockDb.limit.mockResolvedValueOnce([]);        // dedup: no existing notification
 
     const { GET } = await import("@/app/api/fiscal/check-invoices/route");
-    const req = new Request("http://localhost/api/fiscal/check-invoices");
+    const req = cronReq("http://localhost/api/fiscal/check-invoices");
     const res = await GET(req);
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -118,7 +121,7 @@ describe("GET /api/fiscal/check-invoices (cron)", () => {
 
     const { sendInvoiceOverdueEmail } = await import("@/lib/email");
     const { GET } = await import("@/app/api/fiscal/check-invoices/route");
-    const req = new Request("http://localhost/api/fiscal/check-invoices");
+    const req = cronReq("http://localhost/api/fiscal/check-invoices");
     const res = await GET(req);
 
     const data = await res.json();
@@ -131,13 +134,22 @@ describe("GET /api/fiscal/check-invoices (cron)", () => {
     mockDb.where.mockResolvedValueOnce([]);
 
     const { GET } = await import("@/app/api/fiscal/check-invoices/route");
-    const req = new Request("http://localhost/api/fiscal/check-invoices");
+    const req = cronReq("http://localhost/api/fiscal/check-invoices");
     const res = await GET(req);
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.overdueCount).toBe(0);
     expect(data.notificationsSent).toBe(0);
     expect(data.checked).toBeTruthy();
+  });
+
+  it("rejects when CRON_SECRET is not configured (fail-closed)", async () => {
+    delete process.env.CRON_SECRET;
+
+    const { GET } = await import("@/app/api/fiscal/check-invoices/route");
+    const req = new Request("http://localhost/api/fiscal/check-invoices");
+    const res = await GET(req);
+    expect(res.status).toBe(401);
   });
 
   it("rejects wrong CRON_SECRET", async () => {

@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/cabinet/sidebar";
 import { MobileNav } from "@/components/cabinet/mobile-nav";
 import { GlobalSearch } from "@/components/global-search";
 import { ActivityTracker } from "@/components/activity-tracker";
+import { PresenceNotice } from "@/components/presence-notice";
 
 export default async function CabinetLayout({
   children,
@@ -21,6 +22,7 @@ export default async function CabinetLayout({
   return (
     <div className="flex min-h-screen">
       <GlobalSearch />
+      <PresenceNotice acked={!!user.presenceNoticeAckedAt} />
       <ActivityTracker />
       <div className="hidden md:flex">
         <Sidebar role={user.role} />

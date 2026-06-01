@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null }),
-  requireStaff: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null }),
+  requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null }),
+  requireStaff: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null }),
 }));
 
 vi.mock("@/lib/supabase/storage", () => ({
@@ -94,7 +94,7 @@ describe("GET /api/documents/[id]", () => {
   it("blocks CLIENT from accessing other company documents", async () => {
     const { requireAuth } = await import("@/lib/auth");
     vi.mocked(requireAuth).mockResolvedValueOnce({
-      id: "client-1", role: "CLIENT", email: "c@t.com", name: "C", authId: "a", phone: null, avatarUrl: null,
+      id: "client-1", role: "CLIENT", email: "c@t.com", name: "C", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null,
     });
     // No membership found
     mockDb.limit.mockResolvedValueOnce([mockDoc]).mockResolvedValueOnce([]);

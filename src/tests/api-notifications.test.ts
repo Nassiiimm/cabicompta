@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockUser = { id: "user-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null };
+const mockUser = { id: "user-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null };
 
 vi.mock("@/lib/auth", () => ({
   requireAuth: vi.fn().mockResolvedValue(mockUser),

@@ -14,6 +14,7 @@ export type AppUser = {
   phone: string | null;
   role: UserRole;
   avatarUrl: string | null;
+  presenceNoticeAckedAt: Date | null;
 };
 
 export type ExtractedInvoiceData = {

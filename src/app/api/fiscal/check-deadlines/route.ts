@@ -18,7 +18,9 @@ export async function GET(request: Request) {
   // Simple auth for cron
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fail-closed : si le secret n'est pas configuré, on refuse. Sinon la route
+  // serait publiquement déclenchable (emails de masse, mutations).
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
