@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
 
     const [template] = await db
       .insert(workflowTemplates)
-      .values({ ...templateData, createdBy: user.id })
+      .values({ ...templateData, createdBy: user.id, cabinetId: user.cabinetId })
       .returning();
 
     if (tasks && tasks.length > 0) {
       await db.insert(workflowTemplateTasks).values(
-        tasks.map((t) => ({ ...t, templateId: template.id }))
+        tasks.map((t) => ({ ...t, templateId: template.id, cabinetId: user.cabinetId }))
       );
     }
 

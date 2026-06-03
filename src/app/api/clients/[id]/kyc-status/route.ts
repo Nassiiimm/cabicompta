@@ -61,6 +61,7 @@ export async function PATCH(
       .returning();
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "UPDATE_KYC_STATUS",
       tableName: "companies",

@@ -16,6 +16,7 @@ export async function POST() {
       .where(eq(users.id, user.id));
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "PRESENCE_NOTICE_ACK",
       tableName: "users",

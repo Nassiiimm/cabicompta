@@ -137,6 +137,7 @@ export async function PATCH(
 
     // Audit log
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "UPDATE",
       tableName: "companies",
@@ -217,6 +218,7 @@ export async function DELETE(
       .where(eq(workflows.companyId, id));
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "SOFT_DELETE_CASCADE",
       tableName: "companies",

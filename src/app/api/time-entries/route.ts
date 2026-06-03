@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     const [entry] = await db
       .insert(timeEntries)
       .values({
+        cabinetId: user.cabinetId,
         userId: user.id,
         companyId: data.companyId,
         duration: data.duration,

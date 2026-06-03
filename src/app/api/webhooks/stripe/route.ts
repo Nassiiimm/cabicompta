@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
       // Verify invoice exists
       const [existing] = await db
-        .select({ id: invoices.id, status: invoices.status })
+        .select({ id: invoices.id, status: invoices.status, cabinetId: invoices.cabinetId })
         .from(invoices)
         .where(eq(invoices.id, invoiceId))
         .limit(1);
@@ -115,6 +115,7 @@ export async function POST(request: Request) {
           .where(eq(invoices.id, invoiceId));
 
         logAudit({
+          cabinetId: existing.cabinetId,
           userId: null,
           action: "STRIPE_PAYMENT",
           tableName: "invoices",

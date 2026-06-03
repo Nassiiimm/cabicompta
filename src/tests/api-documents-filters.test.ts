@@ -3,12 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Isolated test file for documents list route — category/subcategory filtering.
 // Kept separate to avoid mock state contamination from other test suites.
 
-const mockAdmin = { id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null };
+const mockAdmin = { id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" };
 
 vi.mock("@/lib/auth", () => ({
-  requireStaff:  vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null }),
-  requireAdmin:  vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null }),
-  requireAuth:   vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null }),
+  requireStaff:  vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),
+  requireAdmin:  vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),
+  requireAuth:   vi.fn().mockResolvedValue({ id: "admin-1", role: "ADMIN", email: "admin@test.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),
 }));
 
 vi.mock("@/lib/audit",      () => ({ logAudit:  vi.fn() }));

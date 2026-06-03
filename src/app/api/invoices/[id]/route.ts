@@ -148,6 +148,7 @@ export async function PATCH(
 
     // Audit log
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "STATUS_CHANGE",
       tableName: "invoices",
@@ -236,6 +237,7 @@ export async function DELETE(
       .where(eq(invoices.id, id));
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "SOFT_DELETE",
       tableName: "invoices",

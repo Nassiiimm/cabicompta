@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { workflowTemplates, workflowTemplateTasks } from "@/lib/db/schema";
 import { requireStaff, requireAdmin } from "@/lib/auth";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -57,7 +57,7 @@ export async function PUT(
   segmentData: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
     const { id } = await segmentData.params;
     const body = await request.json();
     const { tasks, ...templateData } = updateSchema.parse(body);
@@ -65,7 +65,7 @@ export async function PUT(
     const [updated] = await db
       .update(workflowTemplates)
       .set({ ...templateData, updatedAt: new Date() })
-      .where(eq(workflowTemplates.id, id))
+      .where(and(eq(workflowTemplates.id, id), eq(workflowTemplates.cabinetId, user.cabinetId)))
       .returning();
 
     if (!updated) return Response.json({ error: "Introuvable" }, { status: 404 });
@@ -74,7 +74,7 @@ export async function PUT(
       await db.delete(workflowTemplateTasks).where(eq(workflowTemplateTasks.templateId, id));
       if (tasks.length > 0) {
         await db.insert(workflowTemplateTasks).values(
-          tasks.map((t) => ({ ...t, templateId: id }))
+          tasks.map((t) => ({ ...t, templateId: id, cabinetId: user.cabinetId }))
         );
       }
     }

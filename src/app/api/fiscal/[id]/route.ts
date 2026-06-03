@@ -45,6 +45,7 @@ export async function PATCH(
       .returning();
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "STATUS_CHANGE",
       tableName: "fiscal_deadlines",

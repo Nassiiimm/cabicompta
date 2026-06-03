@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
+import { sql, and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 
@@ -14,7 +14,7 @@ const createSchema = z.object({
 
 export async function GET() {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
 
     const staffUsers = await db
       .select({
@@ -25,7 +25,7 @@ export async function GET() {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`)
+      .where(and(eq(users.cabinetId, user.cabinetId), sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`))
       .orderBy(users.createdAt);
 
     return Response.json(staffUsers);
@@ -42,7 +42,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
 
     const body = await request.json();
     const data = createSchema.parse(body);
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
     const [newUser] = await db
       .insert(users)
       .values({
+        cabinetId: user.cabinetId,
         authId: authUser.user.id,
         email: data.email,
         name: data.name,

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/auth", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null }),
+  requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),
 }));
 
 const mockDb: Record<string, any> = {};
@@ -63,7 +63,7 @@ describe("POST /api/documents/[id]/comments", () => {
   it("blocks CLIENT from commenting on other company docs", async () => {
     const { requireAuth } = await import("@/lib/auth");
     vi.mocked(requireAuth).mockResolvedValueOnce({
-      id: "client-1", role: "CLIENT", email: "c@t.com", name: "C", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null,
+      id: "client-1", role: "CLIENT", email: "c@t.com", name: "C", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1",
     });
     // Doc exists but no membership
     mockDb.limit

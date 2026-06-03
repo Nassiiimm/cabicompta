@@ -59,6 +59,7 @@ export async function POST(
 
       // Link existing user to company
       await db.insert(companyMembers).values({
+        cabinetId: user.cabinetId,
         companyId,
         userId: existingUser.id,
         role: data.memberRole as "ADMINISTRATOR" | "SHAREHOLDER" | "CONTACT",
@@ -91,6 +92,7 @@ export async function POST(
     const [newUser] = await db
       .insert(users)
       .values({
+        cabinetId: user.cabinetId,
         authId: authUser.user.id,
         email: data.email,
         name: data.name,
@@ -101,6 +103,7 @@ export async function POST(
 
     // Link to company
     await db.insert(companyMembers).values({
+      cabinetId: user.cabinetId,
       companyId,
       userId: newUser.id,
       role: data.memberRole as "ADMINISTRATOR" | "SHAREHOLDER" | "CONTACT",

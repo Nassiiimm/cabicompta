@@ -58,6 +58,7 @@ export async function GET(
       .where(eq(invoiceItems.invoiceId, id));
 
     logAccess({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "INVOICE_PDF_DOWNLOAD",
       resourceType: "invoice",

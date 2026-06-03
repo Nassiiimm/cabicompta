@@ -239,6 +239,7 @@ export async function POST(request: NextRequest) {
     const [doc] = await db
       .insert(documents)
       .values({
+        cabinetId: user.cabinetId,
         companyId,
         uploadedBy: user.id,
         fileName: file.name,
@@ -253,6 +254,7 @@ export async function POST(request: NextRequest) {
       .returning();
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "CREATE",
       tableName: "documents",

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { accessLogs } from "@/lib/db/schema";
 
 type AccessLogParams = {
+  cabinetId: string;
   userId: string | null;
   action: string;
   resourceType: string;
@@ -13,6 +14,7 @@ type AccessLogParams = {
 export async function logAccess(params: AccessLogParams) {
   try {
     await db.insert(accessLogs).values({
+      cabinetId: params.cabinetId,
       userId: params.userId,
       action: params.action,
       resourceType: params.resourceType,

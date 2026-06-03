@@ -13,7 +13,7 @@ export async function POST() {
 
     await db
       .insert(activitySessions)
-      .values({ userId: user.id, date: today, activeSeconds: 0 })
+      .values({ cabinetId: user.cabinetId, userId: user.id, date: today, activeSeconds: 0 })
       .onConflictDoUpdate({
         target: [activitySessions.userId, activitySessions.date],
         set: {

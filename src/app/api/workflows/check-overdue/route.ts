@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       workflowName: workflows.name,
       companyName: companies.name,
       companyId: workflows.companyId,
+      cabinetId: workflows.cabinetId,
       assignedTo: workflowTasks.assignedTo,
       workflowAssignedTo: workflows.assignedTo,
       dueDate: workflowTasks.dueDate,
@@ -49,11 +50,17 @@ export async function GET(request: Request) {
 
   // Récupérer tous les ADMIN pour les notifier aussi
   const admins = await db
-    .select({ id: users.id })
+    .select({ id: users.id, cabinetId: users.cabinetId })
     .from(users)
     .where(eq(users.role, "ADMIN"));
 
-  const adminIds = admins.map((a) => a.id);
+  // Cloisonnement : les admins ne sont notifiés que pour LEUR cabinet
+  const adminsByCabinet = new Map<string, string[]>();
+  for (const a of admins) {
+    const list = adminsByCabinet.get(a.cabinetId) ?? [];
+    list.push(a.id);
+    adminsByCabinet.set(a.cabinetId, list);
+  }
 
   const notificationsToInsert: (typeof notifications.$inferInsert)[] = [];
 
@@ -64,11 +71,12 @@ export async function GET(request: Request) {
     if (task.assignedTo) targets.add(task.assignedTo);
     // Notifier la personne assignée au workflow
     if (task.workflowAssignedTo) targets.add(task.workflowAssignedTo);
-    // Notifier les admins
-    adminIds.forEach((id) => targets.add(id));
+    // Notifier les admins DU CABINET concerné
+    (adminsByCabinet.get(task.cabinetId) ?? []).forEach((id) => targets.add(id));
 
     for (const userId of targets) {
       notificationsToInsert.push({
+        cabinetId: task.cabinetId,
         userId,
         title: "Tâche en retard",
         message: `"${task.taskTitle}" dans le workflow "${task.workflowName}" (${task.companyName}) est en retard depuis le ${task.dueDate}.`,

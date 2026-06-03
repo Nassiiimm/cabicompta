@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
     const [msg] = await db
       .insert(portalMessages)
       .values({
+        cabinetId: user.cabinetId,
         companyId: membership.companyId,
         userId: user.id,
         message: message.trim(),

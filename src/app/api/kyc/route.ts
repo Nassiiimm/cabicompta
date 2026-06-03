@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     const [doc] = await db
       .insert(kycDocuments)
       .values({
+        cabinetId: user.cabinetId,
         companyId: parsed.companyId,
         adminName: parsed.adminName,
         adminRole: parsed.adminRole,

@@ -55,7 +55,7 @@ describe("logAccess", () => {
     const { logAccess } = await import("@/lib/access-log");
 
     await logAccess({
-      userId: "user-1",
+      cabinetId: "cab-1", userId: "user-1",
       action: "LOGIN",
       resourceType: "session",
     });
@@ -68,7 +68,7 @@ describe("logAccess", () => {
     const { logAccess } = await import("@/lib/access-log");
 
     await logAccess({
-      userId: "user-1",
+      cabinetId: "cab-1", userId: "user-1",
       action: "DOCUMENT_DOWNLOAD",
       resourceType: "document",
       resourceId: "doc-1",
@@ -91,7 +91,7 @@ describe("logAccess", () => {
 
     const { logAccess } = await import("@/lib/access-log");
     await expect(
-      logAccess({ userId: "u", action: "TEST", resourceType: "test" })
+      logAccess({ cabinetId: "cab-1", userId: "u", action: "TEST", resourceType: "test" })
     ).resolves.toBeUndefined();
   });
 });

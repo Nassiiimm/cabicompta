@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     const [company] = await db
       .select({
         id: companies.id,
+        cabinetId: companies.cabinetId,
         name: companies.name,
         assignedTo: companies.assignedTo,
         inboxActive: companies.inboxActive,
@@ -92,13 +93,14 @@ export async function POST(request: Request) {
 
         const timestamp = Date.now();
         const safeName = attachment.filename.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storagePath = `${company.id}/${timestamp}_${safeName}`;
+        const storagePath = `${company.cabinetId}/${company.id}/${timestamp}_${safeName}`;
 
         await uploadFile("documents", storagePath, buffer, attachment.contentType);
 
         const [doc] = await db
           .insert(documents)
           .values({
+            cabinetId: company.cabinetId,
             companyId: company.id,
             uploadedBy: uploaderId,
             fileName: attachment.filename,
@@ -115,6 +117,7 @@ export async function POST(request: Request) {
         createdDocs.push(doc.id);
 
         logAudit({
+          cabinetId: company.cabinetId,
           userId: null,
           action: "INBOUND_EMAIL_UPLOAD",
           tableName: "documents",
@@ -135,6 +138,7 @@ export async function POST(request: Request) {
     if (company.assignedTo && createdDocs.length > 0) {
       try {
         await db.insert(notifications).values({
+          cabinetId: company.cabinetId,
           userId: company.assignedTo,
           title: "Nouveau document reçu par courriel",
           message: `${createdDocs.length} document${createdDocs.length > 1 ? "s" : ""} reçu${createdDocs.length > 1 ? "s" : ""} de ${parsed.from} pour ${company.name}`,

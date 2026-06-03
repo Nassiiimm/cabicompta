@@ -33,6 +33,7 @@ export type AutopilotResult = {
 
 export type CompanyFiscalProfile = {
   id: string;
+  cabinetId: string;
   name: string;
   type: string | null;
   fiscalYearEnd: string | null;
@@ -130,6 +131,7 @@ export async function runAutopilotForCompany(
       const [inserted] = await db
         .insert(fiscalDeadlines)
         .values({
+          cabinetId: profile.cabinetId,
           companyId: profile.id,
           type: d.type as typeof fiscalDeadlines.type.enumValues[number],
           label: d.label,
@@ -160,6 +162,7 @@ export async function runAutopilotForCompany(
     const [newWorkflow] = await db
       .insert(workflows)
       .values({
+        cabinetId: profile.cabinetId,
         companyId: profile.id,
         fiscalDeadlineId: deadlineId,
         name: d.label,
@@ -176,6 +179,7 @@ export async function runAutopilotForCompany(
     if (template.tasks.length > 0) {
       await db.insert(workflowTasks).values(
         template.tasks.map((t) => ({
+          cabinetId: profile.cabinetId,
           workflowId: newWorkflow.id,
           title: t.title,
           description: t.description ?? null,
@@ -190,6 +194,7 @@ export async function runAutopilotForCompany(
     if (template.documentRequests.length > 0) {
       await db.insert(documentRequests).values(
         template.documentRequests.map((r) => ({
+          cabinetId: profile.cabinetId,
           workflowId: newWorkflow.id,
           companyId: profile.id,
           label: r.label,
@@ -210,6 +215,7 @@ export async function runAutopilotForCompany(
  * Lance le pilote pour toutes les sociétés actives (ou une liste spécifique).
  */
 export async function runAutopilot(
+  cabinetId: string,
   year: number,
   companyIds?: string[],
   assignedTo?: string | null
@@ -217,6 +223,7 @@ export async function runAutopilot(
   const query = db
     .select({
       id: companies.id,
+      cabinetId: companies.cabinetId,
       name: companies.name,
       type: companies.type,
       fiscalYearEnd: companies.fiscalYearEnd,
@@ -225,7 +232,7 @@ export async function runAutopilot(
       hasInstallments: companies.hasInstallments,
     })
     .from(companies)
-    .where(eq(companies.status, "ACTIVE"));
+    .where(and(eq(companies.status, "ACTIVE"), eq(companies.cabinetId, cabinetId)));
 
   const allCompanies = await query;
 

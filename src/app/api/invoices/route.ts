@@ -134,6 +134,7 @@ export async function POST(request: Request) {
       const [newInvoice] = await tx
         .insert(invoices)
         .values({
+          cabinetId: user.cabinetId,
           companyId,
           invoiceNumber,
           amountHt: amountHt.toFixed(2),
@@ -148,6 +149,7 @@ export async function POST(request: Request) {
       if (computedItems.length > 0) {
         await tx.insert(invoiceItems).values(
           computedItems.map((item) => ({
+            cabinetId: user.cabinetId,
             invoiceId: newInvoice.id,
             description: item.description,
             quantity: item.quantity.toFixed(2),
@@ -161,6 +163,7 @@ export async function POST(request: Request) {
     });
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "CREATE",
       tableName: "invoices",

@@ -25,7 +25,7 @@ describe("logAudit", () => {
   it("writes an audit log entry", async () => {
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
-      userId: "user-1",
+      cabinetId: "cab-1", userId: "user-1",
       action: "UPDATE",
       tableName: "companies",
       recordId: "comp-1",
@@ -38,7 +38,7 @@ describe("logAudit", () => {
   it("handles null userId", async () => {
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
-      userId: null,
+      cabinetId: "cab-1", userId: null,
       action: "SYSTEM",
       tableName: "fiscal_deadlines",
     });
@@ -51,14 +51,14 @@ describe("logAudit", () => {
     mockDb.values.mockRejectedValueOnce(new Error("DB error"));
     const { logAudit } = await import("@/lib/audit");
     await expect(
-      logAudit({ userId: "u", action: "TEST", tableName: "test" })
+      logAudit({ cabinetId: "cab-1", userId: "u", action: "TEST", tableName: "test" })
     ).resolves.toBeUndefined();
   });
 
   it("stores old and new data", async () => {
     const { logAudit } = await import("@/lib/audit");
     await logAudit({
-      userId: "u",
+      cabinetId: "cab-1", userId: "u",
       action: "STATUS_CHANGE",
       tableName: "invoices",
       recordId: "inv-1",

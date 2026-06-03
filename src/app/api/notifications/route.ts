@@ -62,6 +62,7 @@ export async function POST(request: Request) {
         .where(eq(companyMembers.companyId, data.companyId));
 
       const toInsert = members.map((m) => ({
+        cabinetId: user.cabinetId,
         userId: m.userId,
         title: data.title,
         message: data.message,
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
     // Single user notification
     if (data.userId) {
       await db.insert(notifications).values({
+        cabinetId: user.cabinetId,
         userId: data.userId,
         title: data.title,
         message: data.message,

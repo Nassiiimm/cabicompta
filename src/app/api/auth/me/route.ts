@@ -13,7 +13,8 @@ export async function GET(request: Request) {
   }
 
   logAccess({
-    userId: user.id,
+    cabinetId: user.cabinetId,
+      userId: user.id,
     action: "LOGIN",
     resourceType: "session",
     ipAddress: request.headers.get("x-forwarded-for") ?? undefined,

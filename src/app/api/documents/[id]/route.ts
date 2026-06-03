@@ -63,6 +63,7 @@ export async function GET(
 
     // Loi 25 — journal d'accès aux documents confidentiels
     logAccess({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "DOCUMENT_DOWNLOAD",
       resourceType: "document",

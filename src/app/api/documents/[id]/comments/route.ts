@@ -86,7 +86,7 @@ export async function POST(
 
     const [comment] = await db
       .insert(documentComments)
-      .values({ documentId, userId: user.id, message })
+      .values({ cabinetId: user.cabinetId, documentId, userId: user.id, message })
       .returning();
 
     return Response.json(comment, { status: 201 });

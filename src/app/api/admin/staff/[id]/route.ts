@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { createClient } from "@supabase/supabase-js";
 import { logAudit } from "@/lib/audit";
 
@@ -51,9 +51,10 @@ export async function DELETE(
     }
 
     // Supprimer de la table users (FK avec SET NULL / CASCADE gère les dépendances)
-    await db.delete(users).where(eq(users.id, id));
+    await db.delete(users).where(and(eq(users.id, id), eq(users.cabinetId, admin.cabinetId)));
 
     logAudit({
+      cabinetId: admin.cabinetId,
       userId: admin.id,
       action: "DELETE",
       tableName: "users",

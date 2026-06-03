@@ -38,6 +38,7 @@ export async function GET(request: Request) {
       .select({
         id: fiscalDeadlines.id,
         companyId: fiscalDeadlines.companyId,
+        cabinetId: fiscalDeadlines.cabinetId,
         type: fiscalDeadlines.type,
         label: fiscalDeadlines.label,
         dueDate: fiscalDeadlines.dueDate,
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
 
         if (existingNotif.length === 0) {
           await db.insert(notifications).values({
+            cabinetId: deadline.cabinetId,
             userId: member.userId,
             title,
             message: `${deadline.companyName} — ${message}`,

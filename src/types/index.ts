@@ -8,6 +8,7 @@ export type NavItem = {
 
 export type AppUser = {
   id: string;
+  cabinetId: string;
   authId: string;
   email: string;
   name: string;

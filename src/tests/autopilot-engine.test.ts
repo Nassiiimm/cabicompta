@@ -23,6 +23,7 @@ function shouldGenerateType(type: string, profile: CompanyFiscalProfile): boolea
 
 const baseProfile: CompanyFiscalProfile = {
   id: "comp-1",
+  cabinetId: "cab-1",
   name: "Test Co",
   type: "T2_SOCIETE",
   fiscalYearEnd: "2024-12-31",

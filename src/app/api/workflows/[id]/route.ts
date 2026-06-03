@@ -100,6 +100,7 @@ export async function PUT(
       .returning();
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "UPDATE",
       tableName: "workflows",
@@ -146,6 +147,7 @@ export async function DELETE(
     if (!deleted) return Response.json({ error: "Introuvable" }, { status: 404 });
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "DELETE",
       tableName: "workflows",

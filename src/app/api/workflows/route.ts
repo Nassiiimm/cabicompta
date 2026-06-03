@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     const [workflow] = await db
       .insert(workflows)
-      .values({ ...data, createdBy: user.id })
+      .values({ ...data, createdBy: user.id, cabinetId: user.cabinetId })
       .returning();
 
     // Si un template est fourni, copier ses tâches
@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
       if (templateTasks.length > 0) {
         await db.insert(workflowTasks).values(
           templateTasks.map((t) => ({
+            cabinetId: user.cabinetId,
             workflowId: workflow.id,
             title: t.title,
             description: t.description,
@@ -108,11 +109,12 @@ export async function POST(request: NextRequest) {
       }
     } else if (customTasks && customTasks.length > 0) {
       await db.insert(workflowTasks).values(
-        customTasks.map((t) => ({ ...t, workflowId: workflow.id }))
+        customTasks.map((t) => ({ ...t, workflowId: workflow.id, cabinetId: user.cabinetId }))
       );
     }
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "CREATE",
       tableName: "workflows",

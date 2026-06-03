@@ -19,6 +19,7 @@ export async function POST() {
       .where(eq(users.id, user.id));
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "AI_CONSENT_ACK",
       tableName: "users",

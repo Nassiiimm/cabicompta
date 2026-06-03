@@ -26,6 +26,7 @@ export async function getCurrentUser(): Promise<AppUser | null> {
 
   return {
     id: user.id,
+    cabinetId: user.cabinetId,
     authId: user.authId!,
     email: user.email,
     name: user.name,

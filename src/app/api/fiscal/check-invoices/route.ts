@@ -35,6 +35,7 @@ export async function GET(request: Request) {
       total: invoices.total,
       dueDate: invoices.dueDate,
       companyId: invoices.companyId,
+      cabinetId: invoices.cabinetId,
       companyName: companies.name,
     })
     .from(invoices)
@@ -95,6 +96,7 @@ export async function GET(request: Request) {
 
       if (existing.length === 0) {
         await db.insert(notifications).values({
+          cabinetId: inv.cabinetId,
           userId: member.userId,
           title,
           message: `${inv.companyName} — Facture ${inv.invoiceNumber} de ${totalFormatted} est en retard de ${daysLate} jour${daysLate > 1 ? "s" : ""}.`,

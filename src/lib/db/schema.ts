@@ -11,10 +11,12 @@ import {
   jsonb,
   date,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 // Enums
 export const userRole = pgEnum("user_role", ["ADMIN", "STAFF", "INTERN", "CLIENT"]);
+export const cabinetStatus = pgEnum("cabinet_status", ["ACTIVE", "SUSPENDED"]);
 export const companyStatus = pgEnum("company_status", [
   "ACTIVE",
   "INACTIVE",
@@ -110,11 +112,37 @@ export const workflowTaskStatus = pgEnum("workflow_task_status", [
 ]);
 
 // ═══════════════════════════════════════════════════════════
+// Tenant — un cabinet = un client de la plateforme (multi-tenant)
+// Toutes les tables métier portent un cabinet_id et sont scopées par lui.
+// ═══════════════════════════════════════════════════════════
+export const cabinets = pgTable("cabinets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: varchar("slug", { length: 63 }).notNull().unique(), // sous-domaines + namespacing storage (futur)
+  name: varchar("name", { length: 255 }).notNull(),
+  legalName: varchar("legal_name", { length: 255 }),
+  status: cabinetStatus("status").notNull().default("ACTIVE"),
+  plan: varchar("plan", { length: 50 }).notNull().default("pilot"),
+  // White-label
+  displayName: varchar("display_name", { length: 255 }),
+  logoUrl: text("logo_url"),
+  primaryColor: varchar("primary_color", { length: 9 }),
+  emailFrom: varchar("email_from", { length: 255 }),
+  // Contact
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 20 }),
+  address: text("address"),
+  settings: jsonb("settings"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// ═══════════════════════════════════════════════════════════
 // Tables
 // ═══════════════════════════════════════════════════════════
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   authId: text("auth_id").unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -129,11 +157,14 @@ export const users = pgTable("users", {
   aiConsentAckedAt: timestamp("ai_consent_acked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("users_cabinet_idx").on(t.cabinetId),
+}));
 
 // Soft delete : deleted_at non-null = masqué de l'interface, données conservées
 export const companies = pgTable("companies", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   name: varchar("name", { length: 255 }).notNull(),
   neq: varchar("neq", { length: 20 }),
   arcNumber: varchar("arc_number", { length: 20 }),
@@ -183,11 +214,14 @@ export const companies = pgTable("companies", {
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("companies_cabinet_idx").on(t.cabinetId),
+}));
 
 // CASCADE sur company_members OK — si société supprimée physiquement (admin), les liens suivent
 export const companyMembers = pgTable("company_members", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "cascade" }),
@@ -197,11 +231,14 @@ export const companyMembers = pgTable("company_members", {
   role: memberRole("role").notNull().default("CONTACT"),
   isPrimary: boolean("is_primary").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("company_members_cabinet_idx").on(t.cabinetId),
+}));
 
 // RESTRICT : un document ne doit JAMAIS être supprimé par cascade
 export const documents = pgTable("documents", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
@@ -221,16 +258,19 @@ export const documents = pgTable("documents", {
   deletedAt: timestamp("deleted_at"), // Soft delete
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("documents_cabinet_idx").on(t.cabinetId),
+}));
 
 // RESTRICT : une facture ne doit JAMAIS être supprimée par cascade
 // Conservation légale obligatoire (6 ans minimum au Québec)
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
-  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull().unique(),
+  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(),
   amountHt: numeric("amount_ht", { precision: 10, scale: 2 }).notNull(),
   tps: numeric("tps", { precision: 10, scale: 2 }).notNull(),
   tvq: numeric("tvq", { precision: 10, scale: 2 }).notNull(),
@@ -250,10 +290,15 @@ export const invoices = pgTable("invoices", {
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("invoices_cabinet_idx").on(t.cabinetId),
+  // Le numéro de facture est unique PAR cabinet (plus globalement)
+  invoiceNumberPerCabinet: uniqueIndex("invoices_cabinet_invoice_number_idx").on(t.cabinetId, t.invoiceNumber),
+}));
 
 export const invoiceItems = pgTable("invoice_items", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   invoiceId: uuid("invoice_id")
     .notNull()
     .references(() => invoices.id, { onDelete: "cascade" }),
@@ -263,11 +308,14 @@ export const invoiceItems = pgTable("invoice_items", {
     .default("1"),
   unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
   amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("invoice_items_cabinet_idx").on(t.cabinetId),
+}));
 
 
 export const notifications = pgTable("notifications", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -277,10 +325,13 @@ export const notifications = pgTable("notifications", {
   read: boolean("read").notNull().default(false),
   link: text("link"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("notifications_cabinet_idx").on(t.cabinetId),
+}));
 
 export const fiscalDeadlines = pgTable("fiscal_deadlines", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
@@ -293,7 +344,9 @@ export const fiscalDeadlines = pgTable("fiscal_deadlines", {
   notes: text("notes"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("fiscal_deadlines_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Piste d'audit — qui a fait quoi, quand
@@ -301,6 +354,7 @@ export const fiscalDeadlines = pgTable("fiscal_deadlines", {
 // ═══════════════════════════════════════════════════════════
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   action: varchar("action", { length: 50 }).notNull(), // CREATE, UPDATE, DELETE, STATUS_CHANGE, LOGIN, etc.
   tableName: varchar("table_name", { length: 50 }).notNull(),
@@ -309,13 +363,16 @@ export const auditLogs = pgTable("audit_logs", {
   newData: jsonb("new_data"), // état après modification
   ipAddress: varchar("ip_address", { length: 45 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("audit_logs_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Messagerie contextuelle — commentaires par document
 // ═══════════════════════════════════════════════════════════
 export const documentComments = pgTable("document_comments", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   documentId: uuid("document_id")
     .notNull()
     .references(() => documents.id, { onDelete: "cascade" }),
@@ -324,13 +381,16 @@ export const documentComments = pgTable("document_comments", {
     .references(() => users.id, { onDelete: "cascade" }),
   message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("document_comments_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Time tracking — feuilles de temps par dossier
 // ═══════════════════════════════════════════════════════════
 export const timeEntries = pgTable("time_entries", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -342,7 +402,9 @@ export const timeEntries = pgTable("time_entries", {
   date: date("date").notNull(),
   billable: boolean("billable").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("time_entries_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Journal d'accès — conformité Loi 25 (protection des
@@ -350,6 +412,7 @@ export const timeEntries = pgTable("time_entries", {
 // ═══════════════════════════════════════════════════════════
 export const accessLogs = pgTable("access_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
   action: varchar("action", { length: 50 }).notNull(), // LOGIN, DOCUMENT_VIEW, DOCUMENT_DOWNLOAD, PORTAL_ACCESS
   resourceType: varchar("resource_type", { length: 50 }).notNull(), // document, company, invoice
@@ -357,13 +420,16 @@ export const accessLogs = pgTable("access_logs", {
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: text("user_agent"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("access_logs_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // KYC — Conformité anti-blanchiment / Ordre des CPA
 // ═══════════════════════════════════════════════════════════
 export const kycDocuments = pgTable("kyc_documents", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
@@ -376,7 +442,9 @@ export const kycDocuments = pgTable("kyc_documents", {
   verifiedAt: timestamp("verified_at"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("kyc_documents_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Workflows — gestion de la production du cabinet
@@ -384,15 +452,19 @@ export const kycDocuments = pgTable("kyc_documents", {
 
 export const workflowTemplates = pgTable("workflow_templates", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("workflow_templates_cabinet_idx").on(t.cabinetId),
+}));
 
 export const workflowTemplateTasks = pgTable("workflow_template_tasks", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   templateId: uuid("template_id")
     .notNull()
     .references(() => workflowTemplates.id, { onDelete: "cascade" }),
@@ -401,10 +473,13 @@ export const workflowTemplateTasks = pgTable("workflow_template_tasks", {
   order: integer("order").notNull().default(0),
   estimatedMinutes: integer("estimated_minutes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("workflow_template_tasks_cabinet_idx").on(t.cabinetId),
+}));
 
 export const workflows = pgTable("workflows", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
@@ -422,10 +497,13 @@ export const workflows = pgTable("workflows", {
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("workflows_cabinet_idx").on(t.cabinetId),
+}));
 
 export const workflowTasks = pgTable("workflow_tasks", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   workflowId: uuid("workflow_id")
     .notNull()
     .references(() => workflows.id, { onDelete: "cascade" }),
@@ -442,17 +520,17 @@ export const workflowTasks = pgTable("workflow_tasks", {
   estimatedMinutes: integer("estimated_minutes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("workflow_tasks_cabinet_idx").on(t.cabinetId),
+}));
 
-// ═══════════════════════════════════════════════════════════
-// Messagerie portail client — fil de discussion client ↔ cabinet
-// ═══════════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════
 // Demandes documentaires — pilote automatique fiscal
 // Documents requis par filing, visibles par le client
 // ═══════════════════════════════════════════════════════════
 export const documentRequests = pgTable("document_requests", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   workflowId: uuid("workflow_id")
     .notNull()
     .references(() => workflows.id, { onDelete: "cascade" }),
@@ -467,10 +545,16 @@ export const documentRequests = pgTable("document_requests", {
   dueDate: date("due_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("document_requests_cabinet_idx").on(t.cabinetId),
+}));
 
+// ═══════════════════════════════════════════════════════════
+// Messagerie portail client — fil de discussion client ↔ cabinet
+// ═══════════════════════════════════════════════════════════
 export const portalMessages = pgTable("portal_messages", {
   id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   companyId: uuid("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "cascade" }),
@@ -481,7 +565,9 @@ export const portalMessages = pgTable("portal_messages", {
   fromRole: text("from_role").notNull(),
   readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  cabinetIdx: index("portal_messages_cabinet_idx").on(t.cabinetId),
+}));
 
 // ═══════════════════════════════════════════════════════════
 // Présence — temps actif passé sur l'app par employé (automatique)
@@ -492,6 +578,7 @@ export const activitySessions = pgTable(
   "activity_sessions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -502,12 +589,15 @@ export const activitySessions = pgTable(
   },
   (t) => ({
     userDateIdx: uniqueIndex("activity_user_date_idx").on(t.userId, t.date),
+    cabinetIdx: index("activity_sessions_cabinet_idx").on(t.cabinetId),
   })
 );
 
 // ═══════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════
+export type Cabinet = typeof cabinets.$inferSelect;
+export type NewCabinet = typeof cabinets.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Company = typeof companies.$inferSelect;

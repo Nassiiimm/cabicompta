@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
+import { sql, and, eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
 
 // Parseur CSV minimal mais robuste (gère les champs entre guillemets et les "" échappés)
@@ -74,10 +74,11 @@ export async function POST(request: Request) {
       const dupCondition = neq
         ? sql`lower(${companies.neq}) = lower(${neq}) or lower(${companies.name}) = lower(${name})`
         : sql`lower(${companies.name}) = lower(${name})`;
-      const [existing] = await db.select({ id: companies.id }).from(companies).where(dupCondition).limit(1);
+      const [existing] = await db.select({ id: companies.id }).from(companies).where(and(dupCondition, eq(companies.cabinetId, user.cabinetId))).limit(1);
       if (existing) { skipped++; continue; }
 
       await db.insert(companies).values({
+        cabinetId: user.cabinetId,
         name,
         neq,
         type: type as "T1_PARTICULIER" | "T1_AUTONOME" | "T2_SOCIETE" | null,
@@ -92,6 +93,7 @@ export async function POST(request: Request) {
     }
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "IMPORT",
       tableName: "companies",

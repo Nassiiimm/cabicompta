@@ -49,11 +49,13 @@ export async function GET(request: NextRequest) {
         )
       : notDeleted;
 
+    // Cloisonnement multi-tenant : uniquement les sociétés du cabinet courant
+    const cabinetScope = eq(companies.cabinetId, user.cabinetId);
     // INTERN : seulement les clients qui lui sont assignés
     const conditions =
       user.role === "INTERN"
-        ? and(searchCondition, eq(companies.assignedTo, user.id))
-        : searchCondition;
+        ? and(cabinetScope, searchCondition, eq(companies.assignedTo, user.id))
+        : and(cabinetScope, searchCondition);
 
     const result = await db
       .select()
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
   try {
     const csrf = csrfGuard(request);
     if (csrf) return csrf;
-    await requireStaff();
+    const user = await requireStaff();
 
     const body = await request.json();
     const parsed = createCompanySchema.parse(body);
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     const [company] = await db
       .insert(companies)
-      .values({ ...data, inboxEmail, inboxActive: true })
+      .values({ ...data, inboxEmail, inboxActive: true, cabinetId: user.cabinetId })
       .returning();
 
     return Response.json(company, { status: 201 });

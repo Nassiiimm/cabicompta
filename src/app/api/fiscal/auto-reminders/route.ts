@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     .select({
       id: fiscalDeadlines.id,
       companyId: fiscalDeadlines.companyId,
+      cabinetId: fiscalDeadlines.cabinetId,
       label: fiscalDeadlines.label,
       period: fiscalDeadlines.period,
       dueDate: fiscalDeadlines.dueDate,
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
         if (!existing) {
           // In-app notification
           await db.insert(notifications).values({
+            cabinetId: deadline.cabinetId,
             userId: member.userId,
             title: `Rappel — ${deadline.label}`,
             message: `${deadline.companyName} — Échéance dans 5 jours. Aucun document traité pour cette période.`,

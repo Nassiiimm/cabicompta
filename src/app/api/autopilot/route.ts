@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     const { year = new Date().getFullYear(), companyIds, assignedTo } = body;
 
     const results = await runAutopilot(
+      user.cabinetId,
       year,
       companyIds ?? undefined,
       assignedTo ?? user.id
@@ -31,6 +32,7 @@ export async function POST(request: Request) {
     const errors = results.filter((r) => r.error);
 
     logAudit({
+      cabinetId: user.cabinetId,
       userId: user.id,
       action: "CREATE",
       tableName: "autopilot",

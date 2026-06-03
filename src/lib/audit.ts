@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auditLogs } from "@/lib/db/schema";
 
 type AuditParams = {
+  cabinetId: string;
   userId: string | null;
   action: string;
   tableName: string;
@@ -14,6 +15,7 @@ type AuditParams = {
 export async function logAudit(params: AuditParams) {
   try {
     await db.insert(auditLogs).values({
+      cabinetId: params.cabinetId,
       userId: params.userId,
       action: params.action,
       tableName: params.tableName,

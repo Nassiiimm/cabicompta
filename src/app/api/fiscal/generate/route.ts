@@ -57,6 +57,7 @@ export async function POST(request: Request) {
 
       if (existing.length === 0) {
         await db.insert(fiscalDeadlines).values({
+          cabinetId: user.cabinetId,
           companyId,
           type: d.type as typeof fiscalDeadlines.type.enumValues[number],
           label: d.label,
