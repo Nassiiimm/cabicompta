@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/lib/authz", () => ({
+  hasCompanyAccess: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/lib/auth", () => ({
   requireAuth: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),
   requireStaff: vi.fn().mockResolvedValue({ id: "user-1", role: "ADMIN", email: "a@t.com", name: "Admin", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" }),

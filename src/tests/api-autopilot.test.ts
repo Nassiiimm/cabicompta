@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/lib/auth", () => ({
   requireStaff: vi.fn().mockResolvedValue({
     id: "staff-1",
+    cabinetId: "cab-1",
     role: "ADMIN",
     email: "admin@test.com",
     name: "Admin",
@@ -77,6 +78,7 @@ describe("POST /api/autopilot", () => {
     });
     await POST(req);
     expect(runAutopilot).toHaveBeenCalledWith(
+      "cab-1",
       new Date().getFullYear(),
       undefined,
       "staff-1"
@@ -92,7 +94,7 @@ describe("POST /api/autopilot", () => {
       body: JSON.stringify({ year: 2025, companyIds: ["comp-1", "comp-2"] }),
     });
     await POST(req);
-    expect(runAutopilot).toHaveBeenCalledWith(2025, ["comp-1", "comp-2"], "staff-1");
+    expect(runAutopilot).toHaveBeenCalledWith("cab-1", 2025, ["comp-1", "comp-2"], "staff-1");
   });
 
   it("reporte les erreurs par client dans la réponse", async () => {

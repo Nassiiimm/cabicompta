@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/lib/authz", () => ({
+  hasCompanyAccess: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/lib/auth", () => ({
-  requireAuth: vi.fn().mockResolvedValue({ id: "staff-1", role: "STAFF", email: "staff@test.com", name: "Staff" }),
+  requireAuth: vi.fn().mockResolvedValue({ id: "staff-1", cabinetId: "cab-1", role: "STAFF", email: "staff@test.com", name: "Staff" }),
 }));
 
 vi.mock("@/lib/access-log", () => ({
@@ -132,12 +136,12 @@ describe("GET /api/invoices/[id]/pdf", () => {
   it("CLIENT cannot access other company invoices (403)", async () => {
     const { requireAuth } = await import("@/lib/auth");
     vi.mocked(requireAuth).mockResolvedValueOnce({ id: "client-1", role: "CLIENT", email: "c@t.com", name: "Client", authId: "a", phone: null, avatarUrl: null, presenceNoticeAckedAt: null, aiConsentAckedAt: null, cabinetId: "cab-1" });
+    const { hasCompanyAccess } = await import("@/lib/authz");
+    vi.mocked(hasCompanyAccess).mockResolvedValueOnce(false);
 
-    // Invoice lookup chain: where() chainable, limit() resolves
-    mockDb.where.mockReturnValueOnce(mockDb);
-    mockDb.limit
-      .mockResolvedValueOnce([mockInvoice])   // invoice found
-      .mockResolvedValueOnce([]);             // membership check — no match
+    // hasCompanyAccess mocké false → 403 dès après le fetch facture
+    // (plus de requête membership ; ne pas laisser de mock résiduel qui fuiterait)
+    mockDb.limit.mockResolvedValueOnce([mockInvoice]); // invoice found
 
     const { GET } = await import("@/app/api/invoices/[id]/pdf/route");
     const req = new Request("http://localhost/api/invoices/inv-1/pdf");
@@ -152,13 +156,8 @@ describe("GET /api/invoices/[id]/pdf", () => {
     // Invoice lookup: where() chainable → limit() resolves to invoice
     // Membership check: where() chainable → limit() resolves to membership
     // Items query: where() resolves to items
-    mockDb.where
-      .mockReturnValueOnce(mockDb)             // invoice chain where()
-      .mockReturnValueOnce(mockDb)             // membership chain where()
-      .mockResolvedValueOnce(mockItems);       // items chain where()
-    mockDb.limit
-      .mockResolvedValueOnce([mockInvoice])    // invoice found
-      .mockResolvedValueOnce([{ companyId: "comp-1" }]); // membership found
+    // hasCompanyAccess est mocké (true) → plus de requête membership ici
+    setupInvoiceFound();
 
     const { GET } = await import("@/app/api/invoices/[id]/pdf/route");
     const req = new Request("http://localhost/api/invoices/inv-1/pdf");

@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+vi.mock("@/lib/authz", () => ({
+  hasCompanyAccess: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock("@/lib/auth", () => ({
-  requireStaff: vi.fn().mockResolvedValue({ id: "staff-1", role: "ADMIN", email: "admin@test.com", name: "Admin" }),
+  requireStaff: vi.fn().mockResolvedValue({ id: "staff-1", cabinetId: "cab-1", role: "ADMIN", email: "admin@test.com", name: "Admin" }),
 }));
 
 vi.mock("@/lib/audit", () => ({
