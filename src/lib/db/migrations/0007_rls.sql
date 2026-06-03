@@ -21,7 +21,11 @@ DO $$ BEGIN
   CREATE ROLE app_tenant NOLOGIN;
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-GRANT app_tenant TO CURRENT_USER;        -- autorise `set role app_tenant` depuis la connexion app (postgres en prod, dev en local)
+-- NB activation RLS :
+--  • En local (superuser), `set local role app_tenant` suffit (cf. withTenant + rls.test).
+--  • Sur Supabase, `GRANT app_tenant TO postgres` est INTERDIT (garde-fou anti-escalade) →
+--    l'activation se fera via une CONNEXION DÉDIÉE app_tenant (login + mot de passe,
+--    DATABASE_URL séparé), pas via SET ROLE. RLS reste dormante d'ici là.
 GRANT USAGE ON SCHEMA public TO app_tenant;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_tenant;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_tenant;
