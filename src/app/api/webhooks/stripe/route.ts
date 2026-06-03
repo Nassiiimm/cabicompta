@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { invoices } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
+import { captureError } from "@/lib/observability";
 
 // Comparaison à temps constant (évite les timing attacks sur la signature)
 function timingSafeEqualHex(a: string, b: string): boolean {
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
 
     return Response.json({ received: true });
   } catch (error) {
-    console.error("POST /api/webhooks/stripe error:", error);
+    captureError(error, { route: "webhooks/stripe" });
     return Response.json(
       { error: "Erreur traitement webhook" },
       { status: 500 }

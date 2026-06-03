@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { uploadFile } from "@/lib/supabase/storage";
 import { parseInboundEmail } from "@/lib/inbox";
 import { logAudit } from "@/lib/audit";
+import { captureError } from "@/lib/observability";
 
 export async function POST(request: Request) {
   try {
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
       documents: createdDocs.length,
     });
   } catch (error) {
-    console.error("POST /api/webhooks/inbound-email error:", error);
+    captureError(error, { route: "webhooks/inbound-email" });
     return Response.json(
       { error: "Erreur traitement courriel entrant" },
       { status: 500 }

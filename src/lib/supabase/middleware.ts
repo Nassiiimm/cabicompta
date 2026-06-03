@@ -50,6 +50,7 @@ export async function updateSession(request: NextRequest) {
   ];
   if (
     selfAuthRoutes.includes(path) ||
+    path === "/api/health" ||
     path.startsWith("/api/webhooks/") ||
     path.startsWith("/api/platform/")
   ) {
