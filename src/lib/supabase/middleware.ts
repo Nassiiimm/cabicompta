@@ -48,7 +48,11 @@ export async function updateSession(request: NextRequest) {
     "/api/fiscal/auto-reminders",
     "/api/workflows/check-overdue",
   ];
-  if (selfAuthRoutes.includes(path) || path.startsWith("/api/webhooks/")) {
+  if (
+    selfAuthRoutes.includes(path) ||
+    path.startsWith("/api/webhooks/") ||
+    path.startsWith("/api/platform/")
+  ) {
     return supabaseResponse;
   }
 
