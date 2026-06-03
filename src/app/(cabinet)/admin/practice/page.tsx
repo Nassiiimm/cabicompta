@@ -13,7 +13,7 @@ import { sql, eq, and, isNull, gte } from "drizzle-orm";
 import { ExportButton } from "@/components/cabinet/export-button";
 import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
-async function getPracticeData() {
+async function getPracticeData(cabinetId: string) {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -26,6 +26,7 @@ async function getPracticeData() {
     .from(invoices)
     .where(
       and(
+        eq(invoices.cabinetId, cabinetId),
         sql`${invoices.status} != 'DRAFT'`,
         isNull(invoices.deletedAt)
       )
@@ -38,6 +39,7 @@ async function getPracticeData() {
     .from(invoices)
     .where(
       and(
+        eq(invoices.cabinetId, cabinetId),
         eq(invoices.status, "PAID"),
         isNull(invoices.deletedAt)
       )
@@ -50,6 +52,7 @@ async function getPracticeData() {
     .from(invoices)
     .where(
       and(
+        eq(invoices.cabinetId, cabinetId),
         sql`${invoices.status} IN ('SENT', 'OVERDUE')`,
         isNull(invoices.deletedAt)
       )
@@ -57,6 +60,7 @@ async function getPracticeData() {
 
   // Deadlines this month
   const monthFilter = and(
+    eq(fiscalDeadlines.cabinetId, cabinetId),
     eq(fiscalDeadlines.status, "UPCOMING"),
     sql`${fiscalDeadlines.dueDate} >= ${startOfMonth.toISOString().slice(0, 10)}`,
     sql`${fiscalDeadlines.dueDate} <= ${endOfMonth.toISOString().slice(0, 10)}`
@@ -80,7 +84,7 @@ async function getPracticeData() {
   const [overdueCount] = await db
     .select({ v: sql<number>`count(*)::int` })
     .from(fiscalDeadlines)
-    .where(eq(fiscalDeadlines.status, "OVERDUE"));
+    .where(and(eq(fiscalDeadlines.cabinetId, cabinetId), eq(fiscalDeadlines.status, "OVERDUE")));
 
   // Staff workload this month
   const staffHours = await db
@@ -97,7 +101,7 @@ async function getPracticeData() {
         sql`${timeEntries.date} <= ${endOfMonth.toISOString().slice(0, 10)}`
       )
     )
-    .where(sql`${users.role} IN ('ADMIN', 'STAFF')`)
+    .where(and(eq(users.cabinetId, cabinetId), sql`${users.role} IN ('ADMIN', 'STAFF')`))
     .groupBy(users.id, users.name);
 
   // Compliance
@@ -106,6 +110,7 @@ async function getPracticeData() {
     .from(companies)
     .where(
       and(
+        eq(companies.cabinetId, cabinetId),
         eq(companies.kycVerified, false),
         eq(companies.status, "ACTIVE"),
         isNull(companies.deletedAt)
@@ -117,6 +122,7 @@ async function getPracticeData() {
     .from(companies)
     .where(
       and(
+        eq(companies.cabinetId, cabinetId),
         eq(companies.conflictCheck, false),
         eq(companies.status, "ACTIVE"),
         isNull(companies.deletedAt)
@@ -135,7 +141,7 @@ async function getPracticeData() {
       encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
     })
     .from(invoices)
-    .where(and(isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
+    .where(and(eq(invoices.cabinetId, cabinetId), isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
     .groupBy(sql`extract(year from ${invoices.issuedAt})`, sql`extract(month from ${invoices.issuedAt})`)
     .orderBy(sql`extract(year from ${invoices.issuedAt})`, sql`extract(month from ${invoices.issuedAt})`);
 
@@ -165,7 +171,7 @@ async function getPracticeData() {
       eq(workflowTasks.workflowId, workflows.id),
       eq(workflowTasks.assignedTo, users.id)
     ))
-    .where(sql`${users.role} IN ('ADMIN', 'STAFF')`)
+    .where(and(eq(users.cabinetId, cabinetId), sql`${users.role} IN ('ADMIN', 'STAFF')`))
     .groupBy(users.id, users.name)
     .orderBy(users.name);
 
@@ -193,8 +199,8 @@ function formatCurrency(amount: number) {
 }
 
 export default async function PracticePage() {
-  await requireAdmin();
-  const data = await getPracticeData();
+  const user = await requireAdmin();
+  const data = await getPracticeData(user.cabinetId);
 
   const monthName = new Date().toLocaleDateString("fr-CA", { month: "long", year: "numeric" });
 

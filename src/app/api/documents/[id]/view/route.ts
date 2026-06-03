@@ -36,6 +36,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     if (!doc) return new Response("Document introuvable", { status: 404 });
 
+    // Garde-fou multi-tenant : le document doit appartenir au cabinet de l'utilisateur
+    if (doc.cabinetId !== user.cabinetId) return new Response("Accès refusé", { status: 403 });
+
     if (user.role === "CLIENT") {
       const membership = await db
         .select({ companyId: companyMembers.companyId })

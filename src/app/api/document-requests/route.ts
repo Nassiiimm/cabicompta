@@ -31,9 +31,11 @@ export async function GET(request: Request) {
       }
     }
 
-    const condition = workflowId
+    const baseCondition = workflowId
       ? eq(documentRequests.workflowId, workflowId)
       : eq(documentRequests.companyId, companyId!);
+    // Cloisonnement multi-tenant : toujours restreindre au cabinet de l'utilisateur
+    const condition = and(baseCondition, eq(documentRequests.cabinetId, user.cabinetId));
 
     const rows = await db
       .select()

@@ -1,14 +1,14 @@
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users, timeEntries, activitySessions } from "@/lib/db/schema";
-import { sql, gte } from "drizzle-orm";
+import { sql, gte, and, eq } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { CreateStaffForm } from "./create-staff";
 import { DeleteStaffButton } from "./delete-staff";
 import { getTranslations } from "next-intl/server";
 
 export default async function StaffPage() {
-  await requireAdmin();
+  const user = await requireAdmin();
   const t = await getTranslations("admin.team");
 
   const ROLE_LABELS: Record<string, string> = {
@@ -32,7 +32,7 @@ export default async function StaffPage() {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`)
+    .where(and(eq(users.cabinetId, user.cabinetId), sql`${users.role} IN ('ADMIN', 'STAFF', 'INTERN')`))
     .orderBy(users.createdAt);
 
   // Volume horaire du mois courant, agrégé par employé (besoin cabinet : comptabiliser les heures)
@@ -45,7 +45,7 @@ export default async function StaffPage() {
       billableMinutes: sql<number>`coalesce(sum(case when ${timeEntries.billable} then ${timeEntries.duration} else 0 end), 0)`,
     })
     .from(timeEntries)
-    .where(gte(timeEntries.date, startOfMonth))
+    .where(and(eq(timeEntries.cabinetId, user.cabinetId), gte(timeEntries.date, startOfMonth)))
     .groupBy(timeEntries.userId);
 
   const hoursByUser = new Map(
@@ -62,7 +62,7 @@ export default async function StaffPage() {
       totalSeconds: sql<number>`coalesce(sum(${activitySessions.activeSeconds}), 0)`,
     })
     .from(activitySessions)
-    .where(gte(activitySessions.date, startOfMonth))
+    .where(and(eq(activitySessions.cabinetId, user.cabinetId), gte(activitySessions.date, startOfMonth)))
     .groupBy(activitySessions.userId);
 
   const presenceByUser = new Map(
