@@ -24,7 +24,7 @@ export default async function ClientsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; type?: string; sort?: string; dir?: string }>;
 }) {
-  await requireStaff();
+  const user = await requireStaff();
   const t = await getTranslations("clients");
   const { q, status, type, sort, dir } = await searchParams;
 
@@ -40,7 +40,7 @@ export default async function ClientsPage({
     ARCHIVED: "destructive",
   };
 
-  const filters = [isNull(companies.deletedAt)];
+  const filters = [eq(companies.cabinetId, user.cabinetId), isNull(companies.deletedAt)];
 
   if (q) {
     filters.push(

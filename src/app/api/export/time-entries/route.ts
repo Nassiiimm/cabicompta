@@ -24,6 +24,7 @@ export async function GET() {
       .from(timeEntries)
       .innerJoin(users, eq(timeEntries.userId, users.id))
       .innerJoin(companies, eq(timeEntries.companyId, companies.id))
+      .where(eq(timeEntries.cabinetId, user.cabinetId))
       .orderBy(desc(timeEntries.date))
       .limit(5000);
 

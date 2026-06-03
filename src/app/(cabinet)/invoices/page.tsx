@@ -51,7 +51,7 @@ export default async function InvoicesPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  await requireStaff();
+  const user = await requireStaff();
   const t = await getTranslations("invoices");
   const { status } = await searchParams;
   let invoiceList: {
@@ -86,9 +86,9 @@ export default async function InvoicesPage({
       .orderBy(desc(invoices.createdAt));
 
     if (statusFilter) {
-      invoiceList = await query.where(eq(invoices.status, statusFilter));
+      invoiceList = await query.where(and(eq(invoices.cabinetId, user.cabinetId), eq(invoices.status, statusFilter)));
     } else {
-      invoiceList = await query;
+      invoiceList = await query.where(eq(invoices.cabinetId, user.cabinetId));
     }
   } catch {
     // DB not connected yet

@@ -5,7 +5,7 @@ import { eq, desc } from "drizzle-orm";
 
 export async function GET(request: Request) {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") ?? "50"), 200);
@@ -25,6 +25,7 @@ export async function GET(request: Request) {
       })
       .from(auditLogs)
       .leftJoin(users, eq(auditLogs.userId, users.id))
+      .where(eq(auditLogs.cabinetId, user.cabinetId))
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
 

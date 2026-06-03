@@ -1,7 +1,7 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { invoices } from "@/lib/db/schema";
-import { sql, and, isNull } from "drizzle-orm";
+import { sql, and, isNull, eq } from "drizzle-orm";
 
 const MONTH_NAMES = [
   "jan", "fév", "mar", "avr", "mai", "jun",
@@ -31,6 +31,7 @@ export async function GET() {
         .from(invoices)
         .where(
           and(
+            eq(invoices.cabinetId, user.cabinetId),
             sql`${invoices.status} != 'DRAFT'`,
             isNull(invoices.deletedAt),
             sql`extract(year from ${invoices.createdAt}) = ${year}`,
@@ -45,6 +46,7 @@ export async function GET() {
         .from(invoices)
         .where(
           and(
+            eq(invoices.cabinetId, user.cabinetId),
             sql`${invoices.status} = 'PAID'`,
             isNull(invoices.deletedAt),
             sql`extract(year from ${invoices.createdAt}) = ${year}`,

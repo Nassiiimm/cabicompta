@@ -1,7 +1,7 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { companies, users } from "@/lib/db/schema";
-import { eq, asc, isNull } from "drizzle-orm";
+import { eq, asc, isNull, and } from "drizzle-orm";
 import { generateCsv, csvResponse } from "@/lib/csv";
 
 export async function GET() {
@@ -30,7 +30,7 @@ export async function GET() {
       })
       .from(companies)
       .leftJoin(users, eq(companies.assignedTo, users.id))
-      .where(isNull(companies.deletedAt))
+      .where(and(eq(companies.cabinetId, user.cabinetId), isNull(companies.deletedAt)))
       .orderBy(asc(companies.name));
 
     const formatted = rows.map((r) => ({

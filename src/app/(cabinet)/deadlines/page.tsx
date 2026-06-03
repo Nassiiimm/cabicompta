@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fiscalDeadlines, companies } from "@/lib/db/schema";
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import { DeadlinesCalendar } from "@/components/cabinet/deadlines-calendar";
 import { Zap } from "lucide-react";
 
@@ -20,7 +20,7 @@ export default async function DeadlinesPage() {
     })
     .from(fiscalDeadlines)
     .innerJoin(companies, eq(fiscalDeadlines.companyId, companies.id))
-    .where(isNull(fiscalDeadlines.deletedAt));
+    .where(and(eq(fiscalDeadlines.cabinetId, user.cabinetId), isNull(fiscalDeadlines.deletedAt)));
 
   const deadlines = rows.map((r) => ({
     ...r,

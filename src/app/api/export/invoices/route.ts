@@ -1,7 +1,7 @@
 import { requireStaff } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { invoices, companies } from "@/lib/db/schema";
-import { eq, desc, isNull } from "drizzle-orm";
+import { eq, desc, isNull, and } from "drizzle-orm";
 import { generateCsv, csvResponse } from "@/lib/csv";
 
 export async function GET() {
@@ -29,7 +29,7 @@ export async function GET() {
       })
       .from(invoices)
       .leftJoin(companies, eq(invoices.companyId, companies.id))
-      .where(isNull(invoices.deletedAt))
+      .where(and(eq(invoices.cabinetId, user.cabinetId), isNull(invoices.deletedAt)))
       .orderBy(desc(invoices.createdAt));
 
     const csv = generateCsv(

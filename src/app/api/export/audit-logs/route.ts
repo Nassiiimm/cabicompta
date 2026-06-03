@@ -6,7 +6,7 @@ import { generateCsv, csvResponse } from "@/lib/csv";
 
 export async function GET() {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
 
     const rows = await db
       .select({
@@ -22,6 +22,7 @@ export async function GET() {
       })
       .from(auditLogs)
       .leftJoin(users, eq(auditLogs.userId, users.id))
+      .where(eq(auditLogs.cabinetId, user.cabinetId))
       .orderBy(desc(auditLogs.createdAt))
       .limit(10000);
 

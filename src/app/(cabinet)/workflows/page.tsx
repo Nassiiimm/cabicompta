@@ -41,6 +41,7 @@ export default async function WorkflowsPage() {
     .from(workflows)
     .leftJoin(companies, eq(workflows.companyId, companies.id))
     .leftJoin(users, eq(workflows.assignedTo, users.id))
+    .where(eq(workflows.cabinetId, user.cabinetId))
     .orderBy(desc(workflows.createdAt));
 
   const taskStats = await db
@@ -51,6 +52,7 @@ export default async function WorkflowsPage() {
       overdue: sql<number>`count(*) filter (where ${workflowTasks.dueDate} < current_date and ${workflowTasks.status} NOT IN ('DONE','SKIPPED'))::int`,
     })
     .from(workflowTasks)
+    .where(eq(workflowTasks.cabinetId, user.cabinetId))
     .groupBy(workflowTasks.workflowId);
 
   const statsMap = new Map(taskStats.map((s) => [s.workflowId, s]));

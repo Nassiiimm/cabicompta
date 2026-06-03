@@ -7,7 +7,7 @@ import { eq, desc, sql } from "drizzle-orm";
 // GET /api/messages — liste des conversations (une par entreprise)
 export async function GET(_request: NextRequest) {
   try {
-    await requireStaff();
+    const user = await requireStaff();
 
     // Derniers messages par entreprise + unread count (messages CLIENT sans réponse staff après)
     const threads = await db
@@ -33,6 +33,7 @@ export async function GET(_request: NextRequest) {
       .from(portalMessages)
       .leftJoin(companies, eq(portalMessages.companyId, companies.id))
       .leftJoin(users, eq(portalMessages.userId, users.id))
+      .where(eq(portalMessages.cabinetId, user.cabinetId))
       .orderBy(portalMessages.companyId, desc(portalMessages.createdAt));
 
     // Trier par lastAt desc

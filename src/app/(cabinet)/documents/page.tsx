@@ -14,11 +14,11 @@ export default async function DocumentsPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; companyId?: string; category?: string; subcategory?: string }>;
 }) {
-  await requireStaff();
+  const user = await requireStaff();
   const t = await getTranslations("documents");
   const { q, status, companyId, category, subcategory } = await searchParams;
 
-  const filters = [isNull(documents.deletedAt)];
+  const filters = [eq(documents.cabinetId, user.cabinetId), isNull(documents.deletedAt)];
 
   if (q) {
     filters.push(ilike(documents.fileName, `%${q}%`));

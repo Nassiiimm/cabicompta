@@ -24,10 +24,12 @@ export async function GET(request: NextRequest) {
       )!
     );
 
-    const clientCondition =
+    const clientCondition = and(
+      eq(companies.cabinetId, user.cabinetId),
       user.role === "INTERN"
         ? and(baseClientCondition, eq(companies.assignedTo, user.id))
-        : baseClientCondition;
+        : baseClientCondition
+    );
 
     const clientList = await db
       .select({
@@ -41,6 +43,7 @@ export async function GET(request: NextRequest) {
       .limit(5);
 
     const docCondition = and(
+      eq(documents.cabinetId, user.cabinetId),
       isNull(documents.deletedAt),
       ilike(documents.fileName, pattern)
     );

@@ -15,7 +15,7 @@ import { count, eq, sql, desc, and, lte, isNull, gte, lt, isNotNull } from "driz
 import { ArrowRight, CheckCircle2, AlertTriangle, FileText, CalendarClock, Receipt, GitBranch, Zap } from "lucide-react";
 import { RevenueChart } from "@/components/cabinet/revenue-chart";
 
-async function getStats(userId: string) {
+async function getStats(cabinetId: string, userId: string) {
   const todayDate = new Date();
   const todayStr = todayDate.toISOString().split("T")[0];
   const in7Days = new Date(todayDate);
@@ -39,22 +39,23 @@ async function getStats(userId: string) {
     upcomingDeadlines,
     revenueRows,
   ] = await Promise.all([
-    db.select({ v: count() }).from(companies).where(eq(companies.status, "ACTIVE")),
-    db.select({ v: count() }).from(documentRequests).where(eq(documentRequests.status, "PENDING")),
-    db.select({ v: count() }).from(documents).where(eq(documents.status, "PENDING")),
-    db.select({ v: count() }).from(invoices).where(eq(invoices.status, "OVERDUE")),
-    db.select({ v: count() }).from(invoices).where(sql`${invoices.status} IN ('SENT', 'OVERDUE')`),
-    db.select({ v: count() }).from(fiscalDeadlines).where(eq(fiscalDeadlines.status, "UPCOMING")),
+    db.select({ v: count() }).from(companies).where(and(eq(companies.cabinetId, cabinetId), eq(companies.status, "ACTIVE"))),
+    db.select({ v: count() }).from(documentRequests).where(and(eq(documentRequests.cabinetId, cabinetId), eq(documentRequests.status, "PENDING"))),
+    db.select({ v: count() }).from(documents).where(and(eq(documents.cabinetId, cabinetId), eq(documents.status, "PENDING"))),
+    db.select({ v: count() }).from(invoices).where(and(eq(invoices.cabinetId, cabinetId), eq(invoices.status, "OVERDUE"))),
+    db.select({ v: count() }).from(invoices).where(and(eq(invoices.cabinetId, cabinetId), sql`${invoices.status} IN ('SENT', 'OVERDUE')`)),
+    db.select({ v: count() }).from(fiscalDeadlines).where(and(eq(fiscalDeadlines.cabinetId, cabinetId), eq(fiscalDeadlines.status, "UPCOMING"))),
     db
       .select({ v: count() })
       .from(fiscalDeadlines)
-      .where(and(eq(fiscalDeadlines.status, "UPCOMING"), lte(fiscalDeadlines.dueDate, in7DaysStr))),
+      .where(and(eq(fiscalDeadlines.cabinetId, cabinetId), eq(fiscalDeadlines.status, "UPCOMING"), lte(fiscalDeadlines.dueDate, in7DaysStr))),
     db
       .select({ v: sql<number>`count(*)::int` })
       .from(workflowTasks)
       .innerJoin(workflows, eq(workflowTasks.workflowId, workflows.id))
       .where(
         and(
+          eq(workflowTasks.cabinetId, cabinetId),
           eq(workflowTasks.assignedTo, userId),
           isNotNull(workflowTasks.dueDate),
           lt(workflowTasks.dueDate, todayStr),
@@ -73,6 +74,7 @@ async function getStats(userId: string) {
       })
       .from(documents)
       .leftJoin(companies, eq(documents.companyId, companies.id))
+      .where(eq(documents.cabinetId, cabinetId))
       .orderBy(desc(documents.createdAt))
       .limit(5),
     db
@@ -84,7 +86,7 @@ async function getStats(userId: string) {
       })
       .from(fiscalDeadlines)
       .innerJoin(companies, eq(fiscalDeadlines.companyId, companies.id))
-      .where(eq(fiscalDeadlines.status, "UPCOMING"))
+      .where(and(eq(fiscalDeadlines.cabinetId, cabinetId), eq(fiscalDeadlines.status, "UPCOMING")))
       .orderBy(fiscalDeadlines.dueDate)
       .limit(5),
     db
@@ -95,7 +97,7 @@ async function getStats(userId: string) {
         encaisse: sql<string>`coalesce(sum(${invoices.total}) filter (where ${invoices.status} = 'PAID'), 0)`,
       })
       .from(invoices)
-      .where(and(isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
+      .where(and(eq(invoices.cabinetId, cabinetId), isNull(invoices.deletedAt), gte(invoices.issuedAt, sixMonthsAgo)))
       .groupBy(
         sql`extract(year from ${invoices.issuedAt})`,
         sql`extract(month from ${invoices.issuedAt})`
@@ -142,7 +144,7 @@ async function getStats(userId: string) {
 
 export default async function DashboardPage() {
   const user = await requireStaff();
-  const [data, t] = await Promise.all([getStats(user.id), getTranslations("dashboard")]);
+  const [data, t] = await Promise.all([getStats(user.cabinetId, user.id), getTranslations("dashboard")]);
   const tc = await getTranslations("common");
   const td = await getTranslations("documents");
 
