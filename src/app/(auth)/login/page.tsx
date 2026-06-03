@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -90,16 +89,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Panneau gauche — identité visuelle */}
       <div className="hidden lg:flex lg:w-1/2 bg-neutral-950 flex-col items-center justify-center p-12">
-        <Image
-          src="/logo-cfc-transparent.png"
-          alt="CFC — Comptabilité Fiscalité Conseil"
-          width={320}
-          height={128}
-          className="object-contain mb-8"
-          priority
-        />
+        <div className="mb-8 text-4xl font-semibold tracking-tight text-white">CabiCompta</div>
         <p className="text-neutral-400 text-sm text-center max-w-xs leading-relaxed">
-          Plateforme interne de gestion — accès réservé aux membres de l'équipe CFC.
+          Plateforme de gestion pour cabinets comptables et fiscaux.
         </p>
       </div>
 
@@ -107,13 +99,7 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 bg-white dark:bg-neutral-950">
         {/* Logo mobile uniquement */}
         <div className="lg:hidden mb-8 bg-neutral-950 rounded-xl px-6 py-4">
-          <Image
-            src="/logo-cfc-transparent.png"
-            alt="CFC"
-            width={200}
-            height={80}
-            className="object-contain"
-          />
+          <span className="text-2xl font-semibold tracking-tight text-white">CabiCompta</span>
         </div>
 
         <div className="w-full max-w-sm">

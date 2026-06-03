@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/auth";
 import { hasCompanyAccess } from "@/lib/authz";
 import { db } from "@/lib/db";
-import { invoices, invoiceItems, companies } from "@/lib/db/schema";
+import { invoices, invoiceItems, companies, cabinets } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { logAccess } from "@/lib/access-log";
 
@@ -57,6 +57,20 @@ export async function GET(
       .from(invoiceItems)
       .where(eq(invoiceItems.invoiceId, id));
 
+    // Branding du cabinet (white-label) — après contrôle d'accès.
+    // Résilient : un échec de lecture ne doit pas empêcher la génération du PDF.
+    let cabinetName = "CabiCompta";
+    try {
+      const [cab] = await db
+        .select({ name: cabinets.name, displayName: cabinets.displayName })
+        .from(cabinets)
+        .where(eq(cabinets.id, user.cabinetId))
+        .limit(1);
+      cabinetName = cab?.displayName ?? cab?.name ?? "CabiCompta";
+    } catch {
+      /* garde le fallback */
+    }
+
     logAccess({
       cabinetId: user.cabinetId,
       userId: user.id,
@@ -109,7 +123,7 @@ export async function GET(
 <body>
   <div class="header">
     <div>
-      <div class="logo">CFC</div>
+      <div class="logo">${cabinetName}</div>
       <div class="meta">Cabinet comptable et fiscal</div>
     </div>
     <div>
@@ -186,7 +200,7 @@ export async function GET(
   ${invoice.notes ? `<div class="notes"><strong>Notes :</strong> ${invoice.notes}</div>` : ""}
 
   <div class="footer">
-    CFC — Document généré le ${formatDate(new Date())}
+    ${cabinetName} — Document généré le ${formatDate(new Date())}
   </div>
 </body>
 </html>`;

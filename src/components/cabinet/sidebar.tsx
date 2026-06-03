@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -31,7 +30,7 @@ import { LocaleToggle } from "@/components/locale-toggle";
 import { useTranslations } from "next-intl";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 
-export function Sidebar({ role }: { role: string }) {
+export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetName: string; logoUrl?: string | null }) {
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("nav");
@@ -93,15 +92,13 @@ export function Sidebar({ role }: { role: string }) {
     <aside className="flex flex-col w-56 min-h-screen border-r bg-white dark:bg-neutral-950">
       {/* Logo header */}
       <div className="px-3 py-3 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800">
-        <Link href="/dashboard">
-          <Image
-            src="/logo-cfc-transparent.png"
-            alt="CFC — Comptabilité Fiscalité Conseil"
-            width={140}
-            height={56}
-            className="object-contain invert dark:invert-0"
-            priority
-          />
+        <Link href="/dashboard" className="font-semibold tracking-tight truncate">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={cabinetName} className="h-10 object-contain" />
+          ) : (
+            <span>{cabinetName}</span>
+          )}
         </Link>
         <NotificationBell />
       </div>

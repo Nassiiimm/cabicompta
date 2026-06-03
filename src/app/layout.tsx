@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CFC — Comptabilité Fiscalité Conseil",
-  description: "Cabinet comptable agréé au Québec — tenue de livres, fiscalité et conseil pour PME et entrepreneurs.",
+  title: "CabiCompta",
+  description: "Plateforme de gestion pour cabinets comptables et fiscaux.",
 };
 
 export default async function RootLayout({

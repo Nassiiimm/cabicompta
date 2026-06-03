@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
@@ -31,7 +30,7 @@ import { LocaleToggle } from "@/components/locale-toggle";
 import { useTranslations } from "next-intl";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 
-export function MobileNav({ role }: { role: string }) {
+export function MobileNav({ role, cabinetName, logoUrl }: { role: string; cabinetName: string; logoUrl?: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -98,13 +97,12 @@ export function MobileNav({ role }: { role: string }) {
         >
           <Menu className="size-5" />
         </button>
-        <Image
-          src="/logo-cfc-transparent.png"
-          alt="CFC"
-          width={100}
-          height={40}
-          className="object-contain invert dark:invert-0"
-        />
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={cabinetName} className="h-9 object-contain" />
+        ) : (
+          <span className="font-semibold tracking-tight truncate">{cabinetName}</span>
+        )}
         <div className="w-9" />
       </div>
 
@@ -119,13 +117,12 @@ export function MobileNav({ role }: { role: string }) {
           {/* Drawer */}
           <aside className="absolute inset-y-0 left-0 w-64 bg-white dark:bg-neutral-950 border-r flex flex-col animate-in slide-in-from-left duration-200">
             <div className="h-14 px-4 flex items-center justify-between border-b">
-              <Image
-                src="/logo-cfc-transparent.png"
-                alt="CFC"
-                width={100}
-                height={40}
-                className="object-contain invert dark:invert-0"
-              />
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={cabinetName} className="h-9 object-contain" />
+              ) : (
+                <span className="font-semibold tracking-tight truncate">{cabinetName}</span>
+              )}
               <button
                 onClick={() => setOpen(false)}
                 className="p-2 -mr-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
