@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { invoices, invoiceItems, companies } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { InvoiceActions } from "./invoice-actions";
@@ -49,7 +49,7 @@ export default async function InvoiceDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireStaff();
+  const user = await requireStaff();
   const { id } = await params;
 
   const [invoice] = await db
@@ -76,7 +76,7 @@ export default async function InvoiceDetailPage({
     })
     .from(invoices)
     .leftJoin(companies, eq(invoices.companyId, companies.id))
-    .where(eq(invoices.id, id))
+    .where(and(eq(invoices.id, id), eq(invoices.cabinetId, user.cabinetId)))
     .limit(1);
 
   if (!invoice) {

@@ -37,7 +37,7 @@ export default async function ClientDetailPage({
   const [client] = await db
     .select()
     .from(companies)
-    .where(and(eq(companies.id, id), isNull(companies.deletedAt)))
+    .where(and(eq(companies.id, id), eq(companies.cabinetId, staff.cabinetId), isNull(companies.deletedAt)))
     .limit(1);
 
   if (!client) {
