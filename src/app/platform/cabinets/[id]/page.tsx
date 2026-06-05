@@ -32,6 +32,7 @@ export default async function CabinetDetail({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex items-center gap-3">
           <Badge variant={cab.status === "ACTIVE" ? "default" : "destructive"}>{cab.status === "ACTIVE" ? "Actif" : "Suspendu"}</Badge>
+          <a href={`/platform/cabinets/${cab.id}/export`} className="text-sm underline text-muted-foreground hover:text-foreground">Exporter (Loi 25)</a>
           <form action={setCabinetStatusAction}>
             <input type="hidden" name="id" value={cab.id} />
             <input type="hidden" name="status" value={cab.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE"} />
