@@ -146,6 +146,19 @@ export const platformAdmins = pgTable("platform_admins", {
   authId: text("auth_id").notNull().unique(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Journal d'audit des actions PLATEFORME (super-admin) — responsabilité/traçabilité.
+export const platformAuditLogs = pgTable("platform_audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  platformAdminId: uuid("platform_admin_id").references(() => platformAdmins.id, { onDelete: "set null" }),
+  actorEmail: varchar("actor_email", { length: 255 }),
+  action: varchar("action", { length: 50 }).notNull(), // CABINET_CREATE, CABINET_SUSPEND, CABINET_DELETE, IMPERSONATE, USER_RESET_PASSWORD…
+  targetType: varchar("target_type", { length: 50 }), // cabinet | user | platform_admin
+  targetId: uuid("target_id"),
+  meta: jsonb("meta"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -612,6 +625,7 @@ export const activitySessions = pgTable(
 export type Cabinet = typeof cabinets.$inferSelect;
 export type NewCabinet = typeof cabinets.$inferInsert;
 export type PlatformAdmin = typeof platformAdmins.$inferSelect;
+export type PlatformAuditLog = typeof platformAuditLogs.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Company = typeof companies.$inferSelect;

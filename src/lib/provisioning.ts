@@ -1,6 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
+import { eq } from "drizzle-orm";
 import { getDb } from "@/lib/db";
-import { cabinets, users, workflowTemplates, workflowTemplateTasks } from "@/lib/db/schema";
+import {
+  cabinets, users, workflowTemplates, workflowTemplateTasks,
+  companies, companyMembers, documents, documentComments, documentRequests,
+  invoices, invoiceItems, fiscalDeadlines, workflows, workflowTasks,
+  timeEntries, kycDocuments, portalMessages, notifications, activitySessions,
+  auditLogs, accessLogs,
+} from "@/lib/db/schema";
+
+const supabaseAdminClient = () =>
+  createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 /**
  * Provisioning d'un nouveau cabinet (tenant) — cœur DB, testable.
@@ -126,5 +136,38 @@ export async function provisionCabinetWithAdmin(input: {
     // Rollback du compte Auth → pas de compte orphelin
     await supabaseAdmin.auth.admin.deleteUser(authUser.user.id).catch(() => {});
     throw dbErr;
+  }
+}
+
+/**
+ * Supprime DÉFINITIVEMENT un cabinet : toutes ses données (ordre FK), puis le
+ * cabinet, puis les comptes Supabase Auth de tous ses utilisateurs. Irréversible.
+ */
+export async function deleteCabinet(cabinetId: string): Promise<void> {
+  const db = getDb();
+  // Comptes Auth à supprimer (récupérés avant la purge DB)
+  const usersRows = await db
+    .select({ authId: users.authId })
+    .from(users)
+    .where(eq(users.cabinetId, cabinetId));
+
+  // Purge des tables tenant (enfants → parents)
+  const tenantTables = [
+    invoiceItems, invoices, documents, fiscalDeadlines, documentComments,
+    documentRequests, workflowTasks, workflowTemplateTasks, timeEntries,
+    kycDocuments, portalMessages, notifications, activitySessions,
+    accessLogs, auditLogs, workflows, workflowTemplates, companyMembers,
+    companies, users,
+  ];
+  for (const t of tenantTables) {
+    await db.delete(t).where(eq(t.cabinetId, cabinetId));
+  }
+  await db.delete(cabinets).where(eq(cabinets.id, cabinetId));
+
+  // Comptes d'authentification (client construit seulement s'il y en a à supprimer)
+  const authIds = usersRows.map((u) => u.authId).filter((x): x is string => !!x);
+  if (authIds.length > 0) {
+    const supabaseAdmin = supabaseAdminClient();
+    for (const aid of authIds) await supabaseAdmin.auth.admin.deleteUser(aid).catch(() => {});
   }
 }
