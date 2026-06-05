@@ -137,6 +137,19 @@ export const cabinets = pgTable("cabinets", {
 });
 
 // ═══════════════════════════════════════════════════════════
+// Administrateurs PLATEFORME (super-admin) — opérateurs de la plateforme,
+// distincts des utilisateurs des cabinets. N'appartiennent à AUCUN cabinet
+// (pas de cabinet_id) → aucune pollution des données tenant. Console /platform.
+// ═══════════════════════════════════════════════════════════
+export const platformAdmins = pgTable("platform_admins", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  authId: text("auth_id").notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ═══════════════════════════════════════════════════════════
 // Tables
 // ═══════════════════════════════════════════════════════════
 
@@ -598,6 +611,7 @@ export const activitySessions = pgTable(
 // ═══════════════════════════════════════════════════════════
 export type Cabinet = typeof cabinets.$inferSelect;
 export type NewCabinet = typeof cabinets.$inferInsert;
+export type PlatformAdmin = typeof platformAdmins.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Company = typeof companies.$inferSelect;

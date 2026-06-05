@@ -24,6 +24,16 @@ export default function LoginPage() {
   const router = useRouter();
 
   async function proceed() {
+    // Super-admin plateforme ? → console /platform
+    try {
+      const pa = await fetch("/api/platform/whoami").then((r) => r.json());
+      if (pa?.isPlatformAdmin) {
+        router.push("/platform");
+        router.refresh();
+        return;
+      }
+    } catch {}
+
     const res = await fetch("/api/auth/me");
     if (res.ok) {
       const { role } = await res.json();

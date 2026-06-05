@@ -1,6 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { provisionCabinet } from "@/lib/provisioning";
+import { provisionCabinetWithAdmin } from "@/lib/provisioning";
 
 /**
  * Provisioning d'un cabinet — opéré par le PROPRIÉTAIRE DE LA PLATEFORME.
@@ -43,44 +42,19 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const input = schema.parse(body);
 
-    // 1) Compte Supabase Auth du premier admin (service role)
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: input.adminEmail,
-      password: input.adminPassword,
-      email_confirm: true,
-      user_metadata: { name: input.adminName },
-    });
-    if (authError || !authUser.user) {
-      return Response.json(
-        { error: authError?.message ?? "Échec création du compte admin" },
-        { status: 400 }
-      );
-    }
-
-    // 2) Cabinet + ligne admin + templates par défaut (transaction)
     try {
-      const { cabinetId, adminUserId } = await provisionCabinet({
-        name: input.name,
-        slug: input.slug,
-        legalName: input.legalName,
-        admin: { authId: authUser.user.id, email: input.adminEmail, name: input.adminName },
-      });
-
+      const { cabinetId, adminUserId } = await provisionCabinetWithAdmin(input);
       return Response.json(
         { cabinetId, adminUserId, slug: input.slug, adminEmail: input.adminEmail },
         { status: 201 }
       );
-    } catch (dbErr) {
-      // Rollback de l'auth si l'écriture DB échoue (ex. slug déjà pris) — évite un compte orphelin
-      await supabaseAdmin.auth.admin.deleteUser(authUser.user.id).catch(() => {});
+    } catch (err) {
       const msg =
-        dbErr instanceof Error && /unique|duplicate/i.test(dbErr.message)
+        err instanceof Error && /unique|duplicate/i.test(err.message)
           ? "Slug ou courriel déjà utilisé"
-          : "Échec de la création du cabinet";
+          : err instanceof Error
+            ? err.message
+            : "Échec de la création du cabinet";
       return Response.json({ error: msg }, { status: 409 });
     }
   } catch (error) {

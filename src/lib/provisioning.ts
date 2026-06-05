@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { getDb } from "@/lib/db";
 import { cabinets, users, workflowTemplates, workflowTemplateTasks } from "@/lib/db/schema";
 
@@ -85,4 +86,45 @@ export async function provisionCabinet(
 
     return { cabinetId: cab.id, adminUserId: admin.id };
   });
+}
+
+/**
+ * Provisioning complet : crée le compte Supabase Auth du 1er admin PUIS le
+ * cabinet (transaction). Rollback du compte Auth si l'écriture DB échoue (pas
+ * d'orphelin). Réutilisé par l'endpoint API (secret) ET la console /platform.
+ */
+export async function provisionCabinetWithAdmin(input: {
+  name: string;
+  slug: string;
+  legalName?: string;
+  adminEmail: string;
+  adminName: string;
+  adminPassword: string;
+}): Promise<{ cabinetId: string; adminUserId: string }> {
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: input.adminEmail,
+    password: input.adminPassword,
+    email_confirm: true,
+    user_metadata: { name: input.adminName },
+  });
+  if (authError || !authUser.user) {
+    throw new Error(authError?.message ?? "Échec création du compte admin");
+  }
+
+  try {
+    return await provisionCabinet({
+      name: input.name,
+      slug: input.slug,
+      legalName: input.legalName,
+      admin: { authId: authUser.user.id, email: input.adminEmail, name: input.adminName },
+    });
+  } catch (dbErr) {
+    // Rollback du compte Auth → pas de compte orphelin
+    await supabaseAdmin.auth.admin.deleteUser(authUser.user.id).catch(() => {});
+    throw dbErr;
+  }
 }
