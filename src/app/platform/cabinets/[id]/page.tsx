@@ -6,7 +6,7 @@ import { eq, count, desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { setCabinetStatusAction } from "../../actions";
+import { setCabinetStatusAction, impersonateAction } from "../../actions";
 import { EditCabinetForm } from "./edit-cabinet-form";
 import { DeleteCabinetForm } from "./delete-cabinet-form";
 
@@ -56,9 +56,16 @@ export default async function CabinetDetail({ params }: { params: Promise<{ id: 
         <CardContent className="divide-y">
           {cabUsers.length === 0 ? <p className="text-sm text-muted-foreground">Aucun.</p> :
             cabUsers.map((u) => (
-              <div key={u.id} className="flex justify-between py-2 text-sm">
+              <div key={u.id} className="flex items-center justify-between py-2 text-sm">
                 <span>{u.name} <span className="text-muted-foreground">· {u.email}</span></span>
-                <Badge variant="secondary">{u.role}</Badge>
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary">{u.role}</Badge>
+                  <form action={impersonateAction}>
+                    <input type="hidden" name="email" value={u.email} />
+                    <input type="hidden" name="cabinetId" value={cab.id} />
+                    <Button type="submit" size="xs" variant="outline">Se connecter en tant que</Button>
+                  </form>
+                </div>
               </div>
             ))}
         </CardContent>

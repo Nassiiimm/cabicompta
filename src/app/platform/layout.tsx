@@ -12,6 +12,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
     { href: "/platform", label: "Vue d'ensemble" },
     { href: "/platform/cabinets", label: "Cabinets" },
     { href: "/platform/audit", label: "Journal d'audit" },
+    { href: "/platform/admins", label: "Super-admins" },
     { href: "/platform/billing", label: "Facturation" },
   ];
 
