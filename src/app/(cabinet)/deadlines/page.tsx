@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { fiscalDeadlines, companies } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import { DeadlinesCalendar } from "@/components/cabinet/deadlines-calendar";
+import { CalendarSubscribe } from "./calendar-subscribe";
 import { Zap } from "lucide-react";
 
 export default async function DeadlinesPage() {
@@ -38,6 +39,10 @@ export default async function DeadlinesPage() {
           <Zap className="size-3" />
           Pilote automatique
         </Link>
+      </div>
+      <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 px-4 py-2">
+        <p className="text-xs text-muted-foreground">Synchronise tes échéances dans Google Agenda / Outlook (lien d&apos;abonnement iCal).</p>
+        <CalendarSubscribe />
       </div>
       <DeadlinesCalendar deadlines={deadlines} />
     </div>
