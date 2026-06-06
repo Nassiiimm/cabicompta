@@ -52,7 +52,8 @@ export async function updateSession(request: NextRequest) {
     selfAuthRoutes.includes(path) ||
     path === "/api/health" ||
     path.startsWith("/api/webhooks/") ||
-    path.startsWith("/api/platform/")
+    path.startsWith("/api/platform/") ||
+    path.startsWith("/api/calendar/")
   ) {
     return supabaseResponse;
   }

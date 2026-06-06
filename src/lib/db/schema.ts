@@ -175,6 +175,8 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 20 }),
   role: userRole("role").notNull().default("CLIENT"),
   avatarUrl: text("avatar_url"),
+  // Flux iCal des échéances : jeton secret dans l'URL d'abonnement (régénérable).
+  calendarToken: uuid("calendar_token").unique(),
   // Loi 25 : horodatage de l'acquittement de la notice de surveillance de
   // présence par l'employé (null = pas encore informé/acquitté). Auditable.
   presenceNoticeAckedAt: timestamp("presence_notice_acked_at"),
