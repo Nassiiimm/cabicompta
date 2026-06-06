@@ -10,6 +10,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
   // token = "<uuid>.ics" ou "<uuid>"
   const clean = token.replace(/\.ics$/, "");
 
+  // La colonne est de type uuid : un token malformé ferait planter la requête
+  // (invalid input syntax for type uuid) → 404 propre avant de toucher la DB.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(clean)) return new Response("Not found", { status: 404 });
+
   const [u] = await db
     .select({ id: users.id, cabinetId: users.cabinetId, role: users.role })
     .from(users)
