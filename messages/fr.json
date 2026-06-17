@@ -195,6 +195,8 @@
   "clients": {
     "title": "Clients",
     "new": "Nouveau client",
+    "previous": "Précédent",
+    "next": "Suivant",
     "edit": "Modifier le client",
     "noClients": "Aucun client",
     "noClientsDesc": "Commencez par ajouter votre premier client.",

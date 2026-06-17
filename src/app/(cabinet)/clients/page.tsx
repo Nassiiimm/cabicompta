@@ -4,8 +4,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { companies } from "@/lib/db/schema";
-import { asc, desc, isNull, ilike, or, and, eq } from "drizzle-orm";
-import { Plus, Building2 } from "lucide-react";
+import { asc, desc, isNull, ilike, or, and, eq, count } from "drizzle-orm";
+import { Plus, Building2, ChevronLeft, ChevronRight } from "lucide-react";
 import { ClientSearch } from "./client-search";
 import { ClientFilters } from "./client-filters";
 import { ClientSort } from "./client-sort";
@@ -22,11 +22,11 @@ const TYPE_LABELS: Record<string, string> = {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string; type?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; type?: string; sort?: string; dir?: string; page?: string }>;
 }) {
   const user = await requireStaff();
   const t = await getTranslations("clients");
-  const { q, status, type, sort, dir } = await searchParams;
+  const { q, status, type, sort, dir, page } = await searchParams;
 
   const statusLabels: Record<string, string> = {
     ACTIVE: t("active"),
@@ -75,11 +75,36 @@ export default async function ClientsPage({
   const sortCol = SORT_COLS[sortKey];
   const orderFn = dir === "desc" ? desc : asc;
 
+  // Pagination — 20 clients par page
+  const PER_PAGE = 20;
+  const [{ value: totalCount }] = await db
+    .select({ value: count() })
+    .from(companies)
+    .where(conditions);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PER_PAGE));
+  const currentPage = Math.min(Math.max(1, parseInt(page ?? "1", 10) || 1), totalPages);
+  const offset = (currentPage - 1) * PER_PAGE;
+
   const clientList = await db
     .select()
     .from(companies)
     .where(conditions)
-    .orderBy(orderFn(sortCol));
+    .orderBy(orderFn(sortCol))
+    .limit(PER_PAGE)
+    .offset(offset);
+
+  // Conserve les filtres/recherche/tri dans les liens de pagination
+  const buildPageHref = (p: number) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (status) params.set("status", status);
+    if (type) params.set("type", type);
+    if (sort) params.set("sort", sort);
+    if (dir) params.set("dir", dir);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `/clients?${qs}` : "/clients";
+  };
 
   return (
     <div className="max-w-4xl space-y-4">
@@ -134,6 +159,34 @@ export default async function ClientsPage({
               </Badge>
             </Link>
           ))}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-1 text-sm">
+          <p className="text-muted-foreground">
+            {totalCount} client{totalCount > 1 ? "s" : ""} · page {currentPage}/{totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            {currentPage > 1 ? (
+              <Link href={buildPageHref(currentPage - 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                <ChevronLeft className="size-3.5 mr-1" />{t("previous")}
+              </Link>
+            ) : (
+              <span className={`${buttonVariants({ variant: "outline", size: "sm" })} opacity-40 pointer-events-none`}>
+                <ChevronLeft className="size-3.5 mr-1" />{t("previous")}
+              </span>
+            )}
+            {currentPage < totalPages ? (
+              <Link href={buildPageHref(currentPage + 1)} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                {t("next")}<ChevronRight className="size-3.5 ml-1" />
+              </Link>
+            ) : (
+              <span className={`${buttonVariants({ variant: "outline", size: "sm" })} opacity-40 pointer-events-none`}>
+                {t("next")}<ChevronRight className="size-3.5 ml-1" />
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>
