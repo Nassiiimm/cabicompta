@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { companies, fiscalDeadlines } from "@/lib/db/schema";
+import { decryptCompanySecrets } from "@/lib/crypto";
 import { eq, and, isNull } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import { ClientTabs } from "./client-tabs";
@@ -34,15 +35,18 @@ export default async function ClientDetailPage({
   const staff = await requireStaff();
   const { id } = await params;
 
-  const [client] = await db
+  const [clientRow] = await db
     .select()
     .from(companies)
     .where(and(eq(companies.id, id), eq(companies.cabinetId, staff.cabinetId), isNull(companies.deletedAt)))
     .limit(1);
 
-  if (!client) {
+  if (!clientRow) {
     notFound();
   }
+
+  // Déchiffrer les secrets au repos (mots de passe, NAS) avant affichage
+  const client = decryptCompanySecrets(clientRow);
 
   // Fetch deadlines server-side and pass as serializable data
   const deadlines = await db

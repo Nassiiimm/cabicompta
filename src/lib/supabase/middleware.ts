@@ -53,7 +53,8 @@ export async function updateSession(request: NextRequest) {
     path === "/api/health" ||
     path.startsWith("/api/webhooks/") ||
     path.startsWith("/api/platform/") ||
-    path.startsWith("/api/calendar/")
+    path.startsWith("/api/calendar/") ||
+    path.startsWith("/api/ingest/") // auth par clé API (Bearer), sans cookie de session
   ) {
     return supabaseResponse;
   }

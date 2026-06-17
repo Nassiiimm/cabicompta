@@ -4,6 +4,7 @@ import { companies, documents, invoices, fiscalDeadlines, workflows } from "@/li
 import { eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { logAudit } from "@/lib/audit";
+import { decryptCompanySecrets, encryptCompanySecrets } from "@/lib/crypto";
 
 const updateCompanySchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(255).optional(),
@@ -53,15 +54,18 @@ export async function GET(
     const user = await requireStaff();
     const { id } = await segmentData.params;
 
-    const [company] = await db
+    const [companyRow] = await db
       .select()
       .from(companies)
       .where(eq(companies.id, id))
       .limit(1);
 
-    if (!company) {
+    if (!companyRow) {
       return Response.json({ error: "Client introuvable" }, { status: 404 });
     }
+
+    // Déchiffrer les secrets au repos avant de les renvoyer
+    const company = decryptCompanySecrets(companyRow);
 
     if (user.role === "INTERN" && company.assignedTo !== user.id) {
       return Response.json({ error: "Accès refusé" }, { status: 403 });
@@ -129,9 +133,12 @@ export async function PATCH(
       Object.entries(parsed).map(([key, value]) => [key, value === "" ? null : value])
     ) as typeof parsed;
 
+    // Chiffrer les secrets au repos avant écriture
+    const dataToStore = encryptCompanySecrets(data);
+
     const [updated] = await db
       .update(companies)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...dataToStore, updatedAt: new Date() })
       .where(eq(companies.id, id))
       .returning();
 
@@ -143,7 +150,7 @@ export async function PATCH(
       tableName: "companies",
       recordId: id,
       oldData: current as unknown as Record<string, unknown>,
-      newData: data as Record<string, unknown>,
+      newData: dataToStore as Record<string, unknown>,
     });
 
     return Response.json(updated);
