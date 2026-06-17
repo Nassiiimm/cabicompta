@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 .env.local
 .env
+
+# Import OLL — contient des secrets clients en clair
+scripts/out/
+
+# Dépendances du serveur MCP
+mcp-server/node_modules/

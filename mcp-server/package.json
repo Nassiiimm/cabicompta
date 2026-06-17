@@ -1,0 +1,16 @@
+{
+  "name": "cabicompta-mcp",
+  "version": "1.0.0",
+  "description": "Serveur MCP pour injecter des documents dans CabiCompta depuis Claude Code (cabinet)",
+  "type": "module",
+  "bin": {
+    "cabicompta-mcp": "index.mjs"
+  },
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  }
+}

@@ -194,10 +194,15 @@ export const companies = pgTable("companies", {
   id: uuid("id").primaryKey().defaultRandom(),
   cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
   name: varchar("name", { length: 255 }).notNull(),
+  legalName: varchar("legal_name", { length: 255 }),
+  tradeName: varchar("trade_name", { length: 255 }),
   neq: varchar("neq", { length: 20 }),
   arcNumber: varchar("arc_number", { length: 20 }),
   rqNumber: varchar("rq_number", { length: 20 }),
+  tpsNumber: varchar("tps_number", { length: 20 }),
+  tvqNumber: varchar("tvq_number", { length: 20 }),
   fiscalYearEnd: date("fiscal_year_end"),
+  incorporationDate: date("incorporation_date"),
   address: text("address"),
   city: varchar("city", { length: 100 }),
   province: varchar("province", { length: 50 }).default("QC"),
@@ -226,6 +231,8 @@ export const companies = pgTable("companies", {
   // Portails gouvernementaux — accès restreint ADMIN/STAFF uniquement
   clicsequrId: varchar("clicsequr_id", { length: 255 }),
   clicsequrPassword: text("clicsequr_password"),
+  clicsequrExpressId: varchar("clicsequr_express_id", { length: 255 }),
+  clicsequrExpressPassword: text("clicsequr_express_password"),
   arcId: varchar("arc_id", { length: 255 }),
   arcPassword: text("arc_password"),
   cnesstId: varchar("cnesst_id", { length: 255 }),
@@ -239,6 +246,15 @@ export const companies = pgTable("companies", {
   hasEmployees: boolean("has_employees").notNull().default(false),
   employeeCount: integer("employee_count"),
   hasInstallments: boolean("has_installments").notNull().default(false),
+  // Dirigeant / représentant principal
+  representativeName: varchar("representative_name", { length: 255 }),
+  representativeSin: text("representative_sin"), // chiffré (NAS)
+  // Credentials multiples (banques secondaires, logiciels tiers) — secrets chiffrés à l'intérieur
+  bankCredentials: jsonb("bank_credentials"),
+  softwareCredentials: jsonb("software_credentials"),
+  // Traçabilité de l'import Excel
+  importRaw: jsonb("import_raw"),
+  importSource: varchar("import_source", { length: 255 }),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -622,8 +638,28 @@ export const activitySessions = pgTable(
 );
 
 // ═══════════════════════════════════════════════════════════
+// Clés API — ingestion externe (agent Claude du cabinet, etc.)
+// ═══════════════════════════════════════════════════════════
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cabinetId: uuid("cabinet_id").notNull().references(() => cabinets.id, { onDelete: "restrict" }),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  keyHash: varchar("key_hash", { length: 64 }).notNull().unique(), // SHA-256 hex
+  keyPrefix: varchar("key_prefix", { length: 16 }).notNull(),
+  scope: varchar("scope", { length: 50 }).notNull().default("ingest"),
+  lastUsedAt: timestamp("last_used_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  cabinetIdx: index("api_keys_cabinet_idx").on(t.cabinetId),
+  hashIdx: index("api_keys_hash_idx").on(t.keyHash),
+}));
+
+// ═══════════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════════
+export type ApiKey = typeof apiKeys.$inferSelect;
 export type Cabinet = typeof cabinets.$inferSelect;
 export type NewCabinet = typeof cabinets.$inferInsert;
 export type PlatformAdmin = typeof platformAdmins.$inferSelect;
