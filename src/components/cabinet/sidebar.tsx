@@ -110,7 +110,7 @@ export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetN
             const e = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true });
             window.dispatchEvent(e);
           }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors border border-neutral-200 dark:border-neutral-800"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors border border-neutral-200 dark:border-neutral-800"
         >
           <Search className="size-3.5 opacity-60" />
           <span className="flex-1 text-left">Rechercher…</span>
@@ -126,7 +126,7 @@ export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetN
           return (
             <div key={si} className="space-y-0.5">
               {section.title && (
-                <p className="px-3 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
+                <p className="px-3 pt-1 pb-1.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                   {section.title}
                 </p>
               )}
@@ -138,10 +138,10 @@ export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetN
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
+                      "flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] font-medium transition-colors",
                       active
                         ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
-                        : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        : "text-neutral-700 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
                     )}
                   >
                     <item.icon className={cn("size-4 shrink-0", active ? "opacity-100" : "opacity-60")} />
@@ -164,10 +164,10 @@ export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetN
         <Link
           href="/profile"
           className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
+            "flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] font-medium transition-colors",
             pathname === "/profile"
               ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
-              : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              : "text-neutral-700 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
           )}
         >
           <User className="size-4 shrink-0 opacity-60" />
@@ -176,7 +176,7 @@ export function Sidebar({ role, cabinetName, logoUrl }: { role: string; cabinetN
         <div className="flex items-center justify-between px-1">
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[15px] font-medium text-neutral-700 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <LogOut className="size-4 shrink-0 opacity-60" />
             {t("logout")}

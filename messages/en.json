@@ -204,6 +204,8 @@
   "clients": {
     "title": "Clients",
     "new": "New client",
+    "previous": "Previous",
+    "next": "Next",
     "edit": "Edit client",
     "noClients": "No clients",
     "noClientsDesc": "Start by adding your first client.",
