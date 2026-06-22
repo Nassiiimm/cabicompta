@@ -7,7 +7,7 @@ import { uploadFile } from "@/lib/supabase/storage";
 import { logAudit } from "@/lib/audit";
 
 const VALID_CATEGORIES = new Set([
-  "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION",
+  "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "T2", "T4_RL1", "T4A", "REQ_DOC", "IMMOBILISATION",
   "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER",
 ]);
 
