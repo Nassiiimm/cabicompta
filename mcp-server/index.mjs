@@ -3,18 +3,33 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { readFile } from "node:fs/promises";
-import { basename, extname } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { basename, extname, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-// ── Configuration (variables d'environnement) ──────────────────────────────
+// ── Chargement d'un fichier .env posé À CÔTÉ de ce script (config simplifiée) ─
+// Permet de ne PAS avoir à passer la clé dans la commande : il suffit d'éditer
+// le fichier .env du dossier. Les variables déjà définies dans l'environnement
+// (ex. via `claude mcp add --env`) restent prioritaires.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const envPath = join(__dirname, ".env");
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  }
+}
+
+// ── Configuration ───────────────────────────────────────────────────────────
 const API_URL = (process.env.CABICOMPTA_API_URL || "https://cabicompta.vercel.app").replace(/\/$/, "");
 const API_KEY = process.env.CABICOMPTA_API_KEY;
 if (!API_KEY) {
-  console.error("[cabicompta-mcp] CABICOMPTA_API_KEY manquante dans l'environnement.");
+  console.error("[cabicompta-mcp] CABICOMPTA_API_KEY manquante : ajoute-la dans le fichier .env du dossier, ou via `claude mcp add --env`.");
   process.exit(1);
 }
 
 const CATEGORIES = [
-  "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION",
+  "DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "T2", "T4_RL1", "T4A", "REQ_DOC", "IMMOBILISATION",
   "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER",
 ];
 

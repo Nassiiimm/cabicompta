@@ -33,6 +33,9 @@ export const documentCategory = pgEnum("document_category", [
   "TPS_TVQ",
   "FINANCIAL_STATEMENT",
   "T1",
+  "T2",
+  "T4_RL1",
+  "T4A",
   "REQ_DOC",
   "IMMOBILISATION",
   // Catégories génériques
