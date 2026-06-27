@@ -41,6 +41,25 @@ Ouvre le dossier de PDFs dans Claude Code et demande, par exemple :
 
 Les documents apparaissent ensuite dans chaque fiche client, au statut **« à valider »**.
 
+## Analyses fiscales (gratuit, via Claude du poste)
+
+En plus du simple classement, Claude peut **analyser** les documents et en extraire les données
+fiscales — c'est ton abonnement Claude qui fait le travail (gratuit), pas l'API payante.
+
+Outils MCP disponibles :
+- `list_analysis_types` — liste les analyses possibles (factures/CTI-RTI, relevé bancaire,
+  paie/DAS, T4/RL-1, T4A, ventes, états financiers T2, bilan détaillé).
+- `get_analysis_spec(type)` — donne la consigne experte (prompt + format JSON) pour un type.
+
+Workflow d'analyse :
+1. `get_analysis_spec("BANK_STATEMENT")` (par ex.) pour obtenir la consigne et le format attendu.
+2. Lis le document, applique la consigne, produis le JSON demandé.
+3. `upload_document` avec ce JSON dans `extractedData` et la bonne `category`.
+
+Exemple de demande :
+> « Pour chaque relevé bancaire de `D:\Releves\2024`, applique l'analyse BANK_STATEMENT et
+> injecte le résultat dans CabiCompta. »
+
 ## Catégories reconnues
 `DAS, TPS_TVQ, FINANCIAL_STATEMENT, T1, T2, T4_RL1, T4A, REQ_DOC, IMMOBILISATION,
 BANK_STATEMENT, INVOICE, TAX_NOTICE, CORPORATE, CONTRACT, RECEIPT, OTHER`

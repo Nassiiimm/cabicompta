@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -254,6 +255,12 @@ export function DocumentListActions({ documents, emptyMessage }: { documents: Do
                 >
                   Voir
                 </button>
+                <Link
+                  href={`/documents/${doc.id}`}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Détails
+                </Link>
               </div>
             </div>
 

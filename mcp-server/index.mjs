@@ -129,6 +129,60 @@ server.registerTool(
   }
 );
 
+// ── Outil : lister les types d'analyse fiscale disponibles ─────────────────
+let _specsCache = null;
+async function fetchSpecs() {
+  if (_specsCache) return _specsCache;
+  const res = await fetch(`${API_URL}/api/ingest/analysis-specs`, { headers: authHeaders });
+  if (!res.ok) throw new Error(`Erreur ${res.status} : ${await res.text()}`);
+  _specsCache = (await res.json()).specs || [];
+  return _specsCache;
+}
+
+server.registerTool(
+  "list_analysis_types",
+  {
+    title: "Lister les analyses fiscales disponibles",
+    description:
+      "Renvoie les types d'analyse que tu peux réaliser (factures/CTI-RTI, relevé bancaire, paie/DAS, " +
+      "T4/RL-1, T4A, ventes, états financiers T2, bilan détaillé). Donne pour chacun la clé et le libellé.",
+    inputSchema: {},
+  },
+  async () => {
+    try {
+      const specs = await fetchSpecs();
+      return ok(JSON.stringify(specs.map((s) => ({ key: s.key, label: s.label, category: s.category })), null, 2));
+    } catch (e) {
+      return fail(`Échec : ${e.message}`);
+    }
+  }
+);
+
+// ── Outil : obtenir la consigne d'analyse pour un type ─────────────────────
+server.registerTool(
+  "get_analysis_spec",
+  {
+    title: "Obtenir la consigne d'une analyse fiscale",
+    description:
+      "Renvoie la consigne experte (prompt + schéma JSON attendu) pour un type d'analyse donné. " +
+      "Workflow : lis le document, applique CETTE consigne pour produire le JSON, puis appelle " +
+      "upload_document avec ce JSON dans extractedData et la bonne `category`.",
+    inputSchema: {
+      type: z.string().describe("Clé du type d'analyse (ex. INVOICES, BANK_STATEMENT, PAYROLL_DAS, T4_RL1, T4A, SALES, FINANCIAL, FINANCIAL_DETAILED)"),
+    },
+  },
+  async ({ type }) => {
+    try {
+      const specs = await fetchSpecs();
+      const spec = specs.find((s) => s.key === type);
+      if (!spec) return fail(`Type inconnu « ${type} ». Types : ${specs.map((s) => s.key).join(", ")}`);
+      return ok(JSON.stringify(spec, null, 2));
+    } catch (e) {
+      return fail(`Échec : ${e.message}`);
+    }
+  }
+);
+
 const transport = new StdioServerTransport();
 await server.connect(transport);
 console.error("[cabicompta-mcp] prêt — API:", API_URL);
