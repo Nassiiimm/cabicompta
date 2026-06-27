@@ -6,6 +6,23 @@
 
 ---
 
+## Analyse fiscale IA (absorption de FiscalAuto — juin 2026)
+
+CabiCompta intègre désormais les **9 analyseurs fiscaux** auparavant fournis par le projet
+tiers **FiscalAuto** (Express + Gemini + Turso, mono-tenant). FiscalAuto est **décommissionné** :
+ses clients/dossiers vivaient déjà dans CabiCompta et son analyse est absorbée. Le patch
+`fiscalauto-cabicompta-compat.patch` est donc **caduc**.
+
+- **Source unique** : `src/lib/analysis/specs.ts` (prompt + schéma + normalisation par type).
+- **Moteur** : `src/lib/ocr.ts` → `analyzeDocument()` (Claude).
+- **Deux canaux** : (1) **web** `POST /api/analyze/[type]` via API Anthropic payante ;
+  (2) **poste** `GET /api/ingest/analysis-specs` + MCP (`get_analysis_spec`) exécuté par le
+  Claude Max du cabinet (gratuit), résultats poussés via `/api/ingest/documents`.
+- **Stockage** : `documents.extractedData` (jsonb), typé par catégorie.
+- **Affichage** : `src/app/(cabinet)/documents/[id]/page.tsx` + `components/cabinet/analysis-view.tsx`.
+
+---
+
 ## 1. Structure des dossiers
 
 ```

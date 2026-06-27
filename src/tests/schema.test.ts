@@ -73,12 +73,16 @@ describe("database schema", () => {
     expect(schema.companyStatus.enumValues).toEqual(["ACTIVE", "INACTIVE", "ARCHIVED"]);
   });
 
-  it("documentCategory has all 13 categories", () => {
-    expect(schema.documentCategory.enumValues).toHaveLength(13);
+  it("documentCategory has all 16 categories", () => {
+    expect(schema.documentCategory.enumValues).toHaveLength(16);
     expect(schema.documentCategory.enumValues).toContain("BANK_STATEMENT");
     expect(schema.documentCategory.enumValues).toContain("TPS_TVQ");
     expect(schema.documentCategory.enumValues).toContain("DAS");
     expect(schema.documentCategory.enumValues).toContain("IMMOBILISATION");
+    // Catégories ajoutées pour l'intégration FiscalAuto
+    expect(schema.documentCategory.enumValues).toContain("T2");
+    expect(schema.documentCategory.enumValues).toContain("T4_RL1");
+    expect(schema.documentCategory.enumValues).toContain("T4A");
   });
 
   it("invoiceStatus has all 5 statuses", () => {

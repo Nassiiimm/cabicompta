@@ -33,7 +33,7 @@ export default async function DocumentsPage({
     filters.push(eq(documents.companyId, companyId));
   }
 
-  const VALID_CATEGORIES = ["DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "REQ_DOC", "IMMOBILISATION", "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER"] as const;
+  const VALID_CATEGORIES = ["DAS", "TPS_TVQ", "FINANCIAL_STATEMENT", "T1", "T2", "T4_RL1", "T4A", "REQ_DOC", "IMMOBILISATION", "BANK_STATEMENT", "INVOICE", "TAX_NOTICE", "CORPORATE", "CONTRACT", "RECEIPT", "OTHER"] as const;
   if (category && VALID_CATEGORIES.includes(category as typeof VALID_CATEGORIES[number])) {
     filters.push(eq(documents.category, category as typeof VALID_CATEGORIES[number]));
   }
